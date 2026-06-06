@@ -145,62 +145,68 @@ export default function DoctorPortal() {
             )}
 
             {/* SideNavBar */}
-            <aside className={`fixed left-0 top-0 h-full w-[280px] z-40 bg-surface/90 md:bg-surface/50 backdrop-blur-2xl border-r border-white/40 flex flex-col p-6 gap-stack-sm transition-transform duration-300 ease-in-out ${
+            <aside className={`fixed left-0 top-0 h-full w-[280px] z-40 bg-surface/90 md:bg-surface/50 backdrop-blur-2xl border-r border-white/40 flex flex-col p-6 transition-transform duration-300 ease-in-out overflow-hidden ${
                 isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}>
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
+                {/* Decorative concentric circles */}
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[350px] h-[350px] border-[32px] border-primary/10 dark:border-white/10 rounded-full pointer-events-none -ml-28 z-0"></div>
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[220px] h-[220px] border-[24px] border-primary/5 dark:border-white/5 rounded-full pointer-events-none -ml-14 z-0"></div>
+
+                <div className="flex flex-col h-full w-full relative z-10 gap-stack-sm">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                            <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
+                        </div>
+                        <div>
+                            <h1 className="text-headline-sm font-headline-md text-primary leading-none">PalmCrest ENT</h1>
+                            <p className="text-caption text-on-surface-variant font-label-md">Clinical Excellence</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-headline-sm font-headline-md text-primary leading-none">PalmCrest ENT</h1>
-                        <p className="text-caption text-on-surface-variant font-label-md">Clinical Excellence</p>
-                    </div>
-                </div>
-                <nav className="flex-grow flex flex-col gap-2">
-                    <button 
-                        onClick={() => { setActiveTab('dashboard'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
-                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
-                    >
-                        <span className="material-symbols-outlined">dashboard</span>
-                        <span className="text-label-md">Dashboard</span>
-                    </button>
-                    <button 
-                        onClick={() => { setActiveTab('patients'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
-                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'patients' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
-                    >
-                        <span className="material-symbols-outlined">group</span>
-                        <span className="text-label-md">Patients</span>
-                    </button>
-                    <button 
-                        onClick={() => { setActiveTab('appointments'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
-                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
-                    >
-                        <span className="material-symbols-outlined">calendar_today</span>
-                        <span className="text-label-md">Appointments</span>
-                    </button>
-                    <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-xl" href="#">
-                        <span className="material-symbols-outlined">settings</span>
-                        <span className="text-label-md">Settings</span>
-                    </a>
-                </nav>
-                <div className="mt-auto flex flex-col gap-4">
-                    <button className="btn-gradient text-white font-label-md py-3 rounded-xl flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined text-sm">emergency</span>
-                        Emergency Portal
-                    </button>
-                    <div className="pt-4 border-t border-outline-variant/20 flex flex-col gap-2">
-                        <a className="flex items-center gap-4 px-4 py-2 text-on-surface-variant text-caption hover:text-primary" href="#">
-                            <span className="material-symbols-outlined">help</span>
-                            <span>Help Support</span>
-                        </a>
+                    <nav className="flex-grow flex flex-col gap-2">
                         <button 
-                            onClick={handleLogout}
-                            className="flex items-center gap-4 px-4 py-2 text-on-surface-variant text-caption hover:text-error w-full text-left"
+                            onClick={() => { setActiveTab('dashboard'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
                         >
-                            <span className="material-symbols-outlined">logout</span>
-                            <span>Logout</span>
+                            <span className="material-symbols-outlined">dashboard</span>
+                            <span className="text-label-md">Dashboard</span>
                         </button>
+                        <button 
+                            onClick={() => { setActiveTab('patients'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'patients' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                        >
+                            <span className="material-symbols-outlined">group</span>
+                            <span className="text-label-md">Patients</span>
+                        </button>
+                        <button 
+                            onClick={() => { setActiveTab('appointments'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                        >
+                            <span className="material-symbols-outlined">calendar_today</span>
+                            <span className="text-label-md">Appointments</span>
+                        </button>
+                        <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-xl" href="#">
+                            <span className="material-symbols-outlined">settings</span>
+                            <span className="text-label-md">Settings</span>
+                        </a>
+                    </nav>
+                    <div className="mt-auto flex flex-col gap-4">
+                        <button className="btn-gradient text-white font-label-md py-3 rounded-xl flex items-center justify-center gap-2">
+                            <span className="material-symbols-outlined text-sm">emergency</span>
+                            Emergency Portal
+                        </button>
+                        <div className="pt-4 border-t border-outline-variant/20 flex flex-col gap-2">
+                            <a className="flex items-center gap-4 px-4 py-2 text-on-surface-variant text-caption hover:text-primary" href="#">
+                                <span className="material-symbols-outlined">help</span>
+                                <span>Help Support</span>
+                            </a>
+                            <button 
+                                onClick={handleLogout}
+                                className="flex items-center gap-4 px-4 py-2 text-on-surface-variant text-caption hover:text-error w-full text-left"
+                            >
+                                <span className="material-symbols-outlined">logout</span>
+                                <span>Logout</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </aside>

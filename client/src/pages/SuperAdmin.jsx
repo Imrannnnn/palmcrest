@@ -100,41 +100,47 @@ export default function SuperAdmin() {
             </div>
 
             {/* Side Navigation Shell */}
-            <aside className="fixed left-0 top-0 h-full w-[280px] z-40 bg-surface/50 dark:bg-surface-container-low/50 backdrop-blur-2xl border-r border-white/40 dark:border-outline-variant/10 flex flex-col p-6 gap-stack-sm hidden md:flex">
-                <div className="mb-stack-lg">
-                    <h1 className="text-headline-sm font-headline-md text-primary font-bold">PalmCrest ENT</h1>
-                    <p className="text-label-md font-label-md tracking-[0.05em] text-on-surface-variant opacity-70">Clinical Excellence</p>
-                </div>
-                <nav className="flex-grow flex flex-col gap-2">
-                    <a className="flex items-center gap-3 px-4 py-3 bg-white/70 backdrop-blur-md rounded-xl text-primary font-bold animate-smooth" href="#">
-                        <span className="material-symbols-outlined">dashboard</span>
-                        <span className="text-label-md font-label-md tracking-[0.05em]">Dashboard</span>
-                    </a>
-                    <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
-                        <span className="material-symbols-outlined">group</span>
-                        <span className="text-label-md font-label-md tracking-[0.05em]">Patients</span>
-                    </a>
-                    <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
-                        <span className="material-symbols-outlined">calendar_today</span>
-                        <span className="text-label-md font-label-md tracking-[0.05em]">Appointments</span>
-                    </a>
-                    <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
-                        <span className="material-symbols-outlined">settings</span>
-                        <span className="text-label-md font-label-md tracking-[0.05em]">Settings</span>
-                    </a>
-                </nav>
-                <div className="mt-auto flex flex-col gap-2 pt-6 border-t border-outline-variant/20">
-                    <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth" href="#">
-                        <span className="material-symbols-outlined">help</span>
-                        <span className="text-label-md font-label-md tracking-[0.05em]">Help Support</span>
-                    </a>
-                    <button 
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth w-full text-left"
-                    >
-                        <span className="material-symbols-outlined">logout</span>
-                        <span className="text-label-md font-label-md tracking-[0.05em]">Logout</span>
-                    </button>
+            <aside className="fixed left-0 top-0 h-full w-[280px] z-40 bg-surface/50 dark:bg-surface-container-low/50 backdrop-blur-2xl border-r border-white/40 dark:border-outline-variant/10 flex flex-col p-6 transition-transform duration-300 ease-in-out overflow-hidden hidden md:flex">
+                {/* Decorative concentric circles */}
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[350px] h-[350px] border-[32px] border-primary/10 dark:border-white/10 rounded-full pointer-events-none -ml-28 z-0"></div>
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[220px] h-[220px] border-[24px] border-primary/5 dark:border-white/5 rounded-full pointer-events-none -ml-14 z-0"></div>
+
+                <div className="flex flex-col h-full w-full relative z-10 gap-stack-sm">
+                    <div className="mb-stack-lg">
+                        <h1 className="text-headline-sm font-headline-md text-primary font-bold">PalmCrest ENT</h1>
+                        <p className="text-label-md font-label-md tracking-[0.05em] text-on-surface-variant opacity-70">Clinical Excellence</p>
+                    </div>
+                    <nav className="flex-grow flex flex-col gap-2">
+                        <a className="flex items-center gap-3 px-4 py-3 bg-white/70 backdrop-blur-md rounded-xl text-primary font-bold animate-smooth" href="#">
+                            <span className="material-symbols-outlined">dashboard</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Dashboard</span>
+                        </a>
+                        <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
+                            <span className="material-symbols-outlined">group</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Patients</span>
+                        </a>
+                        <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
+                            <span className="material-symbols-outlined">calendar_today</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Appointments</span>
+                        </a>
+                        <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
+                            <span className="material-symbols-outlined">settings</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Settings</span>
+                        </a>
+                    </nav>
+                    <div className="mt-auto flex flex-col gap-2 pt-6 border-t border-outline-variant/20">
+                        <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth" href="#">
+                            <span className="material-symbols-outlined">help</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Help Support</span>
+                        </a>
+                        <button 
+                            onClick={handleLogout}
+                            className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth w-full text-left"
+                        >
+                            <span className="material-symbols-outlined">logout</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Logout</span>
+                        </button>
+                    </div>
                 </div>
             </aside>
 
