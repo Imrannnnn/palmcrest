@@ -44,10 +44,6 @@ export default function DoctorPortal() {
     ]);
 
     useEffect(() => {
-        // Prevent body and html from scrolling to avoid double scrollbar conflicts
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden';
-
         // Simple entrance animation for cards
         const cards = document.querySelectorAll('.glass-card');
         cards.forEach((card, index) => {
@@ -85,8 +81,6 @@ export default function DoctorPortal() {
         document.addEventListener('mousemove', handleMouseMove);
 
         return () => {
-            document.body.style.overflow = '';
-            document.documentElement.style.overflow = '';
             document.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('resize', handleResize);
         };
@@ -132,7 +126,7 @@ export default function DoctorPortal() {
     };
 
     return (
-        <div className="text-[#191c1e] font-body-md overflow-hidden h-screen flex w-full text-left relative z-0">
+        <div className="text-[#191c1e] font-body-md h-[100dvh] flex w-full text-left relative z-0 overflow-hidden">
             {/* Atmospheric Background */}
             <div className="bg-wave">
                 <div className="wave-blob bg-primary-fixed top-[-100px] left-[-100px]"></div>
@@ -212,13 +206,13 @@ export default function DoctorPortal() {
             </aside>
 
             {/* Main Content Canvas */}
-            <main className={`flex-grow flex flex-col h-screen overflow-hidden transition-all duration-300 ease-in-out ${isSidebarOpen ? 'md:ml-[280px]' : 'ml-0'}`}>
+            <main className={`flex-grow flex flex-col h-[100dvh] overflow-hidden transition-all duration-300 ease-in-out ${isSidebarOpen ? 'md:ml-[280px]' : 'ml-0'}`}>
                 {/* Top Header Area */}
                 <header className="flex justify-between items-center px-4 md:px-margin-desktop py-4 md:py-6 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm z-30">
                     <div className="flex items-center gap-4">
                         <button 
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors text-primary flex items-center justify-center shadow-sm"
+                            className="p-2 min-w-[44px] min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors text-primary flex items-center justify-center shadow-sm"
                         >
                             <span className="material-symbols-outlined">menu</span>
                         </button>
@@ -231,12 +225,12 @@ export default function DoctorPortal() {
                         <div className="flex gap-2">
                             <button 
                                 onClick={toggleNotifications}
-                                className="w-10 h-10 glass-card rounded-full flex items-center justify-center relative hover:bg-white/90 transition-all"
+                                className="w-11 h-11 glass-card rounded-full flex items-center justify-center relative hover:bg-white/90 transition-all"
                             >
                                 <span className="material-symbols-outlined">notifications</span>
                                 <span className="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
                             </button>
-                            <button className="w-10 h-10 glass-card rounded-full flex items-center justify-center hover:bg-white/90 transition-all">
+                            <button className="w-11 h-11 glass-card rounded-full flex items-center justify-center hover:bg-white/90 transition-all hidden sm:flex">
                                 <span className="material-symbols-outlined">search</span>
                             </button>
                         </div>
@@ -260,7 +254,7 @@ export default function DoctorPortal() {
                         {/* Weekly Appointment Schedule (Calendar) - Spans 8 cols */}
                         {(activeTab === 'dashboard' || activeTab === 'appointments') && (
                         <section className={`col-span-1 md:col-span-12 ${activeTab === 'appointments' ? 'lg:col-span-8' : 'lg:col-span-8'} flex flex-col gap-4`}>
-                            <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col h-[480px]">
+                            <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col min-h-[400px] h-[50dvh] md:h-[480px]">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-headline-md font-headline-md text-primary">Agenda & Schedule</h3>
                                     <span className="font-label-md text-secondary uppercase tracking-[0.05em] text-caption bg-secondary/10 px-3 py-1 rounded-full">
@@ -269,12 +263,12 @@ export default function DoctorPortal() {
                                 </div>
                                 
                                 {/* Daily Selector Tab Navigation */}
-                                <div className="flex justify-between bg-surface-container-low p-1.5 rounded-2xl mb-6">
+                                <div className="flex overflow-x-auto no-scrollbar gap-2 bg-surface-container-low p-2 rounded-2xl mb-6">
                                     {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day) => (
                                         <button
                                             key={day}
                                             onClick={() => setSelectedDay(day)}
-                                            className={`flex-1 py-2 px-1 rounded-xl text-caption font-label-md uppercase tracking-wider transition-all duration-300 ${
+                                            className={`flex-1 min-w-[60px] py-2 px-1 rounded-xl text-caption font-label-md uppercase tracking-wider transition-all duration-300 ${
                                                 selectedDay === day 
                                                     ? 'bg-primary text-white shadow-md' 
                                                     : day === 'SAT' || day === 'SUN'

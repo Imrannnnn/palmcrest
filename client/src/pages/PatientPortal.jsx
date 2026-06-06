@@ -204,7 +204,7 @@ export default function PatientPortal() {
                         <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors text-primary flex items-center justify-center shadow-sm"
+                                className="p-2 min-w-[44px] min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors text-primary flex items-center justify-center shadow-sm"
                             >
                                 <span className="material-symbols-outlined">menu</span>
                             </button>
@@ -219,9 +219,9 @@ export default function PatientPortal() {
                                     type="text"
                                 />
                             </div>
-                            <button className="p-2 rounded-full hover:bg-surface-container transition-colors relative">
+                            <button className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-surface-container transition-colors relative">
                                 <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full"></span>
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
                             </button>
                             <div className="flex items-center gap-3 ml-4">
                                 <div className="text-right hidden sm:block">
@@ -264,7 +264,7 @@ export default function PatientPortal() {
 
                     {/* Grid Layout */}
                     {activeTab === 'dashboard' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-gutter">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-gutter">
                             {/* Left Column: Summary & Quick Actions */}
                             <div className="lg:col-span-8 space-y-6 md:space-y-gutter">
                                 {/* Upcoming Appointment Summary */}
@@ -374,7 +374,7 @@ export default function PatientPortal() {
                     )}
 
                     {activeTab === 'appointments' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-gutter">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-gutter">
                             <div className="lg:col-span-12 space-y-6 md:space-y-gutter">
                                 {/* Book Appointment Widget */}
                                 <div className="glass-card rounded-3xl p-6 md:p-stack-md">
@@ -390,7 +390,7 @@ export default function PatientPortal() {
                                             <select
                                                 value={specialist}
                                                 onChange={(e) => setSpecialist(e.target.value)}
-                                                className="w-full bg-white/50 border-none rounded-xl py-3 focus:ring-2 focus:ring-secondary/50 outline-none"
+                                                className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                             >
                                                 <option>Dr. Elena Aris (Audiology)</option>
                                                 <option>Dr. Marcus Vane (Rhinology)</option>
@@ -400,7 +400,7 @@ export default function PatientPortal() {
                                         <div>
                                             <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Preferred Date</label>
                                             <input
-                                                className="w-full bg-white/50 border-none rounded-xl py-3 focus:ring-2 focus:ring-secondary/50 outline-none"
+                                                className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                                 type="date"
                                                 value={bookingDate}
                                                 onChange={(e) => setBookingDate(e.target.value)}
