@@ -97,6 +97,12 @@ export default function SuperAdmin() {
                 <div className="wave-blob bg-tertiary top-[45%] left-[30%]" style={{ animationDelay: '-10s' }}></div>
                 <div className="wave-blob bg-primary-fixed top-[15%] right-[15%]" style={{ animationDelay: '-7s' }}></div>
                 <div className="wave-blob bg-secondary-container bottom-[35%] left-[5%]" style={{ animationDelay: '-13s' }}></div>
+
+                {/* Decorative concentric circles in main background */}
+                <div className="absolute top-[10%] right-[-150px] w-[600px] h-[600px] border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute top-[10%] right-[-80px] w-[400px] h-[400px] border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute bottom-[15%] left-[-200px] w-[700px] h-[700px] border-[56px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute bottom-[15%] left-[-100px] w-[450px] h-[450px] border-[36px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
             </div>
 
             {/* Side Navigation Shell */}

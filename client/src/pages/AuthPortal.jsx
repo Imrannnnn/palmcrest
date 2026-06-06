@@ -164,12 +164,32 @@ export default function AuthPortal() {
             <div className="bg-wave z-[-2]">
                 <div className="wave-blob bg-primary top-[-10%]" style={{ width: '800px', height: '800px' }}></div>
                 <div className="wave-blob bg-secondary bottom-[-10%] right-[-10%]" style={{ width: '600px', height: '600px', animationDelay: '-5s' }}></div>
+
+                {/* Decorative concentric circles in main background */}
+                <div className="absolute top-[10%] right-[-150px] w-[600px] h-[600px] border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute top-[10%] right-[-80px] w-[400px] h-[400px] border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute bottom-[15%] left-[-200px] w-[700px] h-[700px] border-[56px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute bottom-[15%] left-[-100px] w-[450px] h-[450px] border-[36px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
             </div>
 
             {/* Main Container */}
             <main className="w-full max-w-[1000px] grid md:grid-cols-2 glass rounded-3xl overflow-hidden shadow-2xl relative bg-white/80 md:bg-white/70 backdrop-blur-xl border border-white/20">
                 {/* Left Side: Branding & Image */}
                 <section className="hidden md:flex flex-col justify-between p-12 bg-primary relative overflow-hidden">
+                    {/* Faint Background Image */}
+                    <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden opacity-20">
+                        <img 
+                            src="/ent_hero.png" 
+                            alt="ENT Hospital Background" 
+                            className="w-full h-full object-cover" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-primary/95 via-primary/80 to-primary/95"></div>
+                    </div>
+
+                    {/* Decorative concentric circles (Half visible on the left edge) */}
+                    <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[600px] h-[600px] border-[50px] border-white/10 rounded-full pointer-events-none -ml-[350px] z-0"></div>
+                    <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[400px] h-[400px] border-[40px] border-white/5 rounded-full pointer-events-none -ml-[230px] z-0"></div>
+
                     <div className="relative z-10 text-left">
                         <h1 className="font-headline-lg text-headline-lg text-white mb-2">PalmCrest ENT</h1>
                         <p className="font-body-md text-body-md text-primary-fixed-dim font-medium">Clinical Excellence in Advanced Sanctuary of Care.</p>

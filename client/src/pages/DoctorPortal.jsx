@@ -134,6 +134,12 @@ export default function DoctorPortal() {
                 <div className="wave-blob bg-tertiary-fixed-dim top-[35%] right-[20%]" style={{ animationDelay: '-8s' }}></div>
                 <div className="wave-blob bg-secondary-fixed top-[15%] left-[40%]" style={{ animationDelay: '-12s' }}></div>
                 <div className="wave-blob bg-primary-container bottom-[25%] left-[200px]" style={{ animationDelay: '-16s' }}></div>
+
+                {/* Decorative concentric circles in main background */}
+                <div className="absolute top-[10%] right-[-150px] w-[600px] h-[600px] border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute top-[10%] right-[-80px] w-[400px] h-[400px] border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute bottom-[15%] left-[-200px] w-[700px] h-[700px] border-[56px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute bottom-[15%] left-[-100px] w-[450px] h-[450px] border-[36px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
             </div>
 
             {/* Sidebar Backdrop for Mobile */}
