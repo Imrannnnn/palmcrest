@@ -6,6 +6,9 @@ export default function PatientPortal() {
 
     // Sidebar state
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+    
+    // Tab state
+    const [activeTab, setActiveTab] = useState('dashboard');
 
     // Booking state
     const [specialist, setSpecialist] = useState('Dr. Elena Aris (Audiology)');
@@ -148,16 +151,23 @@ export default function PatientPortal() {
                     </div>
                 </div>
                 <nav className="flex-1 space-y-2">
-                    <a className="flex items-center gap-4 px-4 py-3 bg-white/70 backdrop-blur-md rounded-xl text-primary font-bold transition-all duration-300" href="#">
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
+                    <button 
+                        onClick={() => { setActiveTab('dashboard'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                    >
+                        <span className="material-symbols-outlined" style={activeTab === 'dashboard' ? { fontVariationSettings: "'FILL' 1" } : {}}>dashboard</span>
                         <span className="font-label-md tracking-[0.05em]">Dashboard</span>
-                    </a>
+                    </button>
 
-                    <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform" href="#">
-                        <span className="material-symbols-outlined">calendar_today</span>
+                    <button 
+                        onClick={() => { setActiveTab('appointments'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                    >
+                        <span className="material-symbols-outlined" style={activeTab === 'appointments' ? { fontVariationSettings: "'FILL' 1" } : {}}>calendar_today</span>
                         <span className="font-label-md tracking-[0.05em]">Appointments</span>
-                    </a>
-                    <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform" href="#">
+                    </button>
+                    
+                    <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-xl" href="#">
                         <span className="material-symbols-outlined">settings</span>
                         <span className="font-label-md tracking-[0.05em]">Settings</span>
                     </a>
@@ -229,167 +239,212 @@ export default function PatientPortal() {
                     </div>
                 </header>
 
-                <div className="pt-24 px-4 md:px-margin-desktop pb-stack-lg max-w-container-max mx-auto">
-                    {/* Hero Greeting */}
-                    <section className="mb-8 md:mb-stack-lg">
-                        <h3 className="text-headline-lg md:text-display font-display text-primary mb-2">Welcome back, Johnathan.</h3>
-                        <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-2xl">Your health journey is our priority. You have an upcoming consultation with Dr. Aris in 2 days.</p>
+                <div className="pt-20 px-4 md:px-margin-desktop pb-8 max-w-container-max mx-auto">
+                    {/* Hero Greeting Banner */}
+                    <section className="mb-6">
+                        <div className="relative bg-[#2A7B4C] rounded-2xl p-6 md:px-8 md:py-6 overflow-hidden flex items-center justify-between shadow-md">
+                            {/* Decorative concentric circles */}
+                            <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[400px] h-[400px] border-[40px] border-white/10 rounded-full pointer-events-none -ml-32"></div>
+                            <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[250px] h-[250px] border-[30px] border-white/5 rounded-full pointer-events-none -ml-16"></div>
+                            
+                            {/* Decorative icons in background */}
+                            <span className="material-symbols-outlined absolute bottom-[-30px] right-[10%] text-white/10 pointer-events-none" style={{ fontSize: '180px' }}>calendar_today</span>
+
+                            <div className="relative z-10 w-full md:w-2/3">
+                                <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Welcome back, Johnathan.</h3>
+                                <p className="text-sm md:text-base text-white/90 max-w-2xl">Your health journey is our priority. You have an upcoming consultation with Dr. Aris in 2 days.</p>
+                            </div>
+                            
+                            {/* Decorative people image on the right */}
+                            <div className="hidden md:block absolute right-0 bottom-0 top-0 w-1/3 pointer-events-none">
+                                <img src="/ent_hero.png" alt="" className="w-full h-full object-cover object-right-top opacity-90" style={{ WebkitMaskImage: 'linear-gradient(to left, black 40%, transparent 100%)', maskImage: 'linear-gradient(to left, black 40%, transparent 100%)' }} />
+                            </div>
+                        </div>
                     </section>
 
                     {/* Grid Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-gutter">
-                        {/* Left Column: Primary Actions & History */}
-                        <div className="lg:col-span-8 space-y-6 md:space-y-gutter">
-                            {/* Book Appointment Widget */}
-                            <div className="glass-card rounded-3xl p-6 md:p-stack-md">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-secondary">add_task</span>
-                                        Quick Appointment
-                                    </h4>
+                    {activeTab === 'dashboard' && (
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-gutter">
+                            {/* Left Column: Summary & Quick Actions */}
+                            <div className="lg:col-span-8 space-y-6 md:space-y-gutter">
+                                {/* Upcoming Appointment Summary */}
+                                <div className="glass-card rounded-3xl p-6 md:p-stack-md relative overflow-hidden border-l-4 border-secondary">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-secondary">event_available</span>
+                                            Upcoming Appointment
+                                        </h4>
+                                        <button onClick={() => setActiveTab('appointments')} className="text-secondary font-label-md hover:underline">Manage</button>
+                                    </div>
+                                    {bookings.length > 0 ? (
+                                        <div className="flex items-center gap-4 p-4 bg-white/40 rounded-2xl border border-white/60">
+                                            <div className={`w-12 h-12 ${bookings[0].bgClass} rounded-xl flex items-center justify-center ${bookings[0].iconColor}`}>
+                                                <span className="material-symbols-outlined">{bookings[0].icon}</span>
+                                            </div>
+                                            <div>
+                                                <p className="font-label-md text-primary">{bookings[0].title}</p>
+                                                <p className="text-caption text-on-surface-variant">{bookings[0].date}</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-body-md text-on-surface-variant">No upcoming appointments.</p>
+                                    )}
                                 </div>
-                                <form onSubmit={handleBookNow} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-stack-sm items-end">
-                                    <div>
-                                        <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Select Specialist</label>
-                                        <select
-                                            value={specialist}
-                                            onChange={(e) => setSpecialist(e.target.value)}
-                                            className="w-full bg-white/50 border-none rounded-xl py-3 focus:ring-2 focus:ring-secondary/50 outline-none"
-                                        >
-                                            <option>Dr. Elena Aris (Audiology)</option>
-                                            <option>Dr. Marcus Vane (Rhinology)</option>
-                                            <option>Dr. Sarah Chen (Laryngology)</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Preferred Date</label>
-                                        <input
-                                            className="w-full bg-white/50 border-none rounded-xl py-3 focus:ring-2 focus:ring-secondary/50 outline-none"
-                                            type="date"
-                                            value={bookingDate}
-                                            onChange={(e) => setBookingDate(e.target.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <button
-                                            className="w-full btn-primary-gradient text-white py-3 rounded-xl font-label-md shadow-lg shadow-primary/10"
-                                            type="submit"
-                                        >
-                                            Book Now
+                                
+                                {/* Surgery Request Card */}
+                                <div className="bg-primary text-white rounded-3xl p-6 md:p-stack-md shadow-xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary rounded-full blur-[60px] opacity-20 -mr-16 -mt-16"></div>
+                                    <h4 className="text-headline-sm md:text-headline-md font-headline-md mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-secondary-fixed">medical_services</span>
+                                        Surgery Request
+                                    </h4>
+                                    <p className="text-body-md text-on-primary-container mb-6">Need to schedule a procedure? Submit a fast-track request for our surgical team.</p>
+                                    <div className="space-y-4">
+                                        <div className="bg-white/10 p-4 rounded-xl border border-white/10 text-left">
+                                            <p className="text-caption font-label-md text-secondary-fixed mb-1">Fast Track Process</p>
+                                            <p className="text-body-md text-white/90">Typical review time: 24-48 hours</p>
+                                        </div>
+                                        <button className="w-full bg-white text-primary py-3 rounded-xl font-label-md hover:bg-secondary-fixed transition-colors">
+                                            Start Request
                                         </button>
                                     </div>
-                                </form>
+                                </div>
                             </div>
 
-                            {/* Booking History List */}
-                            <div className="glass-card rounded-3xl p-6 md:p-stack-md overflow-hidden">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary">Booking History</h4>
-                                    <button className="text-secondary font-label-md hover:underline">View All</button>
-                                </div>
-                                <div className="space-y-4">
-                                    {bookings.map((b) => (
-                                        <div 
-                                            key={b.id} 
-                                            className="flex items-center justify-between p-4 bg-white/40 rounded-2xl border border-white/60 hover:bg-white/60 transition-colors"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-12 h-12 ${b.bgClass} rounded-xl flex items-center justify-center ${b.iconColor}`}>
-                                                    <span className="material-symbols-outlined">{b.icon}</span>
-                                                </div>
-                                                <div>
-                                                    <p className="font-label-md text-primary">{b.title}</p>
-                                                    <p className="text-caption text-on-surface-variant">{b.date}</p>
-                                                </div>
+                            {/* Right Column: Support & Tips */}
+                            <div className="lg:col-span-4 space-y-6 md:space-y-gutter">
+                                {/* Chat Support */}
+                                <div className="glass-card rounded-3xl p-6 md:p-stack-md border-t-4 border-t-secondary">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="relative">
+                                            <img 
+                                                alt="Support Agent" 
+                                                className="w-12 h-12 rounded-full bg-secondary-container object-cover"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBB2IYbsjlv0LgrI258cJE8ELryf9IINqjBWwaMI1bpDl7JE3YLCsl5NF-j2R_38kwJ8daBfZtL3n6vALJghVHzLVLxrU8a8CUyyzoLgxAUWJLYOTY5V5Qu9ACOrcuJwiGl9qzexcN-GiJ0V4oF-JDbWo-1D2SBEGS3QczfMbhT7_vW8IBNfSESnKUqGJBdUJtmPmzBz4HN0etYPEKRVynAzkn8vvbi1V8aISe2ECp4pNXz1ufRH_ARYrM6pfHFM8q_TP7gVpVyDh8" 
+                                            />
+                                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+                                        </div>
+                                        <div>
+                                            <p className="font-label-md text-primary">Live Concierge</p>
+                                            <p className="text-caption text-emerald-600">Online &amp; ready to help</p>
+                                        </div>
+                                    </div>
+                                    <div className="max-h-48 overflow-y-auto space-y-3 mb-4 pr-1 scrollbar-thin">
+                                        {chatMessages.map((msg) => (
+                                            <div 
+                                                key={msg.id}
+                                                className={`p-3 rounded-2xl text-body-md ${
+                                                    msg.sender === 'user' 
+                                                        ? 'bg-primary text-white ml-6 text-right' 
+                                                        : 'bg-surface-container-low text-on-surface-variant mr-6 text-left italic'
+                                                }`}
+                                            >
+                                                <p>{msg.text}</p>
                                             </div>
-                                            <span className={`px-3 py-1 rounded-full text-caption font-label-md ${b.statusColor}`}>{b.status}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        {/* Right Column: Surgery & Support */}
-                        <div className="lg:col-span-4 space-y-6 md:space-y-gutter">
-                            {/* Surgery Request Card */}
-                            <div className="bg-primary text-white rounded-3xl p-6 md:p-stack-md shadow-xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-secondary rounded-full blur-[60px] opacity-20 -mr-16 -mt-16"></div>
-                                <h4 className="text-headline-sm md:text-headline-md font-headline-md mb-4 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-secondary-fixed">medical_services</span>
-                                    Surgery Request
-                                </h4>
-                                <p className="text-body-md text-on-primary-container mb-6">Need to schedule a procedure? Submit a fast-track request for our surgical team.</p>
-                                <div className="space-y-4">
-                                    <div className="bg-white/10 p-4 rounded-xl border border-white/10 text-left">
-                                        <p className="text-caption font-label-md text-secondary-fixed mb-1">Fast Track Process</p>
-                                        <p className="text-body-md text-white/90">Typical review time: 24-48 hours</p>
+                                        ))}
                                     </div>
-                                    <button className="w-full bg-white text-primary py-3 rounded-xl font-label-md hover:bg-secondary-fixed transition-colors">
-                                        Start Request
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Chat Support */}
-                            <div className="glass-card rounded-3xl p-6 md:p-stack-md border-t-4 border-t-secondary">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="relative">
-                                        <img 
-                                            alt="Support Agent" 
-                                            className="w-12 h-12 rounded-full bg-secondary-container object-cover"
-                                            data-alt="A friendly, professional female customer support agent headshot with headphones on, set against a clean minimalist medical office background with soft diffused lighting and a reassuring smile."
-                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBB2IYbsjlv0LgrI258cJE8ELryf9IINqjBWwaMI1bpDl7JE3YLCsl5NF-j2R_38kwJ8daBfZtL3n6vALJghVHzLVLxrU8a8CUyyzoLgxAUWJLYOTY5V5Qu9ACOrcuJwiGl9qzexcN-GiJ0V4oF-JDbWo-1D2SBEGS3QczfMbhT7_vW8IBNfSESnKUqGJBdUJtmPmzBz4HN0etYPEKRVynAzkn8vvbi1V8aISe2ECp4pNXz1ufRH_ARYrM6pfHFM8q_TP7gVpVyDh8" 
+                                    <form onSubmit={handleSendMessage} className="relative">
+                                        <input
+                                            className="w-full bg-white/50 border border-outline-variant/30 rounded-full py-3 px-5 pr-12 focus:ring-2 focus:ring-secondary/50 focus:border-transparent outline-none text-body-md"
+                                            placeholder="Type a message..."
+                                            type="text"
+                                            value={chatInput}
+                                            onChange={(e) => setChatInput(e.target.value)}
                                         />
-                                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
-                                    </div>
-                                    <div>
-                                        <p className="font-label-md text-primary">Live Concierge</p>
-                                        <p className="text-caption text-emerald-600">Online &amp; ready to help</p>
-                                    </div>
-                                </div>
-                                <div className="max-h-48 overflow-y-auto space-y-3 mb-4 pr-1 scrollbar-thin">
-                                    {chatMessages.map((msg) => (
-                                        <div 
-                                            key={msg.id}
-                                            className={`p-3 rounded-2xl text-body-md ${
-                                                msg.sender === 'user' 
-                                                    ? 'bg-primary text-white ml-6 text-right' 
-                                                    : 'bg-surface-container-low text-on-surface-variant mr-6 text-left italic'
-                                            }`}
+                                        <button
+                                            type="submit"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-secondary rounded-full text-white flex items-center justify-center hover:opacity-90"
                                         >
-                                            <p>{msg.text}</p>
-                                        </div>
-                                    ))}
+                                            <span className="material-symbols-outlined">send</span>
+                                        </button>
+                                    </form>
                                 </div>
-                                <form onSubmit={handleSendMessage} className="relative">
-                                    <input
-                                        className="w-full bg-white/50 border border-outline-variant/30 rounded-full py-3 px-5 pr-12 focus:ring-2 focus:ring-secondary/50 focus:border-transparent outline-none text-body-md"
-                                        placeholder="Type a message..."
-                                        type="text"
-                                        value={chatInput}
-                                        onChange={(e) => setChatInput(e.target.value)}
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-secondary rounded-full text-white flex items-center justify-center hover:opacity-90"
-                                    >
-                                        <span className="material-symbols-outlined">send</span>
-                                    </button>
-                                </form>
-                            </div>
 
-                            {/* Health Tip Card */}
-                            <div className="p-6 bg-tertiary-container rounded-3xl text-on-tertiary">
-                                <span className="material-symbols-outlined text-tertiary-fixed text-4xl mb-4">lightbulb</span>
-                                <h5 className="font-headline-md mb-2 text-white">Winter ENT Care</h5>
-                                <p className="text-body-md text-white/80 mb-4">Keep indoor humidity between 30% and 50% to prevent dry nasal passages during the colder months.</p>
-                                <a className="text-tertiary-fixed font-label-md flex items-center gap-1 hover:gap-2 transition-all" href="#">
-                                    Learn more <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                                </a>
+                                {/* Health Tip Card */}
+                                <div className="p-6 bg-tertiary-container rounded-3xl text-on-tertiary">
+                                    <span className="material-symbols-outlined text-tertiary-fixed text-4xl mb-4">lightbulb</span>
+                                    <h5 className="font-headline-md mb-2 text-white">Winter ENT Care</h5>
+                                    <p className="text-body-md text-white/80 mb-4">Keep indoor humidity between 30% and 50% to prevent dry nasal passages during the colder months.</p>
+                                    <a className="text-tertiary-fixed font-label-md flex items-center gap-1 hover:gap-2 transition-all" href="#">
+                                        Learn more <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
+
+                    {activeTab === 'appointments' && (
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-gutter">
+                            <div className="lg:col-span-12 space-y-6 md:space-y-gutter">
+                                {/* Book Appointment Widget */}
+                                <div className="glass-card rounded-3xl p-6 md:p-stack-md">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-secondary">add_task</span>
+                                            Book New Appointment
+                                        </h4>
+                                    </div>
+                                    <form onSubmit={handleBookNow} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-stack-sm items-end">
+                                        <div>
+                                            <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Select Specialist</label>
+                                            <select
+                                                value={specialist}
+                                                onChange={(e) => setSpecialist(e.target.value)}
+                                                className="w-full bg-white/50 border-none rounded-xl py-3 focus:ring-2 focus:ring-secondary/50 outline-none"
+                                            >
+                                                <option>Dr. Elena Aris (Audiology)</option>
+                                                <option>Dr. Marcus Vane (Rhinology)</option>
+                                                <option>Dr. Sarah Chen (Laryngology)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Preferred Date</label>
+                                            <input
+                                                className="w-full bg-white/50 border-none rounded-xl py-3 focus:ring-2 focus:ring-secondary/50 outline-none"
+                                                type="date"
+                                                value={bookingDate}
+                                                onChange={(e) => setBookingDate(e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <button
+                                                className="w-full btn-primary-gradient text-white py-3 rounded-xl font-label-md shadow-lg shadow-primary/10"
+                                                type="submit"
+                                            >
+                                                Book Now
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                {/* Booking History List */}
+                                <div className="glass-card rounded-3xl p-6 md:p-stack-md overflow-hidden">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary">All Appointments</h4>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {bookings.map((b) => (
+                                            <div 
+                                                key={b.id} 
+                                                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/40 rounded-2xl border border-white/60 hover:bg-white/60 transition-colors gap-4"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-12 h-12 ${b.bgClass} rounded-xl flex items-center justify-center ${b.iconColor}`}>
+                                                        <span className="material-symbols-outlined">{b.icon}</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-label-md text-primary">{b.title}</p>
+                                                        <p className="text-caption text-on-surface-variant">{b.date}</p>
+                                                    </div>
+                                                </div>
+                                                <span className={`px-3 py-1 rounded-full text-caption font-label-md ${b.statusColor}`}>{b.status}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}

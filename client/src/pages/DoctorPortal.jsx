@@ -5,6 +5,7 @@ export default function DoctorPortal() {
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('dashboard');
     const [selectedDay, setSelectedDay] = useState('WED');
 
     const scheduleData = {
@@ -163,18 +164,27 @@ export default function DoctorPortal() {
                     </div>
                 </div>
                 <nav className="flex-grow flex flex-col gap-2">
-                    <a className="flex items-center gap-4 px-4 py-3 bg-white/70 backdrop-blur-md rounded-xl text-primary font-bold transition-all duration-300 ease-smooth" href="#">
+                    <button 
+                        onClick={() => { setActiveTab('dashboard'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                    >
                         <span className="material-symbols-outlined">dashboard</span>
                         <span className="text-label-md">Dashboard</span>
-                    </a>
-                    <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-xl" href="#">
+                    </button>
+                    <button 
+                        onClick={() => { setActiveTab('patients'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'patients' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                    >
                         <span className="material-symbols-outlined">group</span>
                         <span className="text-label-md">Patients</span>
-                    </a>
-                    <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-xl" href="#">
+                    </button>
+                    <button 
+                        onClick={() => { setActiveTab('appointments'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                    >
                         <span className="material-symbols-outlined">calendar_today</span>
                         <span className="text-label-md">Appointments</span>
-                    </a>
+                    </button>
                     <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-xl" href="#">
                         <span className="material-symbols-outlined">settings</span>
                         <span className="text-label-md">Settings</span>
@@ -248,7 +258,8 @@ export default function DoctorPortal() {
                 <div className="flex-grow overflow-y-auto px-4 md:px-margin-desktop pt-6 pb-10 no-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-gutter">
                         {/* Weekly Appointment Schedule (Calendar) - Spans 8 cols */}
-                        <section className="col-span-1 md:col-span-12 lg:col-span-8 flex flex-col gap-4">
+                        {(activeTab === 'dashboard' || activeTab === 'appointments') && (
+                        <section className={`col-span-1 md:col-span-12 ${activeTab === 'appointments' ? 'lg:col-span-8' : 'lg:col-span-8'} flex flex-col gap-4`}>
                             <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col h-[480px]">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-headline-md font-headline-md text-primary">Agenda & Schedule</h3>
@@ -338,10 +349,13 @@ export default function DoctorPortal() {
                                 </button>
                             </div>
                         </section>
+                        )}
 
                         {/* Right Column (Patient Cards & Surgery Queue) - Spans 4 cols */}
-                        <section className="col-span-1 md:col-span-12 lg:col-span-4 flex flex-col gap-6 md:gap-gutter">
+                        {(activeTab === 'dashboard' || activeTab === 'patients' || activeTab === 'appointments') && (
+                        <section className={`col-span-1 md:col-span-12 ${activeTab === 'patients' ? 'lg:col-span-12' : 'lg:col-span-4'} flex flex-col gap-6 md:gap-gutter`}>
                             {/* Patient Requests Queue */}
+                            {(activeTab === 'dashboard' || activeTab === 'patients') && (
                             <div className="glass-card rounded-3xl p-4 md:p-6">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 class="text-headline-sm font-headline-md text-primary font-bold">New Patient Requests</h3>
@@ -384,7 +398,9 @@ export default function DoctorPortal() {
                                     ))}
                                 </div>
                             </div>
+                            )}
                             {/* Surgery Queue */}
+                            {(activeTab === 'dashboard' || activeTab === 'appointments') && (
                             <div className="glass-card rounded-3xl p-4 md:p-6 flex-grow">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 class="text-headline-sm font-headline-md text-primary font-bold">Surgery Queue</h3>
@@ -405,9 +421,12 @@ export default function DoctorPortal() {
                                     </div>
                                 </div>
                             </div>
+                            )}
                         </section>
+                        )}
 
                         {/* Patient Medical Notes - Bento Section */}
+                        {(activeTab === 'dashboard' || activeTab === 'patients') && (
                         <section className="col-span-1 md:col-span-12 glass-card rounded-3xl p-6 md:p-8 mb-8">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                                 <div>
@@ -437,6 +456,7 @@ export default function DoctorPortal() {
                                 ))}
                             </div>
                         </section>
+                        )}
                     </div>
                 </div>
             </main>
