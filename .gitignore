@@ -1,0 +1,70 @@
+# ============================================================
+# ROOT .gitignore — Palmcrest Full-Stack Project
+# ============================================================
+
+# ─── Environment & Secrets ───────────────────────────────────
+.env
+.env.*
+!.env.example          # Allow the example template to be committed
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+secrets/
+config/secrets/
+
+# ─── Node / npm ──────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+
+# ─── Build Outputs ───────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.output/
+
+# ─── Vite ────────────────────────────────────────────────────
+*.local
+vite.config.js.timestamp-*
+
+# ─── Database & Uploaded Files ────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+data/
+mongo-data/
+uploads/
+
+# ─── OS & Editor ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── Test & Coverage ─────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ─── Misc ────────────────────────────────────────────────────
+.cache/
+.parcel-cache/
+*.tsbuildinfo

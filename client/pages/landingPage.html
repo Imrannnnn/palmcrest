@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>PalmCrest ENT | Advanced Ear, Nose &amp; Throat Care</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Theme Configuration -->
+    <script
+        id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { outline: "#707979", "surface-tint": "#2a676c", "secondary-container": "#fcb73e", "surface-variant": "#e0e3e5", "on-primary-fixed-variant": "#074f54", "on-primary-fixed": "#002022", "on-primary": "#ffffff", "surface-container-lowest": "#ffffff", "primary-container": "#004b50", "primary-fixed-dim": "#96d1d6", "surface-container-high": "#e6e8ea", "tertiary-container": "#004d3f", "on-error-container": "#93000a", "on-surface-variant": "#404849", "inverse-primary": "#96d1d6", "on-secondary-fixed": "#281800", "on-tertiary-container": "#24c6a7", error: "#ba1a1a", "tertiary-fixed": "#6bfad8", surface: "#f7f9fb", "surface-container-low": "#f2f4f6", "tertiary-fixed-dim": "#48ddbc", "outline-variant": "#bfc8c9", "on-error": "#ffffff", "on-secondary-container": "#6e4a00", "on-tertiary": "#ffffff", "on-tertiary-fixed-variant": "#005142", background: "#f7f9fb", primary: "#003336", secondary: "#805600", "on-surface": "#191c1e", "primary-fixed": "#b1edf2", "inverse-surface": "#2d3133", "surface-bright": "#f7f9fb", "inverse-on-surface": "#eff1f3", "surface-container-highest": "#e0e3e5", "surface-container": "#eceef0", "on-tertiary-fixed": "#002019", tertiary: "#00342a", "on-background": "#191c1e", "on-secondary": "#ffffff", "secondary-fixed": "#ffddaf", "surface-dim": "#d8dadc", "on-primary-container": "#7fbabf", "error-container": "#ffdad6", "on-secondary-fixed-variant": "#614000", "secondary-fixed-dim": "#ffba42" }, borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" }, spacing: { "margin-desktop": "64px", "margin-mobile": "20px", "stack-lg": "48px", "stack-sm": "12px", gutter: "24px", base: "8px", "container-max": "1440px", "stack-md": "24px" }, fontFamily: { "headline-lg-mobile": ["Geist"], "label-md": ["Geist"], "body-lg": ["Inter"], "headline-md": ["Geist"], "headline-lg": ["Geist"], display: ["Geist"], "body-md": ["Inter"], caption: ["Inter"], headline: ["Geist"], body: ["Inter"], label: ["Geist"] }, fontSize: { "headline-lg-mobile": ["24px", { lineHeight: "1.2", fontWeight: "500" }], "label-md": ["14px", { lineHeight: "1.4", letterSpacing: "0.05em", fontWeight: "600" }], "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }], "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "500" }], "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "0.01em", fontWeight: "500" }], display: ["48px", { lineHeight: "1.1", letterSpacing: "0.02em", fontWeight: "600" }], "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }], caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }] } } } };</script>
+    <style>
+        body {
+            background-color: #f7f9fb;
+            color: #191c1e;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #004B50 0%, #00E5FF 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .blob {
+            position: absolute;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.3;
+            border-radius: 50%;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(50px, 100px) scale(1.2);
+            }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="font-body-md text-body-md">
+    <!-- Background Atmospheric Blobs -->
+    <div class="blob w-[500px] h-[500px] bg-primary-container top-[-100px] left-[-100px]"></div>
+    <div class="blob w-[400px] h-[400px] bg-secondary-container bottom-[-100px] right-[-100px]"
+        style="animation-delay: -5s;"></div>
+    <!-- TopNavBar -->
+    <nav
+        class="fixed top-0 w-full z-50 bg-white/70 dark:bg-surface-container/70 backdrop-blur-xl border-b border-white/40 dark:border-outline-variant/20 shadow-sm">
+        <div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+            <div
+                class="text-headline-md font-headline-md font-bold tracking-tight text-primary dark:text-primary-fixed">
+                PalmCrest ENT
+            </div>
+            <div class="hidden md:flex items-center gap-8">
+                <a class="text-secondary dark:text-secondary-fixed-dim font-bold border-b-2 border-secondary"
+                    href="#">Services</a>
+                <a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors"
+                    href="#">Specialists</a>
+                <a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors"
+                    href="#">Emergency</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <button
+                    class="btn-primary text-white px-6 py-2.5 rounded-full font-label-md text-label-md uppercase tracking-wider">
+                    Book Appointment
+                </button>
+            </div>
+        </div>
+    </nav>
+    <!-- Hero Section -->
+    <section
+        class="relative pt-40 pb-20 px-margin-desktop max-w-container-max mx-auto min-h-screen flex flex-col justify-center overflow-hidden">
+        <!-- SVG Wave Lines Animation Placeholder -->
+        <div class="absolute inset-0 z-[-1] opacity-20 pointer-events-none">
+            <svg class="w-full h-full" viewbox="0 0 1440 800" xmlns="http://www.w3.org/2000/svg">
+                <path class="text-secondary-container" d="M0,400 Q360,300 720,400 T1440,400" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <animate attributename="d" dur="10s" repeatcount="indefinite"
+                        values="M0,400 Q360,300 720,400 T1440,400; M0,400 Q360,500 720,400 T1440,400; M0,400 Q360,300 720,400 T1440,400">
+                    </animate>
+                </path>
+            </svg>
+        </div>
+        <div class="max-w-3xl">
+            <h1 class="font-display text-display text-primary mb-6">
+                Advanced Ear, Nose &amp; <span class="text-secondary">Throat Care</span>
+            </h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant mb-10 leading-relaxed">
+                Experience medical excellence at the intersection of clinical precision and high-tech innovation.
+                PalmCrest ENT provides a sanctuary of care with world-class specialists dedicated to your sensory
+                health.
+            </p>
+            <div class="flex flex-wrap gap-4">
+                <button class="btn-primary text-white px-8 py-4 rounded-xl font-label-md text-label-md">
+                    Book Appointment
+                </button>
+                <button
+                    class="bg-white/50 backdrop-blur-md border border-outline-variant/30 text-primary px-8 py-4 rounded-xl font-label-md text-label-md hover:bg-white transition-all">
+                    Meet Specialists
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- Professional Doctor Image Section (Bento Style) -->
+    <section class="px-margin-desktop max-w-container-max mx-auto py-stack-lg reveal">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+            <div class="md:col-span-7 rounded-3xl overflow-hidden glass-card h-[500px] relative group">
+                <img alt="Specialist"
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    data-alt="A professional ENT specialist in a high-tech medical facility, wearing a crisp white coat and a focused expression. The background features blurred diagnostic screens showing 3D anatomical scans of the inner ear. The lighting is cool-toned and clinical yet welcoming, with soft cyan highlights reflecting the brand's modern healthcare aesthetic. The atmosphere conveys immense trust and technological sophistication."
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDBDbx2gC4OkLhELmkJrDQiUR5oMzzPvadarbunbC0WcNOoc1r1AkLzG3nvPrAeEbUklWmRYtoUtWKK4GEWUEuMb4xB9daaSRbr7Lwtb_EQ_5PvzMBlw7pvlN3vcHoJ7POm4nALqT6WAmMSv2reJ68-uoCDEaoquQaHzDSKkuIfUKeUKwlBlKsgBiYPFrk4sBZ4AWy779DWzAFBvndy8KswNWwXgKzD3c-HbxkHnHjbyYIhTy-wu8djAgai_dfQHG0rIixhOo9oHg" />
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
+                <div class="absolute bottom-8 left-8 text-white">
+                    <p class="font-label-md text-label-md uppercase tracking-widest opacity-80">Chief of Surgery</p>
+                    <h3 class="font-headline-lg text-headline-lg">Dr. Elena Vance</h3>
+                </div>
+            </div>
+            <div class="md:col-span-5 flex flex-col gap-gutter">
+                <div class="glass-card p-8 rounded-3xl flex-1 flex flex-col justify-center">
+                    <div class="w-12 h-12 bg-secondary-container rounded-full flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-primary">biotech</span>
+                    </div>
+                    <h4 class="font-headline-md text-headline-md text-primary mb-4">Pioneering Technology</h4>
+                    <p class="text-on-surface-variant">We utilize 3D endoscopy and robotic-assisted surgical systems to
+                        ensure the highest level of precision and minimal recovery times for our patients.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl flex-1 flex flex-col justify-center">
+                    <div class="w-12 h-12 bg-tertiary-fixed-dim rounded-full flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-primary">verified_user</span>
+                    </div>
+                    <h4 class="font-headline-md text-headline-md text-primary mb-4">Patient-First Ethics</h4>
+                    <p class="text-on-surface-variant">Personalized care plans tailored to your unique biological needs,
+                        ensuring comfort throughout your journey at PalmCrest.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Services Section -->
+    <section class="px-margin-desktop max-w-container-max mx-auto py-stack-lg reveal">
+        <div class="text-center mb-16">
+            <span class="text-secondary font-label-md text-label-md uppercase tracking-[0.2em]">Our Expertise</span>
+            <h2 class="font-headline-lg text-headline-lg text-primary mt-4">Specialized ENT Solutions</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+            <!-- Ear Card -->
+            <div class="glass-card p-10 rounded-3xl hover:-translate-y-2 transition-transform duration-300">
+                <span class="material-symbols-outlined text-display text-secondary-container mb-6 block">hearing</span>
+                <h3 class="font-headline-md text-headline-md text-primary mb-4">Ear Care</h3>
+                <p class="text-on-surface-variant mb-6">Comprehensive diagnostics for hearing loss, tinnitus management,
+                    and advanced middle-ear microsurgery.</p>
+                <a class="text-secondary font-label-md flex items-center gap-2 hover:gap-4 transition-all" href="#">
+                    Learn More <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+            </div>
+            <!-- Nose Card -->
+            <div class="glass-card p-10 rounded-3xl hover:-translate-y-2 transition-transform duration-300">
+                <span class="material-symbols-outlined text-display text-secondary-container mb-6 block">air</span>
+                <h3 class="font-headline-md text-headline-md text-primary mb-4">Nasal Health</h3>
+                <p class="text-on-surface-variant mb-6">Expert treatment for chronic sinusitis, allergic rhinitis, and
+                    functional rhinoplasty using minimally invasive techniques.</p>
+                <a class="text-secondary font-label-md flex items-center gap-2 hover:gap-4 transition-all" href="#">
+                    Learn More <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+            </div>
+            <!-- Throat Card -->
+            <div class="glass-card p-10 rounded-3xl hover:-translate-y-2 transition-transform duration-300">
+                <span
+                    class="material-symbols-outlined text-display text-secondary-container mb-6 block">voice_over_off</span>
+                <h3 class="font-headline-md text-headline-md text-primary mb-4">Throat &amp; Voice</h3>
+                <p class="text-on-surface-variant mb-6">Specialized care for vocal fold disorders, swallowing
+                    difficulties, and comprehensive head and neck oncology.</p>
+                <a class="text-secondary font-label-md flex items-center gap-2 hover:gap-4 transition-all" href="#">
+                    Learn More <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+    </section>
+    <!-- About Section -->
+    <section class="bg-surface-container-low py-stack-lg mt-stack-lg reveal">
+        <div
+            class="px-margin-desktop max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-2 gap-stack-lg items-center">
+            <div class="relative">
+                <div class="aspect-square rounded-full overflow-hidden border-[16px] border-white/50 shadow-2xl">
+                    <img alt="Sanctuary" class="w-full h-full object-cover"
+                        data-alt="An expansive view of the PalmCrest ENT Hospital lobby, showcasing minimalist architecture with high ceilings, glass walls, and lush indoor greenery. The space is flooded with natural morning light, creating a serene, spa-like environment rather than a traditional hospital. The design features soft curves and premium materials like marble and light oak wood, reflecting a luxury healthcare brand."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZrZ_xErMbuGeY6iGsF5uUDOcB5lAkTAfGgiInmNnXd71ylBFUZWlbENzpMzizdaOVDzGQgT1WoRiv5pCEWVabPK3Os___YGLGDtHgRvJL7I04DfFXPlomayUJgUcQIrgAi1PLt9yPgJFT3yC2CM4aodxoKUBv7lZ0WVH6XpKs0kWHDEXo188V2-09UM1T8i2tdOqezL6v29I-wrDuIBSkPi6WxtQavBVGU5Kz6XVIC4cQsSj8_FbEdqn-qRzVNeKsVhjGoAihO3U" />
+                </div>
+                <!-- Stat Badge -->
+                <div class="absolute -bottom-10 -right-10 glass-card p-8 rounded-2xl shadow-xl">
+                    <p class="font-display text-display text-primary">25+</p>
+                    <p class="font-label-md text-on-surface-variant">Years of Clinical Pedigree</p>
+                </div>
+            </div>
+            <div class="pl-0 md:pl-16">
+                <h2 class="font-display text-headline-lg text-primary mb-6">An Advanced Sanctuary of Care</h2>
+                <p class="text-body-lg text-on-surface-variant mb-8">
+                    PalmCrest ENT was founded on the principle that medical treatment should be as precise as it is
+                    comfortable. Our facility is designed to reduce patient anxiety, utilizing acoustic engineering and
+                    soft-light aesthetics to create a calming environment.
+                </p>
+                <ul class="space-y-4 mb-10">
+                    <li class="flex items-start gap-4">
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span class="text-on-surface">Board-certified specialists from world-renowned medical
+                            institutions.</span>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span class="text-on-surface">Integrated digital health records for seamless patient
+                            journeys.</span>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span class="text-on-surface">On-site surgical suites equipped with AI-assisted
+                            diagnostics.</span>
+                    </li>
+                </ul>
+                <button
+                    class="bg-primary text-white px-8 py-4 rounded-xl font-label-md hover:bg-primary/90 transition-colors">
+                    Our History
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- Testimonials -->
+    <section class="px-margin-desktop max-w-container-max mx-auto py-stack-lg reveal">
+        <h2 class="font-headline-lg text-headline-lg text-primary text-center mb-16">Patient Stories</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+            <div class="glass-card p-10 rounded-3xl relative">
+                <span
+                    class="material-symbols-outlined text-[64px] text-secondary/10 absolute top-4 right-8">format_quote</span>
+                <p class="text-body-lg text-on-surface-variant italic mb-8 relative z-10">
+                    "The level of care I received for my chronic sinusitis was unlike anything I've experienced. The
+                    technology they used to map my sinuses before surgery gave me so much confidence."
+                </p>
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-surface-container-highest overflow-hidden">
+                        <img alt="Sarah L."
+                            data-alt="Portrait of a smiling woman in her late 30s, looking relaxed and healthy. The lighting is soft and natural, emphasizing a sense of relief and recovery. Background is a blurred modern interior."
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA94UoN7Waqd_dYMzFyLkf8xmryH3nUxWEe4hRSuhVexWXsC146RV_QTUlBaaDiyybHMmRQD1W_f2PiKuQxuwPMTz2ewi0V4j-JBjfeWfe0oZKsTxPS8vn48FVJj-eZym9kU73ZnrmR2i352kGXoA2esmIPHc5w2uEArIe-EsPV7oJOhmdbM8rDsW8RQ4dro7UvnvpSsGzdYjcv60ULJKQjMwX2Y7LmnRXKQctWPJQwSIXd_Ar8riwVAFV44Y2E-ke-OwbtVZNB0NE" />
+                    </div>
+                    <div>
+                        <p class="font-bold text-primary">Sarah J. Lindquist</p>
+                        <p class="text-caption text-on-surface-variant uppercase tracking-wider">Voice Specialist
+                            Patient</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-10 rounded-3xl relative">
+                <span
+                    class="material-symbols-outlined text-[64px] text-secondary/10 absolute top-4 right-8">format_quote</span>
+                <p class="text-body-lg text-on-surface-variant italic mb-8 relative z-10">
+                    "PalmCrest ENT is truly a futuristic sanctuary. Dr. Vance and her team treated my hearing loss with
+                    such precision. I'm hearing sounds I haven't heard in a decade."
+                </p>
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-surface-container-highest overflow-hidden">
+                        <img alt="Robert M."
+                            data-alt="Portrait of a middle-aged man with a graying beard, looking thoughtful and content. The setting is bright and professional, suggesting a positive clinical outcome. The style is clean and high-fidelity."
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaTQrvTDwhmZs256USSJC-cxiU-e2X43ppPaAAfbQyugIRHiHqxNqc0x8EasxIs1FVkvQJamqs3B0ovmP_eJhH5lVbd4OEWjrwf_CMcFa-JI0Pc39NR4r8UvmgH9TFAYlHfcKnmsZsiUi-eQKxn9nP62BK66V24oBswE1suZnLkvtyinAYpQBxKse5WNEdCjkB9CkriUjbMOrbE62-oz6XiUZKUx0_4Sgnl4rdvrFUD9llM6xpgE0jRuk8oJC_a9LLVnY-3fweNYQ" />
+                    </div>
+                    <div>
+                        <p class="font-bold text-primary">Robert McAllister</p>
+                        <p class="text-caption text-on-surface-variant uppercase tracking-wider">Hearing Restoration
+                            Patient</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Emergency Contact Section -->
+    <section class="mx-margin-desktop max-w-container-max md:mx-auto mb-stack-lg reveal">
+        <div
+            class="bg-primary-container rounded-[2rem] p-12 md:p-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
+            <!-- Decorative Pattern -->
+            <div class="absolute inset-0 opacity-10 pointer-events-none">
+                <div class="absolute top-0 left-0 w-full h-full"
+                    style="background-image: radial-gradient(circle at 2px 2px, #fff 1px, transparent 0); background-size: 40px 40px;">
+                </div>
+            </div>
+            <div class="relative z-10 text-white max-w-xl">
+                <span
+                    class="bg-error px-4 py-1 rounded-full text-caption font-bold uppercase tracking-widest mb-6 inline-block">24/7
+                    Priority</span>
+                <h2 class="font-display text-display mb-6">Emergency ENT Portal</h2>
+                <p class="text-body-lg opacity-80">Acute ear trauma, sudden hearing loss, or airway emergencies require
+                    immediate specialist intervention. Our priority unit is standing by.</p>
+            </div>
+            <div class="relative z-10 flex flex-col gap-4 w-full md:w-auto">
+                <a class="bg-white text-primary px-10 py-6 rounded-2xl font-display text-headline-md flex items-center justify-center gap-4 hover:scale-105 transition-transform"
+                    href="tel:1-800-PALM-ENT">
+                    <span class="material-symbols-outlined text-primary"
+                        style="font-variation-settings: 'FILL' 1;">call</span>
+                    +1-800-PALM-ENT
+                </a>
+                <p class="text-white text-center opacity-60 font-label-md">Direct line to On-Call Specialists</p>
+            </div>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="bg-surface-container-lowest dark:bg-surface-dim border-t border-outline-variant/30 w-full py-12">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
+            <div class="col-span-1 md:col-span-1">
+                <div class="text-headline-sm font-headline-md text-primary dark:text-primary-fixed mb-6">PalmCrest ENT
+                </div>
+                <p class="text-body-md text-on-surface-variant">The Advanced Sanctuary of Care. Leading the future of
+                    ENT medicine through innovation and empathy.</p>
+            </div>
+            <div>
+                <h4 class="font-label-md text-primary mb-6">Services</h4>
+                <ul class="space-y-3">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-all" href="#">Hearing
+                            Diagnostics</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-all" href="#">Sinus Surgery</a>
+                    </li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-all" href="#">Voice Therapy</a>
+                    </li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-all" href="#">Sleep Apnea</a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-label-md text-primary mb-6">Resources</h4>
+                <ul class="space-y-3">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-all" href="#">Patient Portal</a>
+                    </li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-all" href="#">Specialist
+                            Directory</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-all" href="#">Department
+                            Directory</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-all" href="#">Terms of
+                            Service</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-label-md text-primary mb-6">Contact</h4>
+                <p class="text-on-surface-variant mb-2">100 Clinical Way, Medical District</p>
+                <p class="text-on-surface-variant mb-4">info@palmcrestent.com</p>
+                <div class="flex gap-4">
+                    <div
+                        class="w-10 h-10 rounded-full glass-card flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all cursor-pointer">
+                        <span class="material-symbols-outlined">share</span>
+                    </div>
+                    <div
+                        class="w-10 h-10 rounded-full glass-card flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all cursor-pointer">
+                        <span class="material-symbols-outlined">public</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div
+            class="mt-12 pt-8 border-t border-outline-variant/10 px-margin-desktop max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-caption font-caption text-on-surface-variant">© 2024 PalmCrest ENT Hospital. Advanced
+                Sanctuary of Care.</p>
+            <div class="flex gap-8">
+                <a class="text-caption font-caption text-on-surface-variant hover:text-primary" href="#">Privacy
+                    Policy</a>
+                <a class="text-caption font-caption text-on-surface-variant hover:text-primary" href="#">Cookie
+                    Settings</a>
+            </div>
+        </div>
+    </footer>
+    <!-- Side Navigation Menu (Mobile Only) -->
+    <div class="fixed inset-0 bg-white z-[60] transform translate-x-full transition-transform duration-500 md:hidden"
+        id="mobile-nav">
+        <div class="p-8 flex flex-col h-full">
+            <div class="flex justify-between items-center mb-12">
+                <span class="text-headline-md font-bold text-primary">PalmCrest</span>
+                <button class="p-2" onclick="toggleMobileNav()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="flex flex-col gap-8">
+                <a class="text-display text-primary" href="#">Services</a>
+                <a class="text-display text-primary" href="#">Specialists</a>
+                <a class="text-display text-primary" href="#">Emergency</a>
+                <a class="text-display text-primary" href="#">Contact</a>
+            </div>
+            <div class="mt-auto">
+                <button class="w-full btn-primary text-white py-6 rounded-2xl text-headline-md">
+                    Book Now
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Scroll & Interactions Script -->
+    <script>
+        // Reveal on scroll logic
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Mobile Nav Toggle
+        function toggleMobileNav() {
+            const nav = document.getElementById('mobile-nav');
+            if (nav.classList.contains('translate-x-full')) {
+                nav.classList.remove('translate-x-full');
+            } else {
+                nav.classList.add('translate-x-full');
+            }
+        }
+
+        // Smooth Navbar Shrink
+        window.onscroll = function () {
+            const nav = document.querySelector('nav');
+            if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+                nav.classList.add('py-2');
+                nav.classList.remove('py-4');
+            } else {
+                nav.classList.add('py-4');
+                nav.classList.remove('py-2');
+            }
+        };
+    </script>
+</body>
+
+</html>

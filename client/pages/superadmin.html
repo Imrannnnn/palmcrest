@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>PalmCrest ENT | Super Admin Dashboard</title>
+    <!-- Fonts & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Theme Configuration -->
+    <script
+        id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { outline: "#707979", "surface-tint": "#2a676c", "secondary-container": "#fcb73e", "surface-variant": "#e0e3e5", "on-primary-fixed-variant": "#074f54", "on-primary-fixed": "#002022", "on-primary": "#ffffff", "surface-container-lowest": "#ffffff", "primary-container": "#004b50", "primary-fixed-dim": "#96d1d6", "surface-container-high": "#e6e8ea", "tertiary-container": "#004d3f", "on-error-container": "#93000a", "on-surface-variant": "#404849", "inverse-primary": "#96d1d6", "on-secondary-fixed": "#281800", "on-tertiary-container": "#24c6a7", error: "#ba1a1a", "tertiary-fixed": "#6bfad8", surface: "#f7f9fb", "surface-container-low": "#f2f4f6", "tertiary-fixed-dim": "#48ddbc", "outline-variant": "#bfc8c9", "on-error": "#ffffff", "on-secondary-container": "#6e4a00", "on-tertiary": "#ffffff", "on-tertiary-fixed-variant": "#005142", background: "#f7f9fb", primary: "#003336", secondary: "#805600", "on-surface": "#191c1e", "primary-fixed": "#b1edf2", "inverse-surface": "#2d3133", "surface-bright": "#f7f9fb", "inverse-on-surface": "#eff1f3", "surface-container-highest": "#e0e3e5", "surface-container": "#eceef0", "on-tertiary-fixed": "#002019", tertiary: "#00342a", "on-background": "#191c1e", "on-secondary": "#ffffff", "secondary-fixed": "#ffddaf", "surface-dim": "#d8dadc", "on-primary-container": "#7fbabf", "error-container": "#ffdad6", "on-secondary-fixed-variant": "#614000", "secondary-fixed-dim": "#ffba42" }, borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" }, spacing: { "margin-desktop": "64px", "margin-mobile": "20px", "stack-lg": "48px", "stack-sm": "12px", gutter: "24px", base: "8px", "container-max": "1440px", "stack-md": "24px" }, fontFamily: { "headline-lg-mobile": ["Geist"], "label-md": ["Geist"], "body-lg": ["Inter"], "headline-md": ["Geist"], "headline-lg": ["Geist"], display: ["Geist"], "body-md": ["Inter"], caption: ["Inter"], headline: ["Geist"], body: ["Inter"], label: ["Geist"] }, fontSize: { "headline-lg-mobile": ["24px", { lineHeight: "1.2", fontWeight: "500" }], "label-md": ["14px", { lineHeight: "1.4", letterSpacing: "0.05em", fontWeight: "600" }], "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }], "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "500" }], "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "0.01em", fontWeight: "500" }], display: ["48px", { lineHeight: "1.1", letterSpacing: "0.02em", fontWeight: "600" }], "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }], caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }] } } } };</script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-headline {
+            font-family: 'Geist', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .bg-blob {
+            position: fixed;
+            z-index: -1;
+            filter: blur(120px);
+            opacity: 0.15;
+            border-radius: 50%;
+        }
+
+        .animate-smooth {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-background min-h-screen overflow-x-hidden">
+    <!-- Animated Background Blobs -->
+    <div class="bg-blob bg-primary w-[500px] h-[500px] -top-48 -left-48"></div>
+    <div class="bg-blob bg-secondary w-[400px] h-[400px] top-1/2 -right-24"></div>
+    <div class="bg-blob bg-tertiary w-[300px] h-[300px] bottom-0 left-1/3"></div>
+    <!-- Side Navigation Shell -->
+    <aside
+        class="fixed left-0 top-0 h-full w-[280px] z-40 bg-surface/50 dark:bg-surface-container-low/50 backdrop-blur-2xl border-r border-white/40 dark:border-outline-variant/10 flex flex-col p-6 gap-stack-sm hidden md:flex">
+        <div class="mb-stack-lg">
+            <h1 class="text-headline-sm font-headline-md text-primary font-bold">PalmCrest ENT</h1>
+            <p class="text-label-md font-label-md tracking-[0.05em] text-on-surface-variant opacity-70">Clinical
+                Excellence</p>
+        </div>
+        <nav class="flex-grow flex flex-col gap-2">
+            <!-- Active Tab: Dashboard -->
+            <a class="flex items-center gap-3 px-4 py-3 bg-white/70 backdrop-blur-md rounded-xl text-primary font-bold animate-smooth"
+                href="#">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-label-md font-label-md tracking-[0.05em]">Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group"
+                href="#">
+                <span class="material-symbols-outlined">group</span>
+                <span class="text-label-md font-label-md tracking-[0.05em]">Patients</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group"
+                href="#">
+                <span class="material-symbols-outlined">calendar_today</span>
+                <span class="text-label-md font-label-md tracking-[0.05em]">Appointments</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group"
+                href="#">
+                <span class="material-symbols-outlined">description</span>
+                <span class="text-label-md font-label-md tracking-[0.05em]">Medical Records</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group"
+                href="#">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="text-label-md font-label-md tracking-[0.05em]">Settings</span>
+            </a>
+        </nav>
+        <div class="mt-auto flex flex-col gap-2 pt-6 border-t border-outline-variant/20">
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth"
+                href="#">
+                <span class="material-symbols-outlined">help</span>
+                <span class="text-label-md font-label-md tracking-[0.05em]">Help Support</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth"
+                href="#">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="text-label-md font-label-md tracking-[0.05em]">Logout</span>
+            </a>
+        </div>
+    </aside>
+    <!-- Main Content Canvas -->
+    <main class="md:ml-[280px] min-h-screen">
+        <!-- TopAppBar -->
+        <header
+            class="fixed top-0 right-0 left-0 md:left-[280px] z-50 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <h2 class="text-headline-md font-headline-md font-bold tracking-tight text-primary">Overview</h2>
+            </div>
+            <div class="flex items-center gap-gutter">
+                <div
+                    class="hidden lg:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/30">
+                    <span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+                    <input class="bg-transparent border-none focus:ring-0 text-body-md w-64"
+                        placeholder="Search patients, records..." type="text" />
+                </div>
+                <div class="flex items-center gap-4 border-l border-outline-variant/30 pl-gutter">
+                    <button class="relative p-2 hover:bg-surface-variant/20 rounded-full animate-smooth">
+                        <span class="material-symbols-outlined text-primary">notifications</span>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+                    </button>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-label-md font-bold text-primary">Dr. Julian Vance</p>
+                            <p class="text-caption text-on-surface-variant">Super Admin</p>
+                        </div>
+                        <img alt="User Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+                            data-alt="A professional close-up portrait of a senior male doctor with grey hair, wearing a white clinical coat and a stethoscope. He has a warm, authoritative expression. The background is a brightly lit, high-end medical office with soft architectural blurring. The overall aesthetic is clean, trustworthy, and futuristic healthcare professional."
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxK5uFx1zr_pnoSRQwZfGlYraLFp4f5xUT5Kv6IbtNNUo-6bYrLxFAzhjm979u0aLf6nj53oulJJNAuwdg2CuFSoWqDcsyMhfCsx4EyWGcfPudS0sVea_NMTJMvGpnytTACB5vQds5DEc0K4AyVKb7XAqsbjLWXPI24h4L2hFRQ1d69HMNMkkj5lllf0N9OjMxoPQhDWXklucaX54hZn1-UwbXZhjNaZGPy04iWFEiu7RtqjL2oBCuJgJ4WfTpgfVFxPCEd23ZDEA" />
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- Dashboard Content -->
+        <div class="pt-24 px-8 pb-12 max-w-container-max mx-auto">
+            <!-- Bento Grid Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-stack-lg">
+                <div
+                    class="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-primary/10 rounded-xl">
+                            <span class="material-symbols-outlined text-primary">medical_services</span>
+                        </div>
+                        <span
+                            class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+12%</span>
+                    </div>
+                    <div>
+                        <p class="text-headline-md font-headline-md font-bold text-primary">84</p>
+                        <p class="text-label-md text-on-surface-variant">Total Doctors</p>
+                    </div>
+                </div>
+                <div
+                    class="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-secondary/10 rounded-xl">
+                            <span class="material-symbols-outlined text-secondary">calendar_month</span>
+                        </div>
+                        <span
+                            class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+5.2%</span>
+                    </div>
+                    <div>
+                        <p class="text-headline-md font-headline-md font-bold text-primary">1,240</p>
+                        <p class="text-label-md text-on-surface-variant">Total Bookings</p>
+                    </div>
+                </div>
+                <div
+                    class="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-tertiary/10 rounded-xl">
+                            <span class="material-symbols-outlined text-tertiary">biotech</span>
+                        </div>
+                        <span
+                            class="text-on-error-container bg-error-container/20 px-2 py-1 rounded text-caption font-bold">-2%</span>
+                    </div>
+                    <div>
+                        <p class="text-headline-md font-headline-md font-bold text-primary">42</p>
+                        <p class="text-label-md text-on-surface-variant">Surgery Requests</p>
+                    </div>
+                </div>
+                <div
+                    class="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-secondary-container/20 rounded-xl">
+                            <span class="material-symbols-outlined text-secondary">payments</span>
+                        </div>
+                        <span
+                            class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+18%</span>
+                    </div>
+                    <div>
+                        <p class="text-headline-md font-headline-md font-bold text-primary">$214.8k</p>
+                        <p class="text-label-md text-on-surface-variant">Monthly Revenue</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
+                <div class="lg:col-span-2 glass-card p-8 rounded-3xl min-h-[400px]">
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h3 class="text-headline-sm font-headline-md text-primary">Patient Inflow Analytics</h3>
+                            <p class="text-body-md text-on-surface-variant">Comparison between new and returning
+                                patients</p>
+                        </div>
+                        <select
+                            class="bg-surface-container-low border-none rounded-full text-label-md px-4 py-2 focus:ring-2 focus:ring-primary/20">
+                            <option>Last 7 Days</option>
+                            <option>Last 30 Days</option>
+                        </select>
+                    </div>
+                    <!-- Simplified Visual Chart Representation -->
+                    <div class="relative h-64 flex items-end gap-4 px-4">
+                        <div class="flex-grow flex items-end justify-around h-full border-b border-outline-variant/30">
+                            <div
+                                class="w-12 bg-gradient-to-t from-primary to-secondary rounded-t-lg h-[60%] animate-smooth hover:opacity-80 relative group">
+                                <div
+                                    class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded">
+                                    124</div>
+                            </div>
+                            <div
+                                class="w-12 bg-gradient-to-t from-secondary to-secondary-container rounded-t-lg h-[45%] animate-smooth hover:opacity-80 relative group">
+                                <div
+                                    class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded">
+                                    98</div>
+                            </div>
+                            <div
+                                class="w-12 bg-gradient-to-t from-primary to-secondary rounded-t-lg h-[85%] animate-smooth hover:opacity-80 relative group">
+                                <div
+                                    class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded">
+                                    182</div>
+                            </div>
+                            <div
+                                class="w-12 bg-gradient-to-t from-secondary to-secondary-container rounded-t-lg h-[70%] animate-smooth hover:opacity-80 relative group">
+                                <div
+                                    class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded">
+                                    145</div>
+                            </div>
+                            <div
+                                class="w-12 bg-gradient-to-t from-primary to-secondary rounded-t-lg h-[95%] animate-smooth hover:opacity-80 relative group">
+                                <div
+                                    class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded">
+                                    210</div>
+                            </div>
+                            <div
+                                class="w-12 bg-gradient-to-t from-secondary to-secondary-container rounded-t-lg h-[40%] animate-smooth hover:opacity-80 relative group">
+                                <div
+                                    class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded">
+                                    84</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-around mt-4 text-caption text-on-surface-variant">
+                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                    </div>
+                </div>
+                <div class="glass-card p-8 rounded-3xl">
+                    <h3 class="text-headline-sm font-headline-md text-primary mb-6">Recent Activity</h3>
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="w-2 h-2 rounded-full bg-secondary mt-2"></div>
+                            <div>
+                                <p class="text-body-md font-bold text-primary">Dr. Sarah Miller Joined</p>
+                                <p class="text-caption text-on-surface-variant">Otology Specialist • 2 mins ago</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                            <div>
+                                <p class="text-body-md font-bold text-primary">New Surgery Approved</p>
+                                <p class="text-caption text-on-surface-variant">Patient ID #8842 • 15 mins ago</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-2 h-2 rounded-full bg-tertiary mt-2"></div>
+                            <div>
+                                <p class="text-body-md font-bold text-primary">Revenue Milestone Reached</p>
+                                <p class="text-caption text-on-surface-variant">Reached $200k target • 1 hour ago</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-2 h-2 rounded-full bg-outline mt-2"></div>
+                            <div>
+                                <p class="text-body-md font-bold text-primary">System Update Completed</p>
+                                <p class="text-caption text-on-surface-variant">Version 4.2.0 stable • 3 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        class="w-full mt-8 py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors">View
+                        All Logs</button>
+                </div>
+            </div>
+            <!-- Manage Doctors Table -->
+            <div class="glass-card rounded-3xl overflow-hidden mb-stack-lg">
+                <div class="p-8 border-b border-white/40 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-headline-sm font-headline-md text-primary">Manage Medical Staff</h3>
+                        <p class="text-body-md text-on-surface-variant">Oversee credentials and performance metrics</p>
+                    </div>
+                    <button
+                        class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] animate-smooth">
+                        <span class="material-symbols-outlined">person_add</span>
+                        Onboard Specialist
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-surface-container-low text-label-md text-on-surface-variant">
+                            <tr>
+                                <th class="px-8 py-4">Specialist</th>
+                                <th class="px-8 py-4">Department</th>
+                                <th class="px-8 py-4">Status</th>
+                                <th class="px-8 py-4">Performance</th>
+                                <th class="px-8 py-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                            <tr class="hover:bg-white/40 transition-colors group">
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <img alt="Staff" class="w-12 h-12 rounded-full object-cover"
+                                            data-alt="A professional headshot of a female ENT doctor with dark hair and a confident smile. She is wearing clinical attire in a minimalist, light-filled futuristic medical environment. The image uses a soft Teal and Cyan color palette, emphasizing high-end medical expertise and technological sophistication."
+                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBL6b9W1d32HG9rw98YFK0m0owE95Ouf8puk4c5PzSjy33_t27MM0s0S4eCx7_EzHE5YBKDWZK_Z3blFblAg_OtW1F0OKLoWaUsNyEJT-Gb8mgOpztTOXEFkreWYEVLhbw9sC6q2GmAmh_PKZMU332uJlDstJFaeo7odtyCPIjFOJITwOM9Ar9UMhCkIZgODIP2snszbMq7fPyjh16-NhP7xYla-jat3FCKvd1xcrHfuLcc_LFU0hpd9O-xKXheqNmZGWgDmgaZYgU" />
+                                        <div>
+                                            <p class="text-body-md font-bold text-primary">Dr. Elena Rodriguez</p>
+                                            <p class="text-caption text-on-surface-variant">Senior Rhinologist</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span class="text-body-md text-primary">Nasal &amp; Sinus</span>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span
+                                        class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-caption font-bold">Active</span>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
+                                            <div class="h-full bg-secondary w-[92%]"></div>
+                                        </div>
+                                        <span class="text-caption font-bold text-primary">92%</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <button class="p-2 hover:bg-primary/10 rounded-lg text-primary animate-smooth">
+                                        <span class="material-symbols-outlined">more_vert</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-white/40 transition-colors group">
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <img alt="Staff" class="w-12 h-12 rounded-full object-cover"
+                                            data-alt="A portrait of a male audiologist in a high-tech medical laboratory setting. He is wearing a modern blue scrub top and has a focus-driven expression. The lighting is crisp and cool, with bokeh highlights from clinical equipment. The style is professional, clean, and futuristic medical-tech."
+                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnfKTPKwSDIwGSX2NixUqrt13K18eOhLNdQ4qa0H91JcnZpYqm_Amf35VqLeM1ilDKgkAxe0hW1qJA7hSRhu8wCHn2qBmAumBzej81NdXEMEh7u_S1TxQouya-TMmvfUNJyweOZkTe8OBr2T51WfBJfPCbz24tEB62aAWgyvWZZS3xjZp25ArmyeKXB4es0EFoRAedBJlvKKoj3BEAx9OofDamGhZOM7272n0Jx695TyKcFlT60Hbn_9_cfRNlynSlvIpMl7fRaSQ" />
+                                        <div>
+                                            <p class="text-body-md font-bold text-primary">Dr. Marcus Thorne</p>
+                                            <p class="text-caption text-on-surface-variant">Audiology Lead</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span class="text-body-md text-primary">Hearing Care</span>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span
+                                        class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-caption font-bold">In
+                                        Surgery</span>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
+                                            <div class="h-full bg-secondary w-[88%]"></div>
+                                        </div>
+                                        <span class="text-caption font-bold text-primary">88%</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <button class="p-2 hover:bg-primary/10 rounded-lg text-primary animate-smooth">
+                                        <span class="material-symbols-outlined">more_vert</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-white/40 transition-colors group">
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <img alt="Staff" class="w-12 h-12 rounded-full object-cover"
+                                            data-alt="A clean portrait of a female laryngology surgeon in a white lab coat. She is in a bright, modern hospital corridor with soft glass reflections and minimal geometric architectural details. The lighting is soft and airy, creating a professional and calm healthcare sanctuary vibe."
+                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgP_OxbynEx8hfasQpsLjLc3fJIotxcrA3FwLVrEO8liHXfQ1Qz8LkafGeI5yON_I6F2eVtwBZ7PMKzHuyXzyI0wJRXbjOSBmk-oUNDc2R_jYy5U0Z_ILcIm2eycYaCf1_nINwhfIQ5DGHSqea_GE1rrZgAaiUKS9mPDfftmcM69IFty8CJUsfKXxtJ0FKevOtU_1oD-YhV_eE_SNuqZNr3YaPir4ijU_jfvJ4IpZ_iPUMe5pt8-z6JcBvzHCQi84zFLdTkLm16TM" />
+                                        <div>
+                                            <p class="text-body-md font-bold text-primary">Dr. Sophia Chen</p>
+                                            <p class="text-caption text-on-surface-variant">Laryngologist</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span class="text-body-md text-primary">Voice &amp; Swallowing</span>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span
+                                        class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-caption font-bold">On
+                                        Break</span>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
+                                            <div class="h-full bg-secondary w-[95%]"></div>
+                                        </div>
+                                        <span class="text-caption font-bold text-primary">95%</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <button class="p-2 hover:bg-primary/10 rounded-lg text-primary animate-smooth">
+                                        <span class="material-symbols-outlined">more_vert</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Notifications Sidebar Panel (Integrated into Main Flow for Desktop Bento) -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-gutter">
+                <div class="lg:col-span-3 glass-card p-8 rounded-3xl min-h-[300px]">
+                    <h3 class="text-headline-sm font-headline-md text-primary mb-6">System Health</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-stack-md">
+                        <div class="p-6 bg-surface-container-low rounded-2xl border border-white/20">
+                            <p class="text-caption font-bold text-on-surface-variant mb-2">SERVER LATENCY</p>
+                            <div class="flex items-end gap-2">
+                                <p class="text-headline-md font-headline-md text-primary">24ms</p>
+                                <span class="material-symbols-outlined text-emerald-500 pb-1">trending_down</span>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-surface-container-low rounded-2xl border border-white/20">
+                            <p class="text-caption font-bold text-on-surface-variant mb-2">DB CONNECTIONS</p>
+                            <div class="flex items-end gap-2">
+                                <p class="text-headline-md font-headline-md text-primary">1,102</p>
+                                <span class="material-symbols-outlined text-secondary pb-1">sync</span>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-surface-container-low rounded-2xl border border-white/20">
+                            <p class="text-caption font-bold text-on-surface-variant mb-2">API UPTIME</p>
+                            <div class="flex items-end gap-2">
+                                <p class="text-headline-md font-headline-md text-primary">99.9%</p>
+                                <span class="material-symbols-outlined text-emerald-500 pb-1">verified</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="lg:col-span-1 glass-card p-8 rounded-3xl bg-primary text-white flex flex-col justify-center relative overflow-hidden group">
+                    <div
+                        class="absolute -right-8 -top-8 w-32 h-32 bg-secondary/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700">
+                    </div>
+                    <p class="text-label-md font-bold mb-2 opacity-80 uppercase tracking-widest">Emergency Portal</p>
+                    <h4 class="text-headline-sm font-headline-md font-bold mb-4">Direct Channel</h4>
+                    <p class="text-body-md opacity-70 mb-8">Access critical clinical alerts and rapid response protocols
+                        immediately.</p>
+                    <button
+                        class="w-full bg-white text-primary py-4 rounded-xl font-bold hover:bg-secondary-fixed transition-colors">Enter
+                        Secure Portal</button>
+                </div>
+            </div>
+        </div>
+        <!-- Footer -->
+        <footer class="w-full py-12 bg-surface-container-lowest border-t border-outline-variant/30">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
+                <div class="flex flex-col gap-4">
+                    <h4 class="text-headline-sm font-headline-md text-primary font-bold">PalmCrest ENT</h4>
+                    <p class="text-body-md text-on-surface-variant max-w-xs">Advanced sanctuary of care specializing in
+                        ear, nose, and throat excellence.</p>
+                </div>
+                <div>
+                    <h5 class="font-bold text-primary mb-4">Support</h5>
+                    <ul class="space-y-2">
+                        <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Emergency:
+                                +1-800-PALM-ENT</a></li>
+                        <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Department
+                                Directory</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-bold text-primary mb-4">Legal</h5>
+                    <ul class="space-y-2">
+                        <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy
+                                Policy</a></li>
+                        <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of
+                                Service</a></li>
+                    </ul>
+                </div>
+                <div class="text-right flex flex-col justify-between">
+                    <div class="flex justify-end gap-4 mb-4">
+                        <span
+                            class="material-symbols-outlined text-secondary cursor-pointer hover:scale-110 transition-transform">public</span>
+                        <span
+                            class="material-symbols-outlined text-secondary cursor-pointer hover:scale-110 transition-transform">hub</span>
+                        <span
+                            class="material-symbols-outlined text-secondary cursor-pointer hover:scale-110 transition-transform">shield</span>
+                    </div>
+                    <p class="text-caption text-on-surface-variant">© 2024 PalmCrest ENT Hospital.<br />Advanced
+                        Sanctuary of Care.</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+    <!-- Mobile Navigation Bar -->
+    <nav
+        class="md:hidden fixed bottom-0 left-0 w-full bg-white/70 backdrop-blur-xl border-t border-white/40 z-50 flex justify-around items-center py-4 px-4">
+        <a class="flex flex-col items-center gap-1 text-primary" href="#">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="text-[10px] font-bold">Dashboard</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+            <span class="material-symbols-outlined">group</span>
+            <span class="text-[10px]">Patients</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <span class="text-[10px]">Appts</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="text-[10px]">Settings</span>
+        </a>
+    </nav>
+    <script>
+        // Micro-interactions and simple hover effects for charts
+        document.querySelectorAll('.group').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                // Future expansion for dynamic data loading on hover
+            });
+        });
+
+        // Sticky Header effect on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body>
+
+</html>
