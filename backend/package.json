@@ -6,6 +6,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "lint": "eslint .",
+    "reset-admin": "node db/resetAdmin.js",
     "test": "jest --runInBand --forceExit",
     "test:watch": "jest --watch",
     "test:coverage": "jest --runInBand --forceExit --coverage"

@@ -3,8 +3,12 @@ const Admin = require('../model/Admin');
 
 const seedAdmin = async () => {
   try {
-    const email = process.env.ADMIN_EMAIL || 'murannasir22@gmail.com';
-    const password = process.env.ADMIN_PASSWORD || 'SuperAdminpalm';
+    const email = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASSWORD;
+
+    if (!email || !password) {
+      throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be defined in environment variables');
+    }
 
     const emailLower = email.toLowerCase();
     const adminExists = await Admin.findOne({ email: emailLower });
@@ -21,6 +25,7 @@ const seedAdmin = async () => {
     }
   } catch (error) {
     console.error('Error seeding admin account:', error);
+    throw error;
   }
 };
 
