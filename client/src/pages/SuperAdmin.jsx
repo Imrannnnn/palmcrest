@@ -282,7 +282,7 @@ export default function SuperAdmin() {
     );
 
     return (
-        <div className="text-[#191c1e] min-h-screen text-left font-body-md relative z-0">
+        <div className="text-[#191c1e] min-h-screen text-left font-body-md relative z-0 w-full max-w-full overflow-x-hidden">
             {/* Atmospheric Background */}
             <div className="bg-wave">
                 <div className="wave-blob bg-primary top-[-120px] left-[-120px]"></div>
@@ -293,8 +293,8 @@ export default function SuperAdmin() {
 
                 {/* Decorative concentric circles in main background */}
                 {/* Decorative concentric circles in main background */}
-                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
-                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[280px] h-[280px] xs:w-[320px] xs:h-[320px] sm:w-[400px] sm:h-[400px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[180px] h-[180px] xs:w-[220px] xs:h-[220px] sm:w-[280px] sm:h-[280px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
             </div>
 
             {/* Side Navigation Shell */}
@@ -365,11 +365,11 @@ export default function SuperAdmin() {
             </aside>
 
             {/* Main Content Canvas */}
-            <main className="md:ml-[280px] min-h-screen">
+            <main className="md:ml-[280px] min-h-screen w-full md:w-[calc(100%-280px)] max-w-full overflow-x-hidden">
                 {/* TopAppBar */}
-                <header className="fixed top-0 right-0 left-0 md:left-[280px] z-50 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm px-8 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-headline-md font-headline-md font-bold tracking-tight text-primary">
+                <header className="fixed top-0 right-0 left-0 md:left-[280px] z-50 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm px-4 sm:px-8 py-4 flex justify-between items-center">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <h2 className="text-lg sm:text-headline-md font-headline-md font-bold tracking-tight text-primary truncate max-w-[160px] xs:max-w-xs sm:max-w-none">
                             {activeTab === 'dashboard' && 'Overview'}
                             {activeTab === 'doctors' && 'Manage Doctors'}
                             {activeTab === 'patients' && 'Patient Directory'}
@@ -377,12 +377,12 @@ export default function SuperAdmin() {
                             {activeTab === 'admins' && 'Administrator Directory'}
                         </h2>
                     </div>
-                    <div className="flex items-center gap-gutter">
+                    <div className="flex items-center gap-3 sm:gap-gutter">
                         <div className="hidden lg:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/30">
                             <span className="material-symbols-outlined text-on-surface-variant mr-2">search</span>
                             <input className="bg-transparent border-none focus:ring-0 text-body-md w-64 outline-none" placeholder="Search..." type="text" />
                         </div>
-                        <div className="flex items-center gap-4 border-l border-outline-variant/30 pl-gutter">
+                        <div className="flex items-center gap-3 sm:gap-4 border-l border-outline-variant/30 pl-3 sm:pl-gutter">
                             <button className="relative p-2 hover:bg-surface-variant/20 rounded-full animate-smooth">
                                 <span className="material-symbols-outlined text-primary">notifications</span>
                                 <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
@@ -403,13 +403,13 @@ export default function SuperAdmin() {
                 </header>
 
                 {/* Dashboard Content */}
-                <div className="pt-24 px-8 pb-12 max-w-container-max mx-auto animate-smooth">
+                <div className="pt-24 px-4 sm:px-8 pb-28 md:pb-12 w-full max-w-full md:max-w-container-max mx-auto animate-smooth overflow-x-hidden">
 
                     {activeTab === 'dashboard' && (
                         <>
                             {/* Bento Grid Overview */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-gutter mb-stack-lg animate-smooth">
-                                <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-gutter mb-stack-lg animate-smooth">
+                                <div className="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
                                     <div className="flex justify-between items-start">
                                         <div className="p-3 bg-primary/10 rounded-xl">
                                             <span className="material-symbols-outlined text-primary">medical_services</span>
@@ -421,7 +421,7 @@ export default function SuperAdmin() {
                                         <p className="text-label-md text-on-surface-variant">Total Doctors</p>
                                     </div>
                                 </div>
-                                <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                                <div className="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
                                     <div className="flex justify-between items-start">
                                         <div className="p-3 bg-secondary/10 rounded-xl">
                                             <span className="material-symbols-outlined text-secondary">calendar_month</span>
@@ -433,7 +433,7 @@ export default function SuperAdmin() {
                                         <p className="text-label-md text-on-surface-variant">Total Bookings</p>
                                     </div>
                                 </div>
-                                <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                                <div className="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
                                     <div className="flex justify-between items-start">
                                         <div className="p-3 bg-tertiary/10 rounded-xl">
                                             <span className="material-symbols-outlined text-tertiary">biotech</span>
@@ -448,9 +448,9 @@ export default function SuperAdmin() {
                             </div>
 
                             {/* Charts Section */}
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
-                                <div className="lg:col-span-2 glass-card p-8 rounded-3xl min-h-[400px]">
-                                    <div className="flex justify-between items-center mb-8">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-gutter mb-stack-lg">
+                                <div className="lg:col-span-2 glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl min-h-[400px]">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                                         <div>
                                             <h3 className="text-headline-sm font-headline-md text-primary">Patient Inflow Analytics</h3>
                                             <p className="text-body-md text-on-surface-variant">Comparison between new and returning patients</p>
@@ -458,22 +458,22 @@ export default function SuperAdmin() {
                                         <select
                                             value={inflowFilter}
                                             onChange={(e) => setInflowFilter(e.target.value)}
-                                            className="bg-surface-container-low border-none rounded-full text-label-md px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none"
+                                            className="w-full sm:w-auto bg-surface-container-low border-none rounded-full text-label-md px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none"
                                         >
                                             <option>Last 7 Days</option>
                                             <option>Last 30 Days</option>
                                         </select>
                                     </div>
                                     {/* Visual Chart Representation */}
-                                    <div className="relative h-64 flex items-end gap-4 px-4">
+                                    <div className="relative h-64 flex items-end gap-2 sm:gap-4 px-2 sm:px-4">
                                         <div className="flex-grow flex items-end justify-around h-full border-b border-outline-variant/30">
                                             {chartHeights.map((hClass, idx) => (
                                                 <div
                                                     key={idx}
-                                                    className={`w-12 bg-gradient-to-t ${idx % 2 === 0 ? 'from-primary to-secondary' : 'from-secondary to-secondary-container'
+                                                    className={`w-6 xs:w-8 sm:w-12 bg-gradient-to-t ${idx % 2 === 0 ? 'from-primary to-secondary' : 'from-secondary to-secondary-container'
                                                         } rounded-t-lg ${hClass} animate-smooth hover:opacity-80 relative group cursor-pointer`}
                                                 >
-                                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded transition-opacity duration-250">
+                                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded transition-opacity duration-250 z-10">
                                                         {chartValues[idx]}
                                                     </div>
                                                 </div>
@@ -485,7 +485,7 @@ export default function SuperAdmin() {
                                     </div>
                                 </div>
 
-                                <div className="glass-card p-8 rounded-3xl">
+                                <div className="glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl">
                                     <h3 className="text-headline-sm font-headline-md text-primary mb-6">Recent Activity</h3>
                                     <div className="space-y-6">
                                         <div className="flex gap-4">
@@ -522,8 +522,8 @@ export default function SuperAdmin() {
                     )}
                                       {/* Manage Doctors Table */}
                     {activeTab === 'doctors' && (
-                        <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg animate-smooth">
-                            <div className="p-8 border-b border-white/40 flex flex-col gap-6">
+                        <div className="glass-card rounded-2xl sm:rounded-3xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-8 border-b border-white/40 flex flex-col gap-6">
                                 <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
                                     <div>
                                         <h3 className="text-headline-sm font-headline-md text-primary">Manage Medical Staff</h3>
@@ -531,7 +531,7 @@ export default function SuperAdmin() {
                                     </div>
                                     <button
                                         onClick={handleOnboardSpecialist}
-                                        className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all animate-smooth self-start md:self-auto"
+                                        className="w-full md:w-auto bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all animate-smooth"
                                     >
                                         <span className="material-symbols-outlined">person_add</span>
                                         Onboard Specialist
@@ -539,7 +539,7 @@ export default function SuperAdmin() {
                                 </div>
                                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between border-t border-outline-variant/10 pt-6">
                                     <form onSubmit={handleDoctorSearch} className="flex flex-wrap gap-2 items-center w-full">
-                                        <div className="flex items-center bg-surface-container-low px-4 py-2.5 rounded-xl border border-outline-variant/30 flex-grow max-w-md">
+                                        <div className="flex items-center bg-surface-container-low px-4 py-2.5 rounded-xl border border-outline-variant/30 flex-grow w-full sm:max-w-md">
                                             <span className="material-symbols-outlined text-on-surface-variant mr-2">search</span>
                                             <input
                                                 className="bg-transparent border-none focus:ring-0 text-body-md w-full outline-none"
@@ -551,7 +551,7 @@ export default function SuperAdmin() {
                                         </div>
                                         <button
                                             type="submit"
-                                            className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all text-label-md"
+                                            className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
                                         >
                                             Search
                                         </button>
@@ -559,7 +559,7 @@ export default function SuperAdmin() {
                                             <button
                                                 type="button"
                                                 onClick={() => { setDoctorSearchInput(''); setDoctorSearchQuery(''); setDoctorPage(1); }}
-                                                className="bg-surface-variant/20 text-on-surface-variant px-4 py-2.5 rounded-xl font-bold hover:bg-surface-variant/40 transition-all text-label-md"
+                                                className="bg-surface-variant/20 text-on-surface-variant px-4 py-2.5 rounded-xl font-bold hover:bg-surface-variant/40 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
                                             >
                                                 Clear
                                             </button>
@@ -571,18 +571,18 @@ export default function SuperAdmin() {
                                 <table className="w-full text-left">
                                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                                         <tr>
-                                            <th className="px-8 py-4">Specialist</th>
-                                            <th className="px-8 py-4">Department / specialization</th>
-                                            <th className="px-8 py-4">Contact Email</th>
-                                            <th className="px-8 py-4">Phone Number</th>
-                                            <th className="px-8 py-4">Status</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Specialist</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Department / specialization</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Contact Email</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Phone Number</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
                                         {paginatedDoctors.length > 0 ? (
                                             paginatedDoctors.map((s) => (
                                                 <tr key={s._id} className="hover:bg-white/40 transition-colors group">
-                                                    <td className="px-8 py-6">
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold">
                                                                 {s.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -592,23 +592,23 @@ export default function SuperAdmin() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-8 py-6">
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                         <span className="text-body-md text-primary">{s.specialization}</span>
                                                     </td>
-                                                    <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                         {s.email}
                                                     </td>
-                                                    <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                         {s.phoneNumber || 'N/A'}
                                                     </td>
-                                                    <td className="px-8 py-6">
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                         <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-caption font-bold">Active</span>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-8 py-6 text-center text-on-surface-variant">
+                                                <td colSpan="5" className="px-4 sm:px-8 py-4 sm:py-6 text-center text-on-surface-variant">
                                                     {doctorSearchQuery ? 'No specialists match the search query.' : 'No specialists onboarded yet.'}
                                                 </td>
                                             </tr>
@@ -616,8 +616,8 @@ export default function SuperAdmin() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex justify-between items-center px-8">
-                                <span className="text-caption text-on-surface-variant font-medium">
+                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex flex-col sm:flex-row justify-between items-center gap-4 px-4 sm:px-8">
+                                <span className="text-caption text-on-surface-variant font-medium text-center sm:text-left">
                                     Page {doctorPage} of {totalDoctorPages} (Total {filteredDoctors.length} staff)
                                 </span>
                                 <div className="flex gap-2">
@@ -640,14 +640,14 @@ export default function SuperAdmin() {
                         </div>
                     )}                      {/* Patient Directory */}
                     {activeTab === 'patients' && (
-                        <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg animate-smooth">
-                            <div className="p-8 border-b border-white/40 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+                        <div className="glass-card rounded-2xl sm:rounded-3xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-8 border-b border-white/40 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
                                 <div>
                                     <h3 className="text-headline-sm font-headline-md text-primary">Patient Directory</h3>
                                     <p className="text-body-md text-on-surface-variant">View all registered patients and clinical IDs</p>
                                 </div>
-                                <form onSubmit={handlePatientSearch} className="flex gap-2">
-                                    <div className="flex items-center bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/30 w-64 md:w-80">
+                                <form onSubmit={handlePatientSearch} className="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto">
+                                    <div className="flex items-center bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/30 flex-grow w-full sm:w-64 md:w-80">
                                         <span className="material-symbols-outlined text-on-surface-variant mr-2">search</span>
                                         <input
                                             className="bg-transparent border-none focus:ring-0 text-body-md w-full outline-none"
@@ -659,7 +659,7 @@ export default function SuperAdmin() {
                                     </div>
                                     <button
                                         type="submit"
-                                        className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:opacity-90 transition-all text-label-md"
+                                        className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:opacity-90 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
                                     >
                                         Search
                                     </button>
@@ -667,7 +667,7 @@ export default function SuperAdmin() {
                                         <button
                                             type="button"
                                             onClick={() => { setPatientSearchInput(''); setPatientSearchQuery(''); setPatientPage(1); }}
-                                            className="bg-surface-variant/20 text-on-surface-variant px-3 py-2 rounded-xl font-bold hover:bg-surface-variant/40 transition-all text-label-md"
+                                            className="bg-surface-variant/20 text-on-surface-variant px-3 py-2 rounded-xl font-bold hover:bg-surface-variant/40 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
                                         >
                                             Clear
                                         </button>
@@ -678,37 +678,37 @@ export default function SuperAdmin() {
                                 <table className="w-full text-left">
                                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                                         <tr>
-                                            <th className="px-8 py-4">Patient Name</th>
-                                            <th className="px-8 py-4">Patient ID</th>
-                                            <th className="px-8 py-4">Email Address</th>
-                                            <th className="px-8 py-4">Phone Number</th>
-                                            <th className="px-8 py-4">Gender</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Patient Name</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Patient ID</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Email Address</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Phone Number</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Gender</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
                                         {paginatedPatients.length > 0 ? (
                                             paginatedPatients.map(p => (
                                                 <tr key={p._id} className="hover:bg-white/40 transition-colors group">
-                                                    <td className="px-8 py-6">
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                         <p className="text-body-md font-bold text-primary">{p.fullName}</p>
                                                     </td>
-                                                    <td className="px-8 py-6">
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                         <span className="text-body-md font-semibold text-secondary">{p.patientId}</span>
                                                     </td>
-                                                    <td className="px-8 py-6">
-                                                        <span className="text-body-md text-on-surface-variant">{p.email}</span>
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                        {p.email}
                                                     </td>
-                                                    <td className="px-8 py-6">
-                                                        <span className="text-body-md text-on-surface-variant">{p.phoneNumber || 'N/A'}</span>
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                        {p.phoneNumber || 'N/A'}
                                                     </td>
-                                                    <td className="px-8 py-6">
-                                                        <span className="text-body-md text-on-surface-variant">{p.gender || 'N/A'}</span>
+                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                        {p.gender || 'N/A'}
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-8 py-6 text-center text-on-surface-variant">
+                                                <td colSpan="5" className="px-4 sm:px-8 py-4 sm:py-6 text-center text-on-surface-variant">
                                                     {patientSearchQuery ? 'No patients match the search query.' : 'No patients registered.'}
                                                 </td>
                                             </tr>
@@ -716,8 +716,8 @@ export default function SuperAdmin() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex justify-between items-center px-8">
-                                <span className="text-caption text-on-surface-variant font-medium">
+                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex flex-col sm:flex-row justify-between items-center gap-4 px-4 sm:px-8">
+                                <span className="text-caption text-on-surface-variant font-medium text-center sm:text-left">
                                     Page {patientPage} of {totalPatientPages} (Total {filteredPatients.length} patients)
                                 </span>
                                 <div className="flex gap-2">
@@ -742,17 +742,17 @@ export default function SuperAdmin() {
 
                     {/* Appointments Management */}
                     {activeTab === 'appointments' && (
-                        <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg animate-smooth">
-                            <div className="p-8 border-b border-white/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="glass-card rounded-2xl sm:rounded-3xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-8 border-b border-white/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <div>
                                     <h3 className="text-headline-sm font-headline-md text-primary">All Appointments & Surgery Requests</h3>
                                     <p className="text-body-md text-on-surface-variant">Review, approve, or cancel clinician requests across the hospital</p>
                                 </div>
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full md:w-auto">
                                     <select
                                         value={selectedDoctorFilter}
                                         onChange={(e) => setSelectedDoctorFilter(e.target.value)}
-                                        className="bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
                                     >
                                         <option value="All">All Doctors</option>
                                         {doctors.map(doc => (
@@ -762,7 +762,7 @@ export default function SuperAdmin() {
                                     <select
                                         value={selectedTypeFilter}
                                         onChange={(e) => setSelectedTypeFilter(e.target.value)}
-                                        className="bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
                                     >
                                         <option value="All">All Types</option>
                                         <option value="Appointment">Appointments</option>
@@ -771,7 +771,7 @@ export default function SuperAdmin() {
                                     <select
                                         value={selectedStatusFilter}
                                         onChange={(e) => setSelectedStatusFilter(e.target.value)}
-                                        className="bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
                                     >
                                         <option value="All">All Statuses</option>
                                         <option value="Pending">Pending</option>
@@ -785,13 +785,13 @@ export default function SuperAdmin() {
                                 <table className="w-full text-left">
                                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                                         <tr>
-                                            <th className="px-8 py-4">Doctor</th>
-                                            <th className="px-8 py-4">Patient</th>
-                                            <th className="px-8 py-4">Title / Purpose</th>
-                                            <th className="px-8 py-4">Date & Time</th>
-                                            <th className="px-8 py-4">Type</th>
-                                            <th className="px-8 py-4">Status</th>
-                                            <th className="px-8 py-4 text-right">Actions</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Doctor</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Patient</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Title / Purpose</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Date & Time</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Type</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Status</th>
+                                            <th className="px-4 sm:px-8 py-4 text-right whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
@@ -810,25 +810,25 @@ export default function SuperAdmin() {
                                                 });
                                                 return (
                                                     <tr key={appt._id} className="hover:bg-white/40 transition-colors group">
-                                                        <td className="px-8 py-6 font-bold text-primary">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 font-bold text-primary whitespace-nowrap">
                                                             {appt.doctor?.fullName || 'Unknown'}
                                                         </td>
-                                                        <td className="px-8 py-6">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                             <p className="text-body-md font-semibold text-primary">{appt.patient?.fullName || 'Unknown'}</p>
                                                             <p className="text-caption text-on-surface-variant">{appt.patient?.patientId || ''}</p>
                                                         </td>
-                                                        <td className="px-8 py-6 text-body-md font-medium text-primary">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-body-md font-medium text-primary whitespace-nowrap">
                                                             {appt.title}
                                                         </td>
-                                                        <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-body-md text-on-surface-variant whitespace-nowrap">
                                                             {formattedDate} • {appt.timeSlot}
                                                         </td>
-                                                        <td className="px-8 py-6">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                             <span className={`px-3 py-1 rounded-full text-caption font-bold ${appt.type === 'Surgery' ? 'bg-secondary/15 text-secondary' : 'bg-primary/15 text-primary'}`}>
                                                                 {appt.type}
                                                             </span>
                                                         </td>
-                                                        <td className="px-8 py-6">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                             <span className={`px-3 py-1 rounded-full text-caption font-bold ${appt.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
                                                                     appt.status === 'Approved' ? 'bg-blue-100 text-blue-800' :
                                                                         appt.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -837,7 +837,7 @@ export default function SuperAdmin() {
                                                                 {appt.status}
                                                             </span>
                                                         </td>
-                                                        <td className="px-8 py-6 text-right space-x-2">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-right space-x-2 whitespace-nowrap">
                                                             {appt.status === 'Pending' && (
                                                                 <button
                                                                     onClick={() => handleUpdateStatus(appt._id, 'Approved')}
@@ -884,15 +884,15 @@ export default function SuperAdmin() {
 
                     {/* Admins Directory */}
                     {activeTab === 'admins' && (
-                        <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg animate-smooth">
-                            <div className="p-8 border-b border-white/40 flex justify-between items-center">
+                        <div className="glass-card rounded-2xl sm:rounded-3xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-8 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <div>
                                     <h3 className="text-headline-sm font-headline-md text-primary">System Administrators</h3>
                                     <p className="text-body-md text-on-surface-variant">Oversee system administrators and access permissions</p>
                                 </div>
                                 <button
                                     onClick={handleOnboardAdmin}
-                                    className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] animate-smooth"
+                                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] animate-smooth"
                                 >
                                     <span className="material-symbols-outlined">person_add</span>
                                     Onboard Admin
@@ -902,11 +902,11 @@ export default function SuperAdmin() {
                                 <table className="w-full text-left">
                                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                                         <tr>
-                                            <th className="px-8 py-4">Administrator</th>
-                                            <th className="px-8 py-4">Contact Email</th>
-                                            <th className="px-8 py-4">Role</th>
-                                            <th className="px-8 py-4">Date Joined</th>
-                                            <th className="px-8 py-4">Status</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Administrator</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Contact Email</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Role</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Date Joined</th>
+                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
@@ -919,7 +919,7 @@ export default function SuperAdmin() {
                                                 });
                                                 return (
                                                     <tr key={adm._id} className="hover:bg-white/40 transition-colors group">
-                                                        <td className="px-8 py-6">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                             <div className="flex items-center gap-4">
                                                                 <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold">
                                                                     {adm.fullName ? adm.fullName.split(' ').map(n => n[0]).join('').toUpperCase() : 'A'}
@@ -929,16 +929,16 @@ export default function SuperAdmin() {
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                             {adm.email}
                                                         </td>
-                                                        <td className="px-8 py-6 text-body-md text-primary capitalize font-semibold">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-primary capitalize font-semibold">
                                                             {adm.role}
                                                         </td>
-                                                        <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                             {formattedDate}
                                                         </td>
-                                                        <td className="px-8 py-6">
+                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                             <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-caption font-bold">Active</span>
                                                         </td>
                                                     </tr>
@@ -946,7 +946,7 @@ export default function SuperAdmin() {
                                             })
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-8 py-6 text-center text-on-surface-variant">No administrators found.</td>
+                                                <td colSpan="5" className="px-4 sm:px-8 py-4 sm:py-6 text-center text-on-surface-variant">No administrators found.</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -957,8 +957,8 @@ export default function SuperAdmin() {
                 </div>
 
                 {/* Footer */}
-                <footer className="w-full py-12 bg-surface-container-lowest border-t border-outline-variant/30">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
+                <footer className="w-full pt-12 pb-28 md:pb-12 bg-surface-container-lowest border-t border-outline-variant/30">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter px-4 md:px-margin-desktop max-w-container-max mx-auto">
                         <div className="flex flex-col gap-4">
                             <h4 className="text-headline-sm font-headline-md text-primary font-bold">PalmCrest ENT</h4>
                             <p className="text-body-md text-on-surface-variant max-w-xs">Advanced sanctuary of care specializing in ear, nose, and throat excellence.</p>
@@ -977,8 +977,8 @@ export default function SuperAdmin() {
                                 <li><a className="text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a></li>
                             </ul>
                         </div>
-                        <div className="text-right flex flex-col justify-between">
-                            <div className="flex justify-end gap-4 mb-4">
+                        <div className="text-left md:text-right flex flex-col justify-between">
+                            <div className="flex justify-start md:justify-end gap-4 mb-4">
                                 <span className="material-symbols-outlined text-secondary cursor-pointer hover:scale-110 transition-transform">public</span>
                                 <span className="material-symbols-outlined text-secondary cursor-pointer hover:scale-110 transition-transform">hub</span>
                                 <span className="material-symbols-outlined text-secondary cursor-pointer hover:scale-110 transition-transform">shield</span>
