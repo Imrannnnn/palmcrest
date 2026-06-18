@@ -68,3 +68,8 @@ coverage/
 .cache/
 .parcel-cache/
 *.tsbuildinfo
+
+# ─── Seeding & Credentials Admin Script ───────────────────────
+backend/db/seed.js
+backend/db/resetAdmin.js
+
