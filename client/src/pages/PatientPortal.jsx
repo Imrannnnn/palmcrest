@@ -9,15 +9,13 @@ export default function PatientPortal() {
 
     // Tab state
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [user, setUser] = useState(null);
 
     // Booking state
-    const [specialist, setSpecialist] = useState('Dr. Elena Aris (Audiology)');
+    const [doctors, setDoctors] = useState([]);
+    const [specialist, setSpecialist] = useState('');
     const [bookingDate, setBookingDate] = useState('');
-    const [bookings, setBookings] = useState([
-        { id: 1, title: 'Tympanometry Screening', date: 'Oct 24, 2024 • 10:30 AM', status: 'Completed', statusColor: 'bg-emerald-100 text-emerald-800', bgClass: 'bg-primary-fixed', icon: 'hearing', iconColor: 'text-primary' },
-        { id: 2, title: 'General ENT Follow-up', date: 'Nov 12, 2024 • 02:15 PM', status: 'Approved', statusColor: 'bg-blue-100 text-blue-800', bgClass: 'bg-secondary-fixed', icon: 'stethoscope', iconColor: 'text-secondary' },
-        { id: 3, title: 'Consultation for Septoplasty', date: 'Requested on Nov 05', status: 'Pending', statusColor: 'bg-yellow-100 text-yellow-800', bgClass: 'bg-surface-container-highest', icon: 'medical_mask', iconColor: 'text-on-surface-variant' }
-    ]);
+    const [bookings, setBookings] = useState([]);
 
     // Live Concierge Chat state
     const [chatInput, setChatInput] = useState('');
@@ -25,7 +23,105 @@ export default function PatientPortal() {
         { id: 1, sender: 'agent', text: 'Hello Johnathan! How can I assist with your appointment today?' }
     ]);
 
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'Completed': return 'bg-emerald-100 text-emerald-800';
+            case 'Approved': return 'bg-blue-100 text-blue-800';
+            case 'Pending': return 'bg-yellow-100 text-yellow-800';
+            case 'Cancelled': return 'bg-red-100 text-red-800';
+            default: return 'bg-surface-container text-on-surface';
+        }
+    };
+
+    const getBgClass = (type) => {
+        return type === 'Surgery' ? 'bg-secondary-fixed' : 'bg-primary-fixed';
+    };
+
+    const getIcon = (title) => {
+        const t = title.toLowerCase();
+        if (t.includes('hearing') || t.includes('audiology') || t.includes('tympanometry')) return 'hearing';
+        if (t.includes('surgery') || t.includes('septoplasty')) return 'medical_services';
+        return 'stethoscope';
+    };
+
+    const getIconColor = (type) => {
+        return type === 'Surgery' ? 'text-secondary' : 'text-primary';
+    };
+
+    const fetchAppointments = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/appointments', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const transformed = data.map(appt => {
+                    const formattedDate = new Date(appt.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    return {
+                        id: appt._id,
+                        title: appt.title,
+                        date: `${formattedDate} • ${appt.timeSlot}`,
+                        status: appt.status,
+                        statusColor: getStatusColor(appt.status),
+                        bgClass: getBgClass(appt.type),
+                        icon: getIcon(appt.title),
+                        iconColor: getIconColor(appt.type)
+                    };
+                });
+                setBookings(transformed);
+            }
+        } catch (err) {
+            console.error('Failed to fetch appointments:', err);
+        }
+    };
+
+    const fetchDoctors = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/auth/doctors', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setDoctors(data);
+                if (data.length > 0) {
+                    setSpecialist(data[0]._id);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch doctors:', err);
+        }
+    };
+
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+
+        if (!token || !storedUser) {
+            navigate('/portal');
+            return;
+        }
+
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.role !== 'patient') {
+            localStorage.clear();
+            navigate('/portal');
+            return;
+        }
+
+        setUser(parsedUser);
+        fetchDoctors();
+        fetchAppointments();
+
         // Handle window resize for sidebar
         const handleResize = () => {
             if (window.innerWidth >= 768) {
@@ -55,30 +151,82 @@ export default function PatientPortal() {
         };
     }, []);
 
-    const handleBookNow = (e) => {
+    const handleBookNow = async (e) => {
         e.preventDefault();
         if (!bookingDate) return alert('Please select a date.');
+        if (!specialist) return alert('Please select a doctor.');
 
-        const formattedDate = new Date(bookingDate).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/appointments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    doctor: specialist,
+                    title: 'Clinical Consultation',
+                    date: bookingDate,
+                    timeSlot: '09:00 AM',
+                    type: 'Appointment'
+                })
+            });
 
-        const newBooking = {
-            id: Date.now(),
-            title: `Consultation with ${specialist.split(' (')[0]}`,
-            date: `${formattedDate} • 09:00 AM`,
-            status: 'Pending',
-            statusColor: 'bg-yellow-100 text-yellow-800',
-            bgClass: 'bg-surface-container-highest',
-            icon: 'calendar_today',
-            iconColor: 'text-primary'
-        };
+            if (!response.ok) {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to book appointment.');
+                return;
+            }
 
-        setBookings([newBooking, ...bookings]);
-        setBookingDate('');
-        alert('Appointment request submitted successfully!');
+            setBookingDate('');
+            alert('Appointment request submitted successfully!');
+            fetchAppointments();
+        } catch (err) {
+            console.error('Error booking appointment:', err);
+            alert('Network error booking appointment.');
+        }
+    };
+
+    const handleRequestSurgery = async () => {
+        if (!specialist) {
+            alert('Please select a specialist first in the booking section.');
+            return;
+        }
+        const title = prompt("Enter requested surgery procedure name:", "Septoplasty");
+        if (!title) return;
+        const date = prompt("Enter preferred surgery date (YYYY-MM-DD):", "2026-06-20");
+        if (!date) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/appointments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    doctor: specialist,
+                    title: title,
+                    date: date,
+                    timeSlot: '08:30 AM',
+                    type: 'Surgery'
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to submit surgery request.');
+                return;
+            }
+
+            alert('Surgery request submitted successfully!');
+            fetchAppointments();
+        } catch (err) {
+            console.error(err);
+            alert('Network error submitting surgery request.');
+        }
     };
 
     const handleSendMessage = (e) => {
@@ -106,6 +254,7 @@ export default function PatientPortal() {
     };
 
     const handleLogout = () => {
+        localStorage.clear();
         navigate('/portal');
     };
 
@@ -124,10 +273,9 @@ export default function PatientPortal() {
                 <div className="wave-blob bg-secondary-fixed bottom-[30%] left-[5%]" style={{ animationDelay: '-13s' }}></div>
 
                 {/* Decorative concentric circles in main background */}
-                <div className="absolute top-[10%] right-[-150px] w-[600px] h-[600px] border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute top-[10%] right-[-80px] w-[400px] h-[400px] border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute bottom-[15%] left-[-200px] w-[700px] h-[700px] border-[56px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute bottom-[15%] left-[-100px] w-[450px] h-[450px] border-[36px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
+                {/* Decorative concentric circles in main background */}
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
             </div>
 
             {/* Sidebar Backdrop for Mobile */}
@@ -147,14 +295,11 @@ export default function PatientPortal() {
 
                 <div className="flex flex-col h-full w-full relative z-10 gap-stack-sm">
                     <div className="mb-8 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
-                            <img
-                                alt="PalmCrest ENT"
-                                className="w-6 h-6 invert"
-                                data-alt="A professional medical logo icon featuring a stylized palm leaf integrated with a medical cross, rendered in a crisp white on a deep teal circular background, emphasizing advanced healthcare and coastal serenity."
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD45lWtmD9uGlZLOShcyBesi15ZZdwRFXByo3R3WWPO5cO6UgD8hHoewb8RN3vIXO0qwqGavpXKPaB0TIrPaYEuP33MI-TfsNcvEOfHdu1Kb_VrFgbAavE0FyAcZx-XB9PC7DrQkMsljhimaXe4pdxcVss0X0JQTv5fe6oYE4-4xbEEqMUWN1_De6Sxzf-8pIWG_Kgk0Ts35Gw5_E4T_mx5uAZScEfTklQUBw8gX3KmluClk3KZ6nWpzjXtJ0oEnHbtqoKOuMoEoIk"
-                            />
-                        </div>
+                        <img
+                            alt="PalmCrest ENT Logo"
+                            className="h-10 w-auto object-contain shadow-sm rounded-xl"
+                            src="/logo-ent.jpeg"
+                        />
                         <div>
                             <h1 className="text-headline-sm font-headline-md text-primary leading-tight">PalmCrest ENT</h1>
                             <p className="text-caption text-on-surface-variant">Clinical Excellence</p>
@@ -236,8 +381,8 @@ export default function PatientPortal() {
                                 </button>
                                 <div className="flex items-center gap-3 ml-4">
                                     <div className="text-right hidden sm:block">
-                                        <p className="font-label-md text-primary">Johnathan Doe</p>
-                                        <p className="text-caption text-on-surface-variant">Patient ID: #PC-8821</p>
+                                        <p className="font-label-md text-primary">{user?.fullName || 'Patient'}</p>
+                                        <p className="text-caption text-on-surface-variant">Patient ID: {user?.patientId || '#PC-8821'}</p>
                                     </div>
                                     <img
                                         alt="User Profile"
@@ -262,7 +407,7 @@ export default function PatientPortal() {
                                 <span className="material-symbols-outlined absolute bottom-[-30px] right-[10%] text-white/10 pointer-events-none" style={{ fontSize: '180px' }}>calendar_today</span>
 
                                 <div className="relative z-10 w-full md:w-2/3">
-                                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Welcome back, Johnathan.</h3>
+                                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Welcome back, {user?.fullName ? user.fullName.split(' ')[0] : 'Patient'}.</h3>
                                     <p className="text-sm md:text-base text-white/90 max-w-2xl">Your health journey is our priority. You have an upcoming consultation with Dr. Aris in 2 days.</p>
                                 </div>
 
@@ -315,7 +460,10 @@ export default function PatientPortal() {
                                                 <p className="text-caption font-label-md text-secondary-fixed mb-1">Fast Track Process</p>
                                                 <p className="text-body-md text-white/90">Typical review time: 24-48 hours</p>
                                             </div>
-                                            <button className="w-full bg-white text-primary py-3 rounded-xl font-label-md hover:bg-secondary-fixed transition-colors">
+                                            <button 
+                                                onClick={handleRequestSurgery}
+                                                className="w-full bg-white text-primary py-3 rounded-xl font-label-md hover:bg-secondary-fixed transition-colors"
+                                            >
                                                 Start Request
                                             </button>
                                         </div>
@@ -331,7 +479,7 @@ export default function PatientPortal() {
                                                 <img
                                                     alt="Support Agent"
                                                     className="w-12 h-12 rounded-full bg-secondary-container object-cover"
-                                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBB2IYbsjlv0LgrI258cJE8ELryf9IINqjBWwaMI1bpDl7JE3YLCsl5NF-j2R_38kwJ8daBfZtL3n6vALJghVHzLVLxrU8a8CUyyzoLgxAUWJLYOTY5V5Qu9ACOrcuJwiGl9qzexcN-GiJ0V4oF-JDbWo-1D2SBEGS3QczfMbhT7_vW8IBNfSESnKUqGJBdUJtmPmzBz4HN0etYPEKRVynAzkn8vvbi1V8aISe2ECp4pNXz1ufRH_ARYrM6pfHFM8q_TP7gVpVyDh8"
+                                                    src="/5p.jpeg"
                                                 />
                                                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
                                             </div>
@@ -402,9 +550,11 @@ export default function PatientPortal() {
                                                     onChange={(e) => setSpecialist(e.target.value)}
                                                     className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                                 >
-                                                    <option>Dr. Elena Aris (Audiology)</option>
-                                                    <option>Dr. Marcus Vane (Rhinology)</option>
-                                                    <option>Dr. Sarah Chen (Laryngology)</option>
+                                                    {doctors.map(doc => (
+                                                        <option key={doc._id} value={doc._id}>
+                                                            {doc.fullName} ({doc.specialization})
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                             <div>

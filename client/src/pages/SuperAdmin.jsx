@@ -6,9 +6,9 @@ export default function SuperAdmin() {
 
     // Chart filter state
     const [inflowFilter, setInflowFilter] = useState('Last 7 Days');
-    
+
     // Simple mock chart heights matching selected filter
-    const chartHeights = inflowFilter === 'Last 7 Days' 
+    const chartHeights = inflowFilter === 'Last 7 Days'
         ? ['h-[60%]', 'h-[45%]', 'h-[85%]', 'h-[70%]', 'h-[95%]', 'h-[40%]']
         : ['h-[90%]', 'h-[75%]', 'h-[50%]', 'h-[80%]', 'h-[65%]', 'h-[95%]'];
 
@@ -16,14 +16,85 @@ export default function SuperAdmin() {
         ? [124, 98, 182, 145, 210, 84]
         : [250, 195, 120, 210, 175, 290];
 
-    // Staff state
-    const [staff, setStaff] = useState([
-        { id: 1, name: 'Dr. Elena Rodriguez', role: 'Senior Rhinologist', dept: 'Nasal & Sinus', status: 'Active', statusColor: 'bg-emerald-100 text-emerald-800', score: 92, progressWidth: 'w-[92%]', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBL6b9W1d32HG9rw98YFK0m0owE95Ouf8puk4c5PzSjy33_t27MM0s0S4eCx7_EzHE5YBKDWZK_Z3blFblAg_OtW1F0OKLoWaUsNyEJT-Gb8mgOpztTOXEFkreWYEVLhbw9sC6q2GmAmh_PKZMU332uJlDstJFaeo7odtyCPIjFOJITwOM9Ar9UMhCkIZgODIP2snszbMq7fPyjh16-NhP7xYla-jat3FCKvd1xcrHfuLcc_LFU0hpd9O-xKXheqNmZGWgDmgaZYgU' },
-        { id: 2, name: 'Dr. Marcus Thorne', role: 'Audiology Lead', dept: 'Hearing Care', status: 'In Surgery', statusColor: 'bg-blue-100 text-blue-800', score: 88, progressWidth: 'w-[88%]', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCnfKTPKwSDIwGSX2NixUqrt13K18eOhLNdQ4qa0H91JcnZpYqm_Amf35VqLeM1ilDKgkAxe0hW1qJA7hSRhu8wCHn2qBmAumBzej81NdXEMEh7u_S1TxQouya-TMmvfUNJyweOZkTe8OBr2T51WfBJfPCbz24tEB62aAWgyvWZZS3xjZp25ArmyeKXB4es0EFoRAedBJlvKKoj3BEAx9OofDamGhZOM7272n0Jx695TyKcFlT60Hbn_9_cfRNlynSlvIpMl7fRaSQ' },
-        { id: 3, name: 'Dr. Sophia Chen', role: 'Laryngologist', dept: 'Voice & Swallowing', status: 'On Break', statusColor: 'bg-amber-100 text-amber-800', score: 95, progressWidth: 'w-[95%]', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBgP_OxbynEx8hfasQpsLjLc3fJIotxcrA3FwLVrEO8liHXfQ1Qz8LkafGeI5yON_I6F2eVtwBZ7PMKzHuyXzyI0wJRXbjOSBmk-oUNDc2R_jYy5U0Z_ILcIm2eycYaCf1_nINwhfIQ5DGHSqea_GE1rrZgAaiUKS9mPDfftmcM69IFty8CJUsfKXxtJ0FKevOtU_1oD-YhV_eE_SNuqZNr3YaPir4ijU_jfvJ4IpZ_iPUMe5pt8-z6JcBvzHCQi84zFLdTkLm16TM' }
-    ]);
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [doctors, setDoctors] = useState([]);
+    const [patients, setPatients] = useState([]);
+    const [appointments, setAppointments] = useState([]);
+    const [admins, setAdmins] = useState([]);
+
+    const [doctorSearchInput, setDoctorSearchInput] = useState('');
+    const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
+    const [patientSearchInput, setPatientSearchInput] = useState('');
+    const [patientSearchQuery, setPatientSearchQuery] = useState('');
+
+    const [doctorPage, setDoctorPage] = useState(1);
+    const [patientPage, setPatientPage] = useState(1);
+
+    const [selectedDoctorFilter, setSelectedDoctorFilter] = useState('All');
+    const [selectedTypeFilter, setSelectedTypeFilter] = useState('All');
+    const [selectedStatusFilter, setSelectedStatusFilter] = useState('All');
+
+    const fetchAdminData = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            // 1. Fetch doctors
+            const docRes = await fetch('/api/auth/doctors', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (docRes.ok) {
+                const docs = await docRes.json();
+                setDoctors(docs);
+            }
+
+            // 2. Fetch patients
+            const patRes = await fetch('/api/auth/patients', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (patRes.ok) {
+                const pats = await patRes.json();
+                setPatients(pats);
+            }
+
+            // 3. Fetch appointments
+            const apptRes = await fetch('/api/appointments', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (apptRes.ok) {
+                const appts = await apptRes.json();
+                setAppointments(appts);
+            }
+
+            // 4. Fetch admins
+            const adminRes = await fetch('/api/auth/admins', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (adminRes.ok) {
+                const adms = await adminRes.json();
+                setAdmins(adms);
+            }
+        } catch (err) {
+            console.error('Error fetching admin data:', err);
+        }
+    };
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+
+        if (!token || !storedUser) {
+            navigate('/portal');
+            return;
+        }
+
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.role !== 'admin') {
+            localStorage.clear();
+            navigate('/portal');
+            return;
+        }
+
+        fetchAdminData();
+
         // Sticky Header effect on scroll
         const handleScroll = () => {
             const header = document.querySelector('header');
@@ -56,28 +127,107 @@ export default function SuperAdmin() {
         };
     }, []);
 
-    const handleOnboardSpecialist = () => {
+    const handleOnboardSpecialist = async () => {
         const name = prompt("Enter Specialist Name:");
         if (!name) return;
-        const role = prompt("Enter Specialist Title/Role:", "Otolaryngologist");
-        if (!role) return;
-        const dept = prompt("Enter Department:", "General ENT");
-        if (!dept) return;
+        const email = prompt("Enter Specialist Email:");
+        if (!email) return;
+        const password = prompt("Enter Specialist Password (min 8 chars):", "password123");
+        if (!password) return;
+        const spec = prompt("Enter Specialization (Audiology, Rhinology, Laryngology, Otology, General ENT):", "General ENT");
+        if (!spec) return;
+        const phone = prompt("Enter Specialist Phone Number:", "123-456-7890");
+        if (!phone) return;
 
-        const newStaff = {
-            id: Date.now(),
-            name,
-            role,
-            dept,
-            status: 'Active',
-            statusColor: 'bg-emerald-100 text-emerald-800',
-            score: 90,
-            progressWidth: 'w-[90%]',
-            img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCnfKTPKwSDIwGSX2NixUqrt13K18eOhLNdQ4qa0H91JcnZpYqm_Amf35VqLeM1ilDKgkAxe0hW1qJA7hSRhu8wCHn2qBmAumBzej81NdXEMEh7u_S1TxQouya-TMmvfUNJyweOZkTe8OBr2T51WfBJfPCbz24tEB62aAWgyvWZZS3xjZp25ArmyeKXB4es0EFoRAedBJlvKKoj3BEAx9OofDamGhZOM7272n0Jx695TyKcFlT60Hbn_9_cfRNlynSlvIpMl7fRaSQ'
-        };
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullName: name,
+                    email: email,
+                    password: password,
+                    role: 'doctor',
+                    specialization: spec,
+                    phoneNumber: phone
+                })
+            });
 
-        setStaff([...staff, newStaff]);
-        alert(`${name} onboarded successfully!`);
+            if (!response.ok) {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to onboard specialist.');
+                return;
+            }
+
+            alert(`${name} onboarded successfully!`);
+            fetchAdminData();
+        } catch (err) {
+            console.error('Error onboarding specialist:', err);
+            alert('Network error onboarding specialist.');
+        }
+    };
+
+    const handleOnboardAdmin = async () => {
+        const name = prompt("Enter Administrator Name:");
+        if (!name) return;
+        const email = prompt("Enter Administrator Email:");
+        if (!email) return;
+        const password = prompt("Enter Administrator Password (min 8 chars):");
+        if (!password) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/auth/admin/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    fullName: name,
+                    email: email,
+                    password: password
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to onboard administrator.');
+                return;
+            }
+
+            alert(`Administrator ${name} onboarded successfully!`);
+            fetchAdminData();
+        } catch (err) {
+            console.error('Error onboarding administrator:', err);
+            alert('Network error onboarding administrator.');
+        }
+    };
+
+    const handleUpdateStatus = async (id, status) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/appointments/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status })
+            });
+
+            if (response.ok) {
+                alert(`Appointment status updated to ${status}!`);
+                fetchAdminData();
+            } else {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to update status.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error updating status.');
+        }
     };
 
     const handleViewLogs = () => {
@@ -85,8 +235,50 @@ export default function SuperAdmin() {
     };
 
     const handleLogout = () => {
+        localStorage.clear();
         navigate('/portal');
     };
+
+    const handleDoctorSearch = (e) => {
+        e.preventDefault();
+        setDoctorSearchQuery(doctorSearchInput);
+        setDoctorPage(1);
+    };
+
+    const handlePatientSearch = (e) => {
+        e.preventDefault();
+        setPatientSearchQuery(patientSearchInput);
+        setPatientPage(1);
+    };
+
+    const filteredDoctors = doctors.filter(doc => {
+        const query = doctorSearchQuery.toLowerCase();
+        return (doc.fullName || '').toLowerCase().includes(query) ||
+            (doc.email || '').toLowerCase().includes(query) ||
+            (doc.specialization || '').toLowerCase().includes(query) ||
+            (doc.phoneNumber || '').toLowerCase().includes(query);
+    });
+
+    const filteredPatients = patients.filter(pat => {
+        const query = patientSearchQuery.toLowerCase();
+        return (pat.fullName || '').toLowerCase().includes(query) ||
+            (pat.email || '').toLowerCase().includes(query) ||
+            (pat.patientId || '').toLowerCase().includes(query) ||
+            (pat.phoneNumber || '').toLowerCase().includes(query);
+    });
+
+    const ITEMS_PER_PAGE = 5;
+    const totalDoctorPages = Math.ceil(filteredDoctors.length / ITEMS_PER_PAGE) || 1;
+    const paginatedDoctors = filteredDoctors.slice(
+        (doctorPage - 1) * ITEMS_PER_PAGE,
+        doctorPage * ITEMS_PER_PAGE
+    );
+
+    const totalPatientPages = Math.ceil(filteredPatients.length / ITEMS_PER_PAGE) || 1;
+    const paginatedPatients = filteredPatients.slice(
+        (patientPage - 1) * ITEMS_PER_PAGE,
+        patientPage * ITEMS_PER_PAGE
+    );
 
     return (
         <div className="text-[#191c1e] min-h-screen text-left font-body-md relative z-0">
@@ -99,10 +291,9 @@ export default function SuperAdmin() {
                 <div className="wave-blob bg-secondary-container bottom-[35%] left-[5%]" style={{ animationDelay: '-13s' }}></div>
 
                 {/* Decorative concentric circles in main background */}
-                <div className="absolute top-[10%] right-[-150px] w-[600px] h-[600px] border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute top-[10%] right-[-80px] w-[400px] h-[400px] border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute bottom-[15%] left-[-200px] w-[700px] h-[700px] border-[56px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute bottom-[15%] left-[-100px] w-[450px] h-[450px] border-[36px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
+                {/* Decorative concentric circles in main background */}
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
             </div>
 
             {/* Side Navigation Shell */}
@@ -112,34 +303,56 @@ export default function SuperAdmin() {
                 <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[220px] h-[220px] border-[24px] border-primary/5 dark:border-white/5 rounded-full pointer-events-none -ml-14 z-0"></div>
 
                 <div className="flex flex-col h-full w-full relative z-10 gap-stack-sm">
-                    <div className="mb-stack-lg">
-                        <h1 className="text-headline-sm font-headline-md text-primary font-bold">PalmCrest ENT</h1>
-                        <p className="text-label-md font-label-md tracking-[0.05em] text-on-surface-variant opacity-70">Clinical Excellence</p>
+                    <div className="mb-stack-lg flex items-center gap-3">
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-xl" />
+                        <div>
+                            <h1 className="text-headline-sm font-headline-md text-primary font-bold leading-tight">PalmCrest ENT</h1>
+                            <p className="text-label-md font-label-md tracking-[0.05em] text-on-surface-variant opacity-70">Clinical Excellence</p>
+                        </div>
                     </div>
                     <nav className="flex-grow flex flex-col gap-2">
-                        <a className="flex items-center gap-3 px-4 py-3 bg-white/70 backdrop-blur-md rounded-xl text-primary font-bold animate-smooth" href="#">
+                        <button
+                            onClick={() => setActiveTab('dashboard')}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                        >
                             <span className="material-symbols-outlined">dashboard</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Dashboard</span>
-                        </a>
-                        <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('doctors')}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'doctors' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                        >
+                            <span className="material-symbols-outlined">medical_services</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Doctors</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('patients')}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'patients' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                        >
                             <span className="material-symbols-outlined">group</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Patients</span>
-                        </a>
-                        <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('appointments')}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                        >
                             <span className="material-symbols-outlined">calendar_today</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Appointments</span>
-                        </a>
-                        <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth group" href="#">
-                            <span className="material-symbols-outlined">settings</span>
-                            <span className="text-label-md font-label-md tracking-[0.05em]">Settings</span>
-                        </a>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('admins')}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'admins' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                        >
+                            <span className="material-symbols-outlined">admin_panel_settings</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Admins</span>
+                        </button>
                     </nav>
                     <div className="mt-auto flex flex-col gap-2 pt-6 border-t border-outline-variant/20">
                         <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth" href="#">
                             <span className="material-symbols-outlined">help</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Help Support</span>
                         </a>
-                        <button 
+                        <button
                             onClick={handleLogout}
                             className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform animate-smooth w-full text-left"
                         >
@@ -155,12 +368,18 @@ export default function SuperAdmin() {
                 {/* TopAppBar */}
                 <header className="fixed top-0 right-0 left-0 md:left-[280px] z-50 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm px-8 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <h2 className="text-headline-md font-headline-md font-bold tracking-tight text-primary">Overview</h2>
+                        <h2 className="text-headline-md font-headline-md font-bold tracking-tight text-primary">
+                            {activeTab === 'dashboard' && 'Overview'}
+                            {activeTab === 'doctors' && 'Manage Doctors'}
+                            {activeTab === 'patients' && 'Patient Directory'}
+                            {activeTab === 'appointments' && 'Appointment Requests'}
+                            {activeTab === 'admins' && 'Administrator Directory'}
+                        </h2>
                     </div>
                     <div className="flex items-center gap-gutter">
                         <div className="hidden lg:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/30">
                             <span className="material-symbols-outlined text-on-surface-variant mr-2">search</span>
-                            <input className="bg-transparent border-none focus:ring-0 text-body-md w-64 outline-none" placeholder="Search patients, records..." type="text" />
+                            <input className="bg-transparent border-none focus:ring-0 text-body-md w-64 outline-none" placeholder="Search..." type="text" />
                         </div>
                         <div className="flex items-center gap-4 border-l border-outline-variant/30 pl-gutter">
                             <button className="relative p-2 hover:bg-surface-variant/20 rounded-full animate-smooth">
@@ -172,11 +391,10 @@ export default function SuperAdmin() {
                                     <p className="text-label-md font-bold text-primary">Dr. Julian Vance</p>
                                     <p className="text-caption text-on-surface-variant">Super Admin</p>
                                 </div>
-                                <img 
-                                    alt="User Profile" 
+                                <img
+                                    alt="User Profile"
                                     className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
-                                    data-alt="A professional close-up portrait of a senior male doctor with grey hair, wearing a white clinical coat and a stethoscope. He has a warm, authoritative expression. The background is a brightly lit, high-end medical office with soft architectural blurring. The overall aesthetic is clean, trustworthy, and futuristic healthcare professional."
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxK5uFx1zr_pnoSRQwZfGlYraLFp4f5xUT5Kv6IbtNNUo-6bYrLxFAzhjm979u0aLf6nj53oulJJNAuwdg2CuFSoWqDcsyMhfCsx4EyWGcfPudS0sVea_NMTJMvGpnytTACB5vQds5DEc0K4AyVKb7XAqsbjLWXPI24h4L2hFRQ1d69HMNMkkj5lllf0N9OjMxoPQhDWXklucaX54hZn1-UwbXZhjNaZGPy04iWFEiu7RtqjL2oBCuJgJ4WfTpgfVFxPCEd23ZDEA" 
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxK5uFx1zr_pnoSRQwZfGlYraLFp4f5xUT5Kv6IbtNNUo-6bYrLxFAzhjm979u0aLf6nj53oulJJNAuwdg2CuFSoWqDcsyMhfCsx4EyWGcfPudS0sVea_NMTJMvGpnytTACB5vQds5DEc0K4AyVKb7XAqsbjLWXPI24h4L2hFRQ1d69HMNMkkj5lllf0N9OjMxoPQhDWXklucaX54hZn1-UwbXZhjNaZGPy04iWFEiu7RtqjL2oBCuJgJ4WfTpgfVFxPCEd23ZDEA"
                                 />
                             </div>
                         </div>
@@ -184,244 +402,557 @@ export default function SuperAdmin() {
                 </header>
 
                 {/* Dashboard Content */}
-                <div className="pt-24 px-8 pb-12 max-w-container-max mx-auto">
-                    {/* Bento Grid Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-stack-lg">
-                        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
-                            <div className="flex justify-between items-start">
-                                <div className="p-3 bg-primary/10 rounded-xl">
-                                    <span className="material-symbols-outlined text-primary">medical_services</span>
-                                </div>
-                                <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+12%</span>
-                            </div>
-                            <div>
-                                <p className="text-headline-md font-headline-md font-bold text-primary">84</p>
-                                <p className="text-label-md text-on-surface-variant">Total Doctors</p>
-                            </div>
-                        </div>
-                        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
-                            <div className="flex justify-between items-start">
-                                <div className="p-3 bg-secondary/10 rounded-xl">
-                                    <span className="material-symbols-outlined text-secondary">calendar_month</span>
-                                </div>
-                                <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+5.2%</span>
-                            </div>
-                            <div>
-                                <p className="text-headline-md font-headline-md font-bold text-primary">1,240</p>
-                                <p className="text-label-md text-on-surface-variant">Total Bookings</p>
-                            </div>
-                        </div>
-                        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
-                            <div className="flex justify-between items-start">
-                                <div className="p-3 bg-tertiary/10 rounded-xl">
-                                    <span className="material-symbols-outlined text-tertiary">biotech</span>
-                                </div>
-                                <span className="text-on-error-container bg-error-container/20 px-2 py-1 rounded text-caption font-bold">-2%</span>
-                            </div>
-                            <div>
-                                <p className="text-headline-md font-headline-md font-bold text-primary">42</p>
-                                <p className="text-label-md text-on-surface-variant">Surgery Requests</p>
-                            </div>
-                        </div>
-                        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
-                            <div className="flex justify-between items-start">
-                                <div className="p-3 bg-secondary-container/20 rounded-xl">
-                                    <span className="material-symbols-outlined text-secondary">payments</span>
-                                </div>
-                                <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+18%</span>
-                            </div>
-                            <div>
-                                <p className="text-headline-md font-headline-md font-bold text-primary">$214.8k</p>
-                                <p className="text-label-md text-on-surface-variant">Monthly Revenue</p>
-                            </div>
-                        </div>
-                    </div>
+                <div className="pt-24 px-8 pb-12 max-w-container-max mx-auto animate-smooth">
 
-                    {/* Charts Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
-                        <div className="lg:col-span-2 glass-card p-8 rounded-3xl min-h-[400px]">
-                            <div className="flex justify-between items-center mb-8">
-                                <div>
-                                    <h3 className="text-headline-sm font-headline-md text-primary">Patient Inflow Analytics</h3>
-                                    <p className="text-body-md text-on-surface-variant">Comparison between new and returning patients</p>
+                    {activeTab === 'dashboard' && (
+                        <>
+                            {/* Bento Grid Overview */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-gutter mb-stack-lg animate-smooth">
+                                <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                                    <div className="flex justify-between items-start">
+                                        <div className="p-3 bg-primary/10 rounded-xl">
+                                            <span className="material-symbols-outlined text-primary">medical_services</span>
+                                        </div>
+                                        <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+12%</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-headline-md font-headline-md font-bold text-primary">{doctors.length}</p>
+                                        <p className="text-label-md text-on-surface-variant">Total Doctors</p>
+                                    </div>
                                 </div>
-                                <select
-                                    value={inflowFilter}
-                                    onChange={(e) => setInflowFilter(e.target.value)}
-                                    className="bg-surface-container-low border-none rounded-full text-label-md px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none"
-                                >
-                                    <option>Last 7 Days</option>
-                                    <option>Last 30 Days</option>
-                                </select>
+                                <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                                    <div className="flex justify-between items-start">
+                                        <div className="p-3 bg-secondary/10 rounded-xl">
+                                            <span className="material-symbols-outlined text-secondary">calendar_month</span>
+                                        </div>
+                                        <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+5.2%</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-headline-md font-headline-md font-bold text-primary">{appointments.filter(a => a.type === 'Appointment').length}</p>
+                                        <p className="text-label-md text-on-surface-variant">Total Bookings</p>
+                                    </div>
+                                </div>
+                                <div className="glass-card p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                                    <div className="flex justify-between items-start">
+                                        <div className="p-3 bg-tertiary/10 rounded-xl">
+                                            <span className="material-symbols-outlined text-tertiary">biotech</span>
+                                        </div>
+                                        <span className="text-on-error-container bg-error-container/20 px-2 py-1 rounded text-caption font-bold">-2%</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-headline-md font-headline-md font-bold text-primary">{appointments.filter(a => a.type === 'Surgery').length}</p>
+                                        <p className="text-label-md text-on-surface-variant">Surgery Requests</p>
+                                    </div>
+                                </div>
                             </div>
-                            {/* Visual Chart Representation */}
-                            <div className="relative h-64 flex items-end gap-4 px-4">
-                                <div className="flex-grow flex items-end justify-around h-full border-b border-outline-variant/30">
-                                    {chartHeights.map((hClass, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`w-12 bg-gradient-to-t ${
-                                                idx % 2 === 0 ? 'from-primary to-secondary' : 'from-secondary to-secondary-container'
-                                            } rounded-t-lg ${hClass} animate-smooth hover:opacity-80 relative group cursor-pointer`}
+
+                            {/* Charts Section */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
+                                <div className="lg:col-span-2 glass-card p-8 rounded-3xl min-h-[400px]">
+                                    <div className="flex justify-between items-center mb-8">
+                                        <div>
+                                            <h3 className="text-headline-sm font-headline-md text-primary">Patient Inflow Analytics</h3>
+                                            <p className="text-body-md text-on-surface-variant">Comparison between new and returning patients</p>
+                                        </div>
+                                        <select
+                                            value={inflowFilter}
+                                            onChange={(e) => setInflowFilter(e.target.value)}
+                                            className="bg-surface-container-low border-none rounded-full text-label-md px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none"
                                         >
-                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded transition-opacity duration-250">
-                                                {chartValues[idx]}
+                                            <option>Last 7 Days</option>
+                                            <option>Last 30 Days</option>
+                                        </select>
+                                    </div>
+                                    {/* Visual Chart Representation */}
+                                    <div className="relative h-64 flex items-end gap-4 px-4">
+                                        <div className="flex-grow flex items-end justify-around h-full border-b border-outline-variant/30">
+                                            {chartHeights.map((hClass, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className={`w-12 bg-gradient-to-t ${idx % 2 === 0 ? 'from-primary to-secondary' : 'from-secondary to-secondary-container'
+                                                        } rounded-t-lg ${hClass} animate-smooth hover:opacity-80 relative group cursor-pointer`}
+                                                >
+                                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-2 py-1 rounded transition-opacity duration-250">
+                                                        {chartValues[idx]}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-around mt-4 text-caption text-on-surface-variant">
+                                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                                    </div>
+                                </div>
+
+                                <div className="glass-card p-8 rounded-3xl">
+                                    <h3 className="text-headline-sm font-headline-md text-primary mb-6">Recent Activity</h3>
+                                    <div className="space-y-6">
+                                        <div className="flex gap-4">
+                                            <div className="w-2 h-2 rounded-full bg-secondary mt-2"></div>
+                                            <div>
+                                                <p className="text-body-md font-bold text-primary">New Specialist Onboarded</p>
+                                                <p className="text-caption text-on-surface-variant">System updated successfully • 2 mins ago</p>
                                             </div>
                                         </div>
-                                    ))}
+                                        <div className="flex gap-4">
+                                            <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                                            <div>
+                                                <p className="text-body-md font-bold text-primary">New Surgery Approved</p>
+                                                <p className="text-caption text-on-surface-variant">Procedure scheduled • 15 mins ago</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <div className="w-2 h-2 rounded-full bg-tertiary mt-2"></div>
+                                            <div>
+                                                <p className="text-body-md font-bold text-primary">Revenue Milestone Reached</p>
+                                                <p className="text-caption text-on-surface-variant">Reached $200k target • 1 hour ago</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleViewLogs}
+                                        className="w-full mt-8 py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors"
+                                    >
+                                        View All Logs
+                                    </button>
                                 </div>
                             </div>
-                            <div className="flex justify-around mt-4 text-caption text-on-surface-variant">
-                                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                        </>
+                    )}
+                                      {/* Manage Doctors Table */}
+                    {activeTab === 'doctors' && (
+                        <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg animate-smooth">
+                            <div className="p-8 border-b border-white/40 flex flex-col gap-6">
+                                <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
+                                    <div>
+                                        <h3 className="text-headline-sm font-headline-md text-primary">Manage Medical Staff</h3>
+                                        <p className="text-body-md text-on-surface-variant">Oversee credentials and performance metrics</p>
+                                    </div>
+                                    <button
+                                        onClick={handleOnboardSpecialist}
+                                        className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all animate-smooth self-start md:self-auto"
+                                    >
+                                        <span className="material-symbols-outlined">person_add</span>
+                                        Onboard Specialist
+                                    </button>
+                                </div>
+                                <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between border-t border-outline-variant/10 pt-6">
+                                    <form onSubmit={handleDoctorSearch} className="flex flex-wrap gap-2 items-center w-full">
+                                        <div className="flex items-center bg-surface-container-low px-4 py-2.5 rounded-xl border border-outline-variant/30 flex-grow max-w-md">
+                                            <span className="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+                                            <input
+                                                className="bg-transparent border-none focus:ring-0 text-body-md w-full outline-none"
+                                                placeholder="Search name, email, spec..."
+                                                type="text"
+                                                value={doctorSearchInput}
+                                                onChange={(e) => setDoctorSearchInput(e.target.value)}
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all text-label-md"
+                                        >
+                                            Search
+                                        </button>
+                                        {doctorSearchQuery && (
+                                            <button
+                                                type="button"
+                                                onClick={() => { setDoctorSearchInput(''); setDoctorSearchQuery(''); setDoctorPage(1); }}
+                                                className="bg-surface-variant/20 text-on-surface-variant px-4 py-2.5 rounded-xl font-bold hover:bg-surface-variant/40 transition-all text-label-md"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </form>
+                                </div>
                             </div>
-                        </div>
-
-                        <div className="glass-card p-8 rounded-3xl">
-                            <h3 className="text-headline-sm font-headline-md text-primary mb-6">Recent Activity</h3>
-                            <div className="space-y-6">
-                                <div className="flex gap-4">
-                                    <div className="w-2 h-2 rounded-full bg-secondary mt-2"></div>
-                                    <div>
-                                        <p className="text-body-md font-bold text-primary">Dr. Sarah Miller Joined</p>
-                                        <p className="text-caption text-on-surface-variant">Otology Specialist • 2 mins ago</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                                    <div>
-                                        <p className="text-body-md font-bold text-primary">New Surgery Approved</p>
-                                        <p className="text-caption text-on-surface-variant">Patient ID #8842 • 15 mins ago</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="w-2 h-2 rounded-full bg-tertiary mt-2"></div>
-                                    <div>
-                                        <p className="text-body-md font-bold text-primary">Revenue Milestone Reached</p>
-                                        <p className="text-caption text-on-surface-variant">Reached $200k target • 1 hour ago</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="w-2 h-2 rounded-full bg-outline mt-2"></div>
-                                    <div>
-                                        <p className="text-body-md font-bold text-primary">System Update Completed</p>
-                                        <p className="text-caption text-on-surface-variant">Version 4.2.0 stable • 3 hours ago</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <button 
-                                onClick={handleViewLogs}
-                                className="w-full mt-8 py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors"
-                            >
-                                View All Logs
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Manage Doctors Table */}
-                    <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg">
-                        <div className="p-8 border-b border-white/40 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-headline-sm font-headline-md text-primary">Manage Medical Staff</h3>
-                                <p className="text-body-md text-on-surface-variant">Oversee credentials and performance metrics</p>
-                            </div>
-                            <button
-                                onClick={handleOnboardSpecialist}
-                                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] animate-smooth"
-                            >
-                                <span className="material-symbols-outlined">person_add</span>
-                                Onboard Specialist
-                            </button>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead class="bg-surface-container-low text-label-md text-on-surface-variant">
-                                    <tr>
-                                        <th className="px-8 py-4">Specialist</th>
-                                        <th className="px-8 py-4">Department</th>
-                                        <th className="px-8 py-4">Status</th>
-                                        <th className="px-8 py-4">Performance</th>
-                                        <th className="px-8 py-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-outline-variant/10">
-                                    {staff.map(s => (
-                                        <tr key={s.id} className="hover:bg-white/40 transition-colors group">
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-4">
-                                                    <img 
-                                                        alt="Staff" 
-                                                        className="w-12 h-12 rounded-full object-cover"
-                                                        data-alt="A professional headshot of a female/male doctor..."
-                                                        src={s.img}
-                                                    />
-                                                    <div>
-                                                        <p className="text-body-md font-bold text-primary">{s.name}</p>
-                                                        <p className="text-caption text-on-surface-variant">{s.role}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <span className="text-body-md text-primary">{s.dept}</span>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <span className={`${s.statusColor} px-3 py-1 rounded-full text-caption font-bold`}>{s.status}</span>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
-                                                        <div className={`h-full bg-secondary ${s.progressWidth}`}></div>
-                                                    </div>
-                                                    <span className="text-caption font-bold text-primary">{s.score}%</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <button className="p-2 hover:bg-primary/10 rounded-lg text-primary animate-smooth">
-                                                    <span className="material-symbols-outlined">more_vert</span>
-                                                </button>
-                                            </td>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
+                                        <tr>
+                                            <th className="px-8 py-4">Specialist</th>
+                                            <th className="px-8 py-4">Department / specialization</th>
+                                            <th className="px-8 py-4">Contact Email</th>
+                                            <th className="px-8 py-4">Phone Number</th>
+                                            <th className="px-8 py-4">Status</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Notifications Sidebar Panel */}
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-gutter">
-                        <div className="lg:col-span-3 glass-card p-8 rounded-3xl min-h-[300px]">
-                            <h3 className="text-headline-sm font-headline-md text-primary mb-6">System Health</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-stack-md">
-                                <div className="p-6 bg-surface-container-low rounded-2xl border border-white/20">
-                                    <p className="text-caption font-bold text-on-surface-variant mb-2">SERVER LATENCY</p>
-                                    <div className="flex items-end gap-2">
-                                        <p className="text-headline-md font-headline-md text-primary">24ms</p>
-                                        <span className="material-symbols-outlined text-emerald-500 pb-1">trending_down</span>
-                                    </div>
-                                </div>
-                                <div className="p-6 bg-surface-container-low rounded-2xl border border-white/20">
-                                    <p className="text-caption font-bold text-on-surface-variant mb-2">DB CONNECTIONS</p>
-                                    <div className="flex items-end gap-2">
-                                        <p className="text-headline-md font-headline-md text-primary">1,102</p>
-                                        <span className="material-symbols-outlined text-secondary pb-1">sync</span>
-                                    </div>
-                                </div>
-                                <div className="p-6 bg-surface-container-low rounded-2xl border border-white/20">
-                                    <p className="text-caption font-bold text-on-surface-variant mb-2">API UPTIME</p>
-                                    <div className="flex items-end gap-2">
-                                        <p className="text-headline-md font-headline-md text-primary">99.9%</p>
-                                        <span className="material-symbols-outlined text-emerald-500 pb-1">verified</span>
-                                    </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-outline-variant/10">
+                                        {paginatedDoctors.length > 0 ? (
+                                            paginatedDoctors.map((s, idx) => (
+                                                <tr key={s._id} className="hover:bg-white/40 transition-colors group">
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold">
+                                                                {s.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-body-md font-bold text-primary">{s.fullName}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="text-body-md text-primary">{s.specialization}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                        {s.email}
+                                                    </td>
+                                                    <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                        {s.phoneNumber || 'N/A'}
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-caption font-bold">Active</span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" className="px-8 py-6 text-center text-on-surface-variant">
+                                                    {doctorSearchQuery ? 'No specialists match the search query.' : 'No specialists onboarded yet.'}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex justify-between items-center px-8">
+                                <span className="text-caption text-on-surface-variant font-medium">
+                                    Page {doctorPage} of {totalDoctorPages} (Total {filteredDoctors.length} staff)
+                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        disabled={doctorPage === 1}
+                                        onClick={() => setDoctorPage(p => Math.max(p - 1, 1))}
+                                        className="px-4 py-2 rounded-xl text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
+                                    >
+                                        Previous
+                                    </button>
+                                    <button
+                                        disabled={doctorPage === totalDoctorPages}
+                                        onClick={() => setDoctorPage(p => Math.min(p + 1, totalDoctorPages))}
+                                        className="px-4 py-2 rounded-xl text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
+                                    >
+                                        Next
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div className="lg:col-span-1 glass-card p-8 rounded-3xl bg-primary text-white flex flex-col justify-center relative overflow-hidden group">
-                            <div className="absolute -right-8 -top-8 w-32 h-32 bg-secondary/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                            <p className="text-label-md font-bold mb-2 opacity-80 uppercase tracking-widest text-[#ffddaf]">Emergency Portal</p>
-                            <h4 className="text-headline-sm font-headline-md font-bold mb-4 text-white">Direct Channel</h4>
-                            <p className="text-body-md opacity-70 mb-8 text-white/90">Access critical clinical alerts and rapid response protocols immediately.</p>
-                            <button className="w-full bg-white text-primary py-4 rounded-xl font-bold hover:bg-secondary-fixed transition-colors">Enter Secure Portal</button>
+                    )}                      {/* Patient Directory */}
+                    {activeTab === 'patients' && (
+                        <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg animate-smooth">
+                            <div className="p-8 border-b border-white/40 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+                                <div>
+                                    <h3 className="text-headline-sm font-headline-md text-primary">Patient Directory</h3>
+                                    <p className="text-body-md text-on-surface-variant">View all registered patients and clinical IDs</p>
+                                </div>
+                                <form onSubmit={handlePatientSearch} className="flex gap-2">
+                                    <div className="flex items-center bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/30 w-64 md:w-80">
+                                        <span className="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+                                        <input
+                                            className="bg-transparent border-none focus:ring-0 text-body-md w-full outline-none"
+                                            placeholder="Search name, email, ID..."
+                                            type="text"
+                                            value={patientSearchInput}
+                                            onChange={(e) => setPatientSearchInput(e.target.value)}
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:opacity-90 transition-all text-label-md"
+                                    >
+                                        Search
+                                    </button>
+                                    {patientSearchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { setPatientSearchInput(''); setPatientSearchQuery(''); setPatientPage(1); }}
+                                            className="bg-surface-variant/20 text-on-surface-variant px-3 py-2 rounded-xl font-bold hover:bg-surface-variant/40 transition-all text-label-md"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </form>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
+                                        <tr>
+                                            <th className="px-8 py-4">Patient Name</th>
+                                            <th className="px-8 py-4">Patient ID</th>
+                                            <th className="px-8 py-4">Email Address</th>
+                                            <th className="px-8 py-4">Phone Number</th>
+                                            <th className="px-8 py-4">Gender</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-outline-variant/10">
+                                        {paginatedPatients.length > 0 ? (
+                                            paginatedPatients.map(p => (
+                                                <tr key={p._id} className="hover:bg-white/40 transition-colors group">
+                                                    <td className="px-8 py-6">
+                                                        <p className="text-body-md font-bold text-primary">{p.fullName}</p>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="text-body-md font-semibold text-secondary">{p.patientId}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="text-body-md text-on-surface-variant">{p.email}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="text-body-md text-on-surface-variant">{p.phoneNumber || 'N/A'}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="text-body-md text-on-surface-variant">{p.gender || 'N/A'}</span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" className="px-8 py-6 text-center text-on-surface-variant">
+                                                    {patientSearchQuery ? 'No patients match the search query.' : 'No patients registered.'}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex justify-between items-center px-8">
+                                <span className="text-caption text-on-surface-variant font-medium">
+                                    Page {patientPage} of {totalPatientPages} (Total {filteredPatients.length} patients)
+                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        disabled={patientPage === 1}
+                                        onClick={() => setPatientPage(p => Math.max(p - 1, 1))}
+                                        className="px-4 py-2 rounded-xl text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
+                                    >
+                                        Previous
+                                    </button>
+                                    <button
+                                        disabled={patientPage === totalPatientPages}
+                                        onClick={() => setPatientPage(p => Math.min(p + 1, totalPatientPages))}
+                                        className="px-4 py-2 rounded-xl text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Appointments Management */}
+                    {activeTab === 'appointments' && (
+                        <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg animate-smooth">
+                            <div className="p-8 border-b border-white/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div>
+                                    <h3 className="text-headline-sm font-headline-md text-primary">All Appointments & Surgery Requests</h3>
+                                    <p className="text-body-md text-on-surface-variant">Review, approve, or cancel clinician requests across the hospital</p>
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    <select
+                                        value={selectedDoctorFilter}
+                                        onChange={(e) => setSelectedDoctorFilter(e.target.value)}
+                                        className="bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                    >
+                                        <option value="All">All Doctors</option>
+                                        {doctors.map(doc => (
+                                            <option key={doc._id} value={doc._id}>{doc.fullName}</option>
+                                        ))}
+                                    </select>
+                                    <select
+                                        value={selectedTypeFilter}
+                                        onChange={(e) => setSelectedTypeFilter(e.target.value)}
+                                        className="bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                    >
+                                        <option value="All">All Types</option>
+                                        <option value="Appointment">Appointments</option>
+                                        <option value="Surgery">Surgeries</option>
+                                    </select>
+                                    <select
+                                        value={selectedStatusFilter}
+                                        onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                                        className="bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                    >
+                                        <option value="All">All Statuses</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
+                                        <tr>
+                                            <th className="px-8 py-4">Doctor</th>
+                                            <th className="px-8 py-4">Patient</th>
+                                            <th className="px-8 py-4">Title / Purpose</th>
+                                            <th className="px-8 py-4">Date & Time</th>
+                                            <th className="px-8 py-4">Type</th>
+                                            <th className="px-8 py-4">Status</th>
+                                            <th className="px-8 py-4 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-outline-variant/10">
+                                        {appointments
+                                            .filter(appt => {
+                                                if (selectedDoctorFilter !== 'All' && appt.doctor?._id !== selectedDoctorFilter) return false;
+                                                if (selectedTypeFilter !== 'All' && appt.type !== selectedTypeFilter) return false;
+                                                if (selectedStatusFilter !== 'All' && appt.status !== selectedStatusFilter) return false;
+                                                return true;
+                                            })
+                                            .map(appt => {
+                                                const formattedDate = new Date(appt.date).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    year: 'numeric'
+                                                });
+                                                return (
+                                                    <tr key={appt._id} className="hover:bg-white/40 transition-colors group">
+                                                        <td className="px-8 py-6 font-bold text-primary">
+                                                            {appt.doctor?.fullName || 'Unknown'}
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <p className="text-body-md font-semibold text-primary">{appt.patient?.fullName || 'Unknown'}</p>
+                                                            <p className="text-caption text-on-surface-variant">{appt.patient?.patientId || ''}</p>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-body-md font-medium text-primary">
+                                                            {appt.title}
+                                                        </td>
+                                                        <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                            {formattedDate} • {appt.timeSlot}
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <span className={`px-3 py-1 rounded-full text-caption font-bold ${appt.type === 'Surgery' ? 'bg-secondary/15 text-secondary' : 'bg-primary/15 text-primary'}`}>
+                                                                {appt.type}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <span className={`px-3 py-1 rounded-full text-caption font-bold ${appt.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                                                                    appt.status === 'Approved' ? 'bg-blue-100 text-blue-800' :
+                                                                        appt.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                            'bg-red-100 text-red-800'
+                                                                }`}>
+                                                                {appt.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-right space-x-2">
+                                                            {appt.status === 'Pending' && (
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(appt._id, 'Approved')}
+                                                                    className="bg-primary text-white text-caption px-3 py-1.5 rounded-lg font-bold hover:opacity-90 animate-smooth"
+                                                                >
+                                                                    Approve
+                                                                </button>
+                                                            )}
+                                                            {['Pending', 'Approved'].includes(appt.status) && (
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(appt._id, 'Cancelled')}
+                                                                    className="bg-error/10 text-error text-caption px-3 py-1.5 rounded-lg font-bold hover:bg-error/20 animate-smooth"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                            )}
+                                                            {appt.status === 'Approved' && (
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(appt._id, 'Completed')}
+                                                                    className="bg-emerald-600 text-white text-caption px-3 py-1.5 rounded-lg font-bold hover:opacity-90 animate-smooth"
+                                                                >
+                                                                    Complete
+                                                                </button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        {appointments.filter(appt => {
+                                            if (selectedDoctorFilter !== 'All' && appt.doctor?._id !== selectedDoctorFilter) return false;
+                                            if (selectedTypeFilter !== 'All' && appt.type !== selectedTypeFilter) return false;
+                                            if (selectedStatusFilter !== 'All' && appt.status !== selectedStatusFilter) return false;
+                                            return true;
+                                        }).length === 0 && (
+                                                <tr>
+                                                    <td colSpan="7" className="px-8 py-6 text-center text-on-surface-variant">No appointments match the selected filters.</td>
+                                                </tr>
+                                            )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Admins Directory */}
+                    {activeTab === 'admins' && (
+                        <div className="glass-card rounded-3xl overflow-hidden mb-stack-lg animate-smooth">
+                            <div className="p-8 border-b border-white/40 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-headline-sm font-headline-md text-primary">System Administrators</h3>
+                                    <p className="text-body-md text-on-surface-variant">Oversee system administrators and access permissions</p>
+                                </div>
+                                <button
+                                    onClick={handleOnboardAdmin}
+                                    className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] animate-smooth"
+                                >
+                                    <span className="material-symbols-outlined">person_add</span>
+                                    Onboard Admin
+                                </button>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
+                                        <tr>
+                                            <th className="px-8 py-4">Administrator</th>
+                                            <th className="px-8 py-4">Contact Email</th>
+                                            <th className="px-8 py-4">Role</th>
+                                            <th className="px-8 py-4">Date Joined</th>
+                                            <th className="px-8 py-4">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-outline-variant/10">
+                                        {admins.length > 0 ? (
+                                            admins.map((adm) => {
+                                                const formattedDate = new Date(adm.createdAt).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    year: 'numeric'
+                                                });
+                                                return (
+                                                    <tr key={adm._id} className="hover:bg-white/40 transition-colors group">
+                                                        <td className="px-8 py-6">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold">
+                                                                    {adm.fullName ? adm.fullName.split(' ').map(n => n[0]).join('').toUpperCase() : 'A'}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-body-md font-bold text-primary">{adm.fullName}</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                            {adm.email}
+                                                        </td>
+                                                        <td className="px-8 py-6 text-body-md text-primary capitalize font-semibold">
+                                                            {adm.role}
+                                                        </td>
+                                                        <td className="px-8 py-6 text-body-md text-on-surface-variant">
+                                                            {formattedDate}
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-caption font-bold">Active</span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" className="px-8 py-6 text-center text-on-surface-variant">No administrators found.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}
@@ -451,7 +982,7 @@ export default function SuperAdmin() {
                                 <span className="material-symbols-outlined text-secondary cursor-pointer hover:scale-110 transition-transform">hub</span>
                                 <span className="material-symbols-outlined text-secondary cursor-pointer hover:scale-110 transition-transform">shield</span>
                             </div>
-                            <p className="text-caption text-on-surface-variant">© 2024 PalmCrest ENT Hospital.<br />Advanced Sanctuary of Care.</p>
+                            <p className="text-caption text-on-surface-variant">© 2026 PalmCrest ENT Hospital.<br />Advanced Sanctuary of Care.</p>
                         </div>
                     </div>
                 </footer>
@@ -459,24 +990,40 @@ export default function SuperAdmin() {
 
             {/* Mobile Navigation Bar */}
             <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/70 backdrop-blur-xl border-t border-white/40 z-50 flex justify-around items-center py-4 px-4">
-                <a className="flex flex-col items-center gap-1 text-primary" href="#">
+                <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className={`flex flex-col items-center gap-1 ${activeTab === 'dashboard' ? 'text-primary' : 'text-on-surface-variant'}`}
+                >
                     <span className="material-symbols-outlined">dashboard</span>
                     <span className="text-[10px] font-bold">Dashboard</span>
-                </a>
-                <a className="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+                </button>
+                <button
+                    onClick={() => setActiveTab('doctors')}
+                    className={`flex flex-col items-center gap-1 ${activeTab === 'doctors' ? 'text-primary' : 'text-on-surface-variant'}`}
+                >
+                    <span className="material-symbols-outlined">medical_services</span>
+                    <span className="text-[10px]">Doctors</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('patients')}
+                    className={`flex flex-col items-center gap-1 ${activeTab === 'patients' ? 'text-primary' : 'text-on-surface-variant'}`}
+                >
                     <span className="material-symbols-outlined">group</span>
                     <span className="text-[10px]">Patients</span>
-                </a>
-                <a className="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+                </button>
+                <button
+                    onClick={() => setActiveTab('appointments')}
+                    className={`flex flex-col items-center gap-1 ${activeTab === 'appointments' ? 'text-primary' : 'text-on-surface-variant'}`}
+                >
                     <span className="material-symbols-outlined">calendar_today</span>
                     <span className="text-[10px]">Appts</span>
-                </a>
-                <button 
-                    onClick={handleLogout}
-                    className="flex flex-col items-center gap-1 text-on-surface-variant"
+                </button>
+                <button
+                    onClick={() => setActiveTab('admins')}
+                    className={`flex flex-col items-center gap-1 ${activeTab === 'admins' ? 'text-primary' : 'text-on-surface-variant'}`}
                 >
-                    <span className="material-symbols-outlined">logout</span>
-                    <span className="text-[10px]">Logout</span>
+                    <span className="material-symbols-outlined">admin_panel_settings</span>
+                    <span className="text-[10px]">Admins</span>
                 </button>
             </nav>
         </div>

@@ -10,6 +10,7 @@ export default function AuthPortal() {
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [specialization, setSpecialization] = useState('General ENT');
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [rememberMe, setRememberMe] = useState(false);
     
@@ -94,7 +95,7 @@ export default function AuthPortal() {
         validateField(field, value);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
         validateField('email', email);
@@ -108,11 +109,48 @@ export default function AuthPortal() {
         }
 
         setIsSubmitting(true);
+        setErrors({});
 
-        setTimeout(() => {
+        try {
+            const endpoint = tab === 'register' ? '/api/auth/register' : '/api/auth/login';
+            const payload = tab === 'register' 
+                ? { fullName, email, password, role, specialization }
+                : { email, password, role };
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setErrors({ submit: data.message || 'Authentication failed' });
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Save details to localStorage
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify({
+                _id: data._id,
+                fullName: data.fullName,
+                email: data.email,
+                role: data.role,
+                patientId: data.patientId,
+                specialization: data.specialization
+            }));
+
             setIsSubmitting(false);
-            setStep('verify');
-        }, 1500);
+            if (data.role === 'patient') navigate('/patient');
+            else if (data.role === 'doctor') navigate('/doctor');
+            else if (data.role === 'admin') navigate('/admin');
+        } catch (err) {
+            console.error('Auth error:', err);
+            setErrors({ submit: 'Network connection failed' });
+            setIsSubmitting(false);
+        }
     };
 
     const handleVerify = (e) => {
@@ -148,12 +186,12 @@ export default function AuthPortal() {
     };
 
     const getInputClasses = (field) => {
-        let baseClasses = "w-full bg-white border border-outline-variant/65 rounded-xl py-3 px-4 pr-12 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-body-md text-body-md text-on-surface outline-none ";
+        let baseClasses = "w-full bg-white/40 border border-[#00c3da]/25 rounded-xl py-3 px-4 pr-12 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none ";
         if (errors[field]) {
             return baseClasses + "border-error focus:border-error focus:ring-error/10 text-error";
         }
         if (success[field]) {
-            return baseClasses + "border-tertiary-fixed-dim focus:border-tertiary-fixed-dim focus:ring-tertiary-fixed-dim/10";
+            return baseClasses + "border-emerald-500/50 focus:border-emerald-500 focus:ring-emerald-500/10";
         }
         return baseClasses;
     };
@@ -161,38 +199,39 @@ export default function AuthPortal() {
     return (
         <div className="min-h-screen flex items-center justify-center relative z-0 px-4 py-8 md:py-12 md:px-6 font-body-md text-body-md">
             {/* Atmospheric Background */}
-            <div className="bg-wave z-[-2]">
-                <div className="wave-blob bg-primary top-[-10%]" style={{ width: '800px', height: '800px' }}></div>
-                <div className="wave-blob bg-secondary bottom-[-10%] right-[-10%]" style={{ width: '600px', height: '600px', animationDelay: '-5s' }}></div>
+            <div className="absolute inset-0 z-[-2] overflow-hidden pointer-events-none">
+                <div className="absolute rounded-full filter blur-[120px] bg-[#00c3da]/[0.15] top-[-10%] left-[-10%]" style={{ width: '800px', height: '800px' }}></div>
+                <div className="absolute rounded-full filter blur-[120px] bg-primary/[0.10] bottom-[-10%] right-[-10%]" style={{ width: '600px', height: '600px', animationDelay: '-5s' }}></div>
 
                 {/* Decorative concentric circles in main background */}
-                <div className="absolute top-[10%] right-[-150px] w-[600px] h-[600px] border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute top-[10%] right-[-80px] w-[400px] h-[400px] border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute bottom-[15%] left-[-200px] w-[700px] h-[700px] border-[56px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute bottom-[15%] left-[-100px] w-[450px] h-[450px] border-[36px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[50px] border-primary/[0.15] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[40px] border-primary/[0.10] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
             </div>
 
             {/* Main Container */}
-            <main className="w-full max-w-[1000px] grid md:grid-cols-2 glass rounded-3xl overflow-hidden shadow-2xl relative bg-white/80 md:bg-white/70 backdrop-blur-xl border border-white/20">
+            <main className="w-full max-w-[1000px] grid md:grid-cols-2 glass-portal rounded-3xl overflow-hidden shadow-2xl relative">
                 {/* Left Side: Branding & Image */}
-                <section className="hidden md:flex flex-col justify-between p-12 bg-primary relative overflow-hidden">
+                <section className="hidden md:flex flex-col justify-between p-12 bg-gradient-to-br from-primary via-[#004b50] to-[#008f9f] relative overflow-hidden">
                     {/* Faint Background Image */}
-                    <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden opacity-20">
+                    <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden opacity-[0.18]">
                         <img 
                             src="/ent_hero.png" 
                             alt="ENT Hospital Background" 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover mix-blend-overlay" 
                         />
-                        <div className="absolute inset-0 bg-gradient-to-b from-primary/95 via-primary/80 to-primary/95"></div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-[#004b50]/75 to-primary/95"></div>
                     </div>
 
                     {/* Decorative concentric circles (Half visible on the left edge) */}
                     <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[600px] h-[600px] border-[50px] border-white/10 rounded-full pointer-events-none -ml-[350px] z-0"></div>
                     <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[400px] h-[400px] border-[40px] border-white/5 rounded-full pointer-events-none -ml-[230px] z-0"></div>
 
-                    <div className="relative z-10 text-left">
-                        <h1 className="font-headline-lg text-headline-lg text-white mb-2">PalmCrest ENT</h1>
-                        <p className="font-body-md text-body-md text-primary-fixed-dim font-medium">Clinical Excellence in Advanced Sanctuary of Care.</p>
+                    <div className="relative z-10 text-left flex items-center gap-4">
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-14 md:h-16 w-auto object-contain shadow-md rounded-2xl border border-white/25" />
+                        <div>
+                            <h1 className="font-headline-lg text-headline-lg text-white mb-0.5 leading-tight font-extrabold tracking-tight">PalmCrest ENT</h1>
+                            <p className="font-body-md text-caption text-primary-fixed-dim font-bold tracking-widest uppercase">Clinical Excellence</p>
+                        </div>
                     </div>
                     <div className="relative z-10 space-y-4 text-left">
                         <div className="flex items-center gap-3 text-white">
@@ -216,9 +255,9 @@ export default function AuthPortal() {
                     {step === 'form' ? (
                         <>
                             {/* Toggle */}
-                            <div className="relative flex bg-surface-container rounded-full p-1 mb-6 w-full max-w-[280px] mx-auto md:mx-0 shadow-sm border border-outline-variant/30">
+                            <div className="relative flex bg-white/40 backdrop-blur-sm rounded-full p-1 mb-6 w-full max-w-[280px] mr-auto ml-0 shadow-inner border border-[#00c3da]/20">
                                 <div 
-                                    className="absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-sm transition-all duration-300 ease-out"
+                                    className="absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-sm border border-[#00c3da]/10 transition-all duration-300 ease-out"
                                     style={{
                                         width: 'calc(50% - 4px)',
                                         transform: tab === 'login' ? 'translateX(0)' : 'translateX(100%)'
@@ -227,7 +266,7 @@ export default function AuthPortal() {
                                 <button
                                     type="button"
                                     className={`relative z-10 py-2 rounded-full text-label-md font-label-md transition-colors duration-300 flex-1 text-center font-bold ${
-                                        tab === 'login' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
+                                        tab === 'login' ? 'text-primary' : 'text-on-surface-variant hover:text-[#00c3da]'
                                     }`}
                                     onClick={() => { setTab('login'); setErrors({}); setSuccess({}); }}
                                 >
@@ -236,9 +275,14 @@ export default function AuthPortal() {
                                 <button
                                     type="button"
                                     className={`relative z-10 py-2 rounded-full text-label-md font-label-md transition-colors duration-300 flex-1 text-center font-bold ${
-                                        tab === 'register' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
+                                        tab === 'register' ? 'text-primary' : 'text-on-surface-variant hover:text-[#00c3da]'
                                     }`}
-                                    onClick={() => { setTab('register'); setErrors({}); setSuccess({}); }}
+                                    onClick={() => {
+                                        setTab('register');
+                                        setErrors({});
+                                        setSuccess({});
+                                        if (role === 'admin') setRole('patient');
+                                    }}
                                 >
                                     Register
                                 </button>
@@ -254,11 +298,17 @@ export default function AuthPortal() {
                             </div>
 
                             <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+                                {errors.submit && (
+                                    <div className="bg-error/10 text-error p-3.5 rounded-xl border border-error/25 font-label-md text-caption text-left flex items-center gap-2 mb-2 animate-slide-up">
+                                        <span className="material-symbols-outlined text-[20px]">warning</span>
+                                        <span>{errors.submit}</span>
+                                    </div>
+                                )}
                                 {/* Role Selector */}
                                 <div className="space-y-2">
-                                    <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider">Access Role</label>
+                                    <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Access Role</label>
                                     <div className="flex gap-1.5 xs:gap-2 sm:gap-3">
-                                        {['patient', 'doctor', 'admin'].map((r) => (
+                                        {['patient', 'doctor', 'admin'].filter(r => tab !== 'register' || r !== 'admin').map((r) => (
                                             <label key={r} className="flex-1 cursor-pointer group">
                                                 <input 
                                                     className="hidden peer" 
@@ -270,8 +320,8 @@ export default function AuthPortal() {
                                                 />
                                                 <div className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border transition-all text-center ${
                                                     role === r 
-                                                    ? 'border-primary bg-primary/5 text-primary shadow-sm font-bold' 
-                                                    : 'border-outline-variant/40 text-on-surface-variant hover:bg-white hover:border-outline-variant/80 hover:shadow-sm'
+                                                    ? 'border-[#00c3da] bg-[#00c3da]/8 text-primary shadow-sm font-bold ring-2 ring-[#00c3da]/10' 
+                                                    : 'border-[#00c3da]/20 text-on-surface-variant hover:bg-white/50 hover:border-[#00c3da]/50 hover:shadow-sm'
                                                 }`}>
                                                     <span className="material-symbols-outlined mb-1 text-[20px] sm:text-[24px]" style={{ fontVariationSettings: role === r ? "'FILL' 1" : "'FILL' 0" }}>
                                                         {r === 'patient' ? 'person' : r === 'doctor' ? 'stethoscope' : 'admin_panel_settings'}
@@ -310,6 +360,23 @@ export default function AuthPortal() {
                                                     {errors.fullName}
                                                 </p>
                                             )}
+                                        </div>
+                                    )}
+
+                                    {tab === 'register' && role === 'doctor' && (
+                                        <div className="space-y-1 animate-slide-up">
+                                            <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Specialization</label>
+                                            <select
+                                                className="w-full bg-white/40 border border-[#00c3da]/25 rounded-xl py-3 px-4 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none"
+                                                value={specialization}
+                                                onChange={(e) => setSpecialization(e.target.value)}
+                                            >
+                                                <option value="Audiology">Audiology</option>
+                                                <option value="Rhinology">Rhinology</option>
+                                                <option value="Laryngology">Laryngology</option>
+                                                <option value="Otology">Otology</option>
+                                                <option value="General ENT">General ENT</option>
+                                            </select>
                                         </div>
                                     )}
 
@@ -455,7 +522,7 @@ export default function AuthPortal() {
                                             value={digit}
                                             onChange={(e) => handleOtpChange(index, e.target.value)}
                                             onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                                            className="w-9 h-11 sm:w-12 sm:h-14 text-center font-headline-md text-headline-md font-bold text-on-surface border border-outline-variant/60 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all bg-white"
+                                            className="w-9 h-11 sm:w-12 sm:h-14 text-center font-headline-md text-headline-md font-bold text-on-surface border border-[#00c3da]/25 rounded-xl focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 outline-none transition-all bg-white/40 backdrop-blur-[2px]"
                                         />
                                     ))}
                                 </div>

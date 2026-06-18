@@ -42,8 +42,8 @@ describe('<LandingPage />', () => {
   it('renders the hero heading with ENT keywords', () => {
     renderLandingPage();
     expect(
-      screen.getByText(/Ear, Nose/i)
-    ).toBeInTheDocument();
+      screen.getAllByText(/Ear, Nose/i).length
+    ).toBeGreaterThan(0);
   });
 
   it('renders the emergency phone link', () => {

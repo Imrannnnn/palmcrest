@@ -6,9 +6,10 @@ export default function DoctorPortal() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [user, setUser] = useState(null);
     const [selectedDay, setSelectedDay] = useState('WED');
 
-    const scheduleData = {
+    const initialScheduleData = {
         MON: [
             { time: '09:00 AM', title: 'Clinical Consultation', desc: 'General Ear/Nose diagnostics and reviews', duration: '60 mins', borderClass: 'border-l-secondary' }
         ],
@@ -31,19 +32,120 @@ export default function DoctorPortal() {
     };
 
     // Patient requests state
-    const [requests, setRequests] = useState([
-        { id: 1, name: 'Arthur Shelby', condition: 'Chronic Sinusitis', initials: 'AS', status: 'PENDING', statusColor: 'bg-secondary/10 text-secondary' },
-        { id: 2, name: 'Linda Mitchell', condition: 'Post-Op Review', initials: 'LM', status: 'APPROVED', statusColor: 'bg-tertiary/10 text-tertiary' }
-    ]);
+    const [requests, setRequests] = useState([]);
 
     // Active Patient Notes state
-    const [notes, setNotes] = useState([
-        { id: 1, name: 'Eleanor Rigby', note: 'Patient reports increased pressure in the left sinus region over the last 48 hours. Suggesting nasal endoscopy during today\'s visit.', time: 'Updated 2h ago', badge: 'Urgent', badgeColor: 'text-secondary' },
-        { id: 2, name: 'Thomas Shelby', note: 'Post-septoplasty recovery proceeding well. Minimal inflammation. Scheduled for stitch removal in 3 days.', time: 'Updated 5h ago', badge: 'Routine', badgeColor: 'text-tertiary' },
-        { id: 3, name: 'Grace Burgess', note: 'Wait-and-watch approach for mild tinnitus. Patient to keep a sound diary for the next two weeks.', time: 'Updated 1d ago', badge: 'Monitoring', badgeColor: 'text-on-surface-variant' }
-    ]);
+    const [notes, setNotes] = useState([]);
+
+    // We also need the raw appointments from the DB
+    const [rawAppointments, setRawAppointments] = useState([]);
+    const [scheduleData, setScheduleData] = useState(initialScheduleData);
+    const [surgeries, setSurgeries] = useState([]);
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'Completed': return 'bg-emerald-100 text-emerald-800';
+            case 'Approved': return 'bg-blue-100 text-blue-800';
+            case 'Pending': return 'bg-yellow-100 text-yellow-800';
+            case 'Cancelled': return 'bg-red-100 text-red-800';
+            default: return 'bg-surface-container text-on-surface';
+        }
+    };
+
+    const fetchDoctorData = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            // 1. Fetch appointments
+            const apptRes = await fetch('/api/appointments', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            let appts = [];
+            if (apptRes.ok) {
+                appts = await apptRes.json();
+                setRawAppointments(appts);
+                
+                // Group by day of week
+                const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                const sched = { MON: [], TUE: [], WED: [], THU: [], FRI: [], SAT: [], SUN: [] };
+                appts.forEach(appt => {
+                    const dateObj = new Date(appt.date);
+                    const dayName = days[dateObj.getDay()];
+                    if (sched[dayName] && appt.type === 'Appointment') {
+                        sched[dayName].push({
+                            id: appt._id,
+                            time: appt.timeSlot,
+                            title: appt.title,
+                            desc: `Patient: ${appt.patient?.fullName || 'Unknown'} (${appt.patient?.patientId || ''})`,
+                            duration: `${appt.duration || 30} mins`,
+                            borderClass: 'border-l-secondary',
+                            isCurrent: false
+                        });
+                    }
+                });
+                setScheduleData(sched);
+
+                // Group Surgeries
+                const surgList = appts.filter(appt => appt.type === 'Surgery');
+                setSurgeries(surgList);
+
+                // Group Requests (Pending)
+                const reqList = appts.filter(appt => appt.status === 'Pending').map(appt => ({
+                    id: appt._id,
+                    name: appt.patient.fullName,
+                    condition: appt.title,
+                    initials: appt.patient.fullName.split(' ').map(n => n[0]).join('').toUpperCase(),
+                    status: appt.status,
+                    statusColor: 'bg-secondary/10 text-secondary'
+                }));
+                setRequests(reqList);
+            }
+
+            // 2. Fetch clinical notes
+            const notesRes = await fetch('/api/notes/doctor', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (notesRes.ok) {
+                const notesData = await notesRes.json();
+                const formattedNotes = notesData.map(n => {
+                    const formattedTime = new Date(n.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    return {
+                        id: n._id,
+                        name: n.patient.fullName,
+                        note: n.note,
+                        time: `Created on ${formattedTime}`,
+                        badge: n.priority,
+                        badgeColor: n.priority === 'Urgent' ? 'text-secondary' : n.priority === 'Monitoring' ? 'text-on-surface-variant' : 'text-tertiary'
+                    };
+                });
+                setNotes(formattedNotes);
+            }
+        } catch (err) {
+            console.error('Error fetching doctor data:', err);
+        }
+    };
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+
+        if (!token || !storedUser) {
+            navigate('/portal');
+            return;
+        }
+
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.role !== 'doctor') {
+            localStorage.clear();
+            navigate('/portal');
+            return;
+        }
+
+        setUser(parsedUser);
+        fetchDoctorData();
+
         // Simple entrance animation for cards
         const cards = document.querySelectorAll('.glass-card');
         cards.forEach((card, index) => {
@@ -90,38 +192,109 @@ export default function DoctorPortal() {
         setIsNotificationsOpen(!isNotificationsOpen);
     };
 
-    const handleAccept = (id) => {
-        setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'APPROVED', statusColor: 'bg-tertiary/10 text-tertiary' } : r));
+    const handleAccept = async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/appointments/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: 'Approved' })
+            });
+            if (response.ok) {
+                alert('Appointment approved successfully!');
+                fetchDoctorData();
+            } else {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to update status.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error updating status.');
+        }
     };
 
-    const handleReject = (id) => {
-        setRequests(prev => prev.filter(r => r.id !== id));
+    const handleReject = async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/appointments/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: 'Cancelled' })
+            });
+            if (response.ok) {
+                alert('Appointment cancelled successfully!');
+                fetchDoctorData();
+            } else {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to update status.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error updating status.');
+        }
     };
 
-    const handleNewAnnotation = () => {
-        const name = prompt("Enter Patient Name:");
+    const handleNewAnnotation = async () => {
+        const name = prompt("Enter Patient Name or Patient ID to find patient record:");
         if (!name) return;
-        const noteText = prompt("Enter Clinical Annotation:");
+
+        // Search for patient in doctor's rawAppointments
+        const matchedAppt = rawAppointments.find(a => 
+            a.patient.fullName.toLowerCase().includes(name.toLowerCase()) || 
+            a.patient.patientId === name
+        );
+
+        if (!matchedAppt) {
+            alert("Patient record not found in your clinical appointments. Doctors can only write clinical notes for their active patients.");
+            return;
+        }
+
+        const patientId = matchedAppt.patient._id;
+        const patientName = matchedAppt.patient.fullName;
+
+        const noteText = prompt(`Enter Clinical Annotation for ${patientName}:`);
         if (!noteText) return;
+
         const badge = prompt("Enter Priority (Urgent, Routine, Monitoring):", "Routine");
+        if (!badge) return;
 
-        let badgeColor = 'text-tertiary';
-        if (badge?.toLowerCase() === 'urgent') badgeColor = 'text-secondary';
-        if (badge?.toLowerCase() === 'monitoring') badgeColor = 'text-on-surface-variant';
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    patient: patientId,
+                    note: noteText,
+                    priority: badge
+                })
+            });
 
-        const newNote = {
-            id: Date.now(),
-            name,
-            note: `"${noteText}"`,
-            time: 'Updated just now',
-            badge: badge || 'Routine',
-            badgeColor
-        };
+            if (!response.ok) {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to add note.');
+                return;
+            }
 
-        setNotes([newNote, ...notes]);
+            alert('Clinical note added successfully!');
+            fetchDoctorData();
+        } catch (err) {
+            console.error(err);
+            alert('Error adding clinical note.');
+        }
     };
 
     const handleLogout = () => {
+        localStorage.clear();
         navigate('/portal');
     };
 
@@ -136,10 +309,10 @@ export default function DoctorPortal() {
                 <div className="wave-blob bg-primary-container bottom-[25%] left-[200px]" style={{ animationDelay: '-16s' }}></div>
 
                 {/* Decorative concentric circles in main background */}
-                <div className="absolute top-[10%] right-[-150px] w-[600px] h-[600px] border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute top-[10%] right-[-80px] w-[400px] h-[400px] border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute bottom-[15%] left-[-200px] w-[700px] h-[700px] border-[56px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1]"></div>
-                <div className="absolute bottom-[15%] left-[-100px] w-[450px] h-[450px] border-[36px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1]"></div>
+                {/* Decorative concentric circles in main background */}
+                {/* Decorative concentric circles in main background */}
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
             </div>
 
             {/* Sidebar Backdrop for Mobile */}
@@ -160,9 +333,7 @@ export default function DoctorPortal() {
 
                 <div className="flex flex-col h-full w-full relative z-10 gap-stack-sm">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                            <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
-                        </div>
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-xl" />
                         <div>
                             <h1 className="text-headline-sm font-headline-md text-primary leading-none">PalmCrest ENT</h1>
                             <p className="text-caption text-on-surface-variant font-label-md">Clinical Excellence</p>
@@ -230,7 +401,7 @@ export default function DoctorPortal() {
                         </button>
                         <div>
                             <h2 className="text-headline-md md:text-headline-lg font-headline-lg text-primary hidden sm:block">Physician Hub</h2>
-                            <p className="text-caption md:text-body-md text-on-surface-variant hidden sm:block">Welcome back, Dr. Julian Harrison. You have 8 appointments today.</p>
+                            <p className="text-caption md:text-body-md text-on-surface-variant hidden sm:block">Welcome back, {user?.fullName || 'Dr. Julian Harrison'}. You have 8 appointments today.</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 md:gap-4">
@@ -248,8 +419,8 @@ export default function DoctorPortal() {
                         </div>
                         <div className="flex items-center gap-3 pl-2 md:pl-4 border-l border-outline-variant/30">
                             <div className="text-right hidden sm:block">
-                                <p className="text-label-md text-primary font-bold">Dr. Julian Harrison</p>
-                                <p className="text-caption text-on-surface-variant">Otolaryngologist</p>
+                                <p className="text-label-md text-primary font-bold">{user?.fullName || 'Dr. Julian Harrison'}</p>
+                                <p className="text-caption text-on-surface-variant">{user?.specialization || 'Otolaryngologist'}</p>
                             </div>
                             <img 
                                 className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
@@ -413,18 +584,24 @@ export default function DoctorPortal() {
                                     <span className="material-symbols-outlined text-on-surface-variant">more_vert</span>
                                 </div>
                                 <div className="space-y-6">
-                                    <div className="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-outline-variant/30">
-                                        <div className="absolute left-[-4px] top-0 w-2 h-2 rounded-full bg-primary"></div>
-                                        <p className="text-caption font-bold text-primary">Tomorrow, 08:30</p>
-                                        <p className="text-body-md">Tympanoplasty</p>
-                                        <p className="text-caption text-on-surface-variant">Patient: Henry G. • Theater 4</p>
-                                    </div>
-                                    <div className="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-outline-variant/30">
-                                        <div className="absolute left-[-4px] top-0 w-2 h-2 rounded-full bg-outline-variant"></div>
-                                        <p className="text-caption font-bold text-on-surface-variant">Oct 18, 10:00</p>
-                                        <p className="text-body-md">Septoplasty</p>
-                                        <p className="text-caption text-on-surface-variant">Patient: Sarah J. • Theater 2</p>
-                                    </div>
+                                    {surgeries.length > 0 ? (
+                                        surgeries.map((surg) => {
+                                            const formattedDate = new Date(surg.date).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric'
+                                            });
+                                            return (
+                                                <div key={surg._id} className="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-outline-variant/30">
+                                                    <div className={`absolute left-[-4px] top-0 w-2 h-2 rounded-full ${surg.status === 'Approved' ? 'bg-primary' : surg.status === 'Pending' ? 'bg-amber-400' : 'bg-outline-variant'}`}></div>
+                                                    <p className="text-caption font-bold text-primary">{formattedDate}, {surg.timeSlot} ({surg.status})</p>
+                                                    <p className="text-body-md">{surg.title}</p>
+                                                    <p className="text-caption text-on-surface-variant">Patient: {surg.patient.fullName}</p>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-caption text-on-surface-variant">No surgery procedures in queue.</p>
+                                    )}
                                 </div>
                             </div>
                             )}
