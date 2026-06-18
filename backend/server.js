@@ -1,4 +1,5 @@
 const express = require('express')
+const cors = require('cors')
 const dotenv = require('dotenv')
 const connectDB = require("./db/db")
 
@@ -18,6 +19,20 @@ const PORT = process.env.PORT || 5000
 
 
 //middle ware 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : [
+      'https://your-netlify-site.netlify.app',
+      'http://localhost:5173'
+    ];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true
+  })
+);
+
 app.use(express.json())
 
 

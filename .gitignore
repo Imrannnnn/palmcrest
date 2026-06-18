@@ -5,7 +5,7 @@
 # ─── Environment & Secrets ───────────────────────────────────
 .env
 .env.*
-!.env.example          # Allow the example template to be committed
+!**/.env.example          # Allow the example template to be committed
 *.pem
 *.key
 *.p12
@@ -72,4 +72,7 @@ coverage/
 # ─── Seeding & Credentials Admin Script ───────────────────────
 backend/db/seed.js
 backend/db/resetAdmin.js
+
+!backend/.env.example
+
 
