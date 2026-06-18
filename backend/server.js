@@ -20,17 +20,17 @@ const PORT = process.env.PORT || 5000
 
 //middle ware 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : [
-      'https://your-netlify-site.netlify.app',
-      'http://localhost:5173'
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : [
+        'https://palmcrestent.netlify.app',
+        'http://localhost:5173'
     ];
 
 app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true
-  })
+    cors({
+        origin: allowedOrigins,
+        credentials: true
+    })
 );
 
 app.use(express.json())
