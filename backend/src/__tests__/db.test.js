@@ -11,8 +11,6 @@
 jest.mock('mongoose', () => ({
   connect: jest.fn(),
 }));
-jest.mock('../../db/seed', () => jest.fn());
-
 const mongoose = require('mongoose');
 
 // Pull in the module AFTER the mock is set up
