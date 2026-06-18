@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function PatientPortal() {
@@ -9,7 +9,10 @@ export default function PatientPortal() {
 
     // Tab state
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [user, setUser] = useState(null);
+    const [user] = useState(() => {
+        const u = localStorage.getItem('user');
+        return u ? JSON.parse(u) : null;
+    });
 
     // Booking state
     const [doctors, setDoctors] = useState([]);
@@ -118,9 +121,10 @@ export default function PatientPortal() {
             return;
         }
 
-        setUser(parsedUser);
-        fetchDoctors();
-        fetchAppointments();
+        Promise.resolve().then(() => {
+            fetchDoctors();
+            fetchAppointments();
+        });
 
         // Handle window resize for sidebar
         const handleResize = () => {
@@ -149,7 +153,8 @@ export default function PatientPortal() {
             document.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('resize', handleResize);
         };
-    }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [navigate]);
 
     const handleBookNow = async (e) => {
         e.preventDefault();

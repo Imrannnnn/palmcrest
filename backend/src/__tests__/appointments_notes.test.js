@@ -22,7 +22,8 @@ const appointmentRoutes = require('../../routes/appointmentRoutes');
 const noteRoutes = require('../../routes/noteRoutes');
 const errorHandler = require('../../middleware/error');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'defaultjwtsecret';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'defaultjwtsecret';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function buildApp() {
   const app = express();

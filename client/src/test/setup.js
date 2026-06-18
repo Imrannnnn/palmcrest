@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 // ── Browser API stubs (not implemented in jsdom) ──────────────────────────────
 
 // IntersectionObserver — used by LandingPage for scroll-reveal animations
-global.IntersectionObserver = class IntersectionObserver {
+globalThis.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   observe() {}
   unobserve() {}
@@ -16,7 +16,7 @@ global.IntersectionObserver = class IntersectionObserver {
 };
 
 // ResizeObserver — may be needed by layout-aware components
-global.ResizeObserver = class ResizeObserver {
+globalThis.ResizeObserver = class ResizeObserver {
   constructor() {}
   observe() {}
   unobserve() {}

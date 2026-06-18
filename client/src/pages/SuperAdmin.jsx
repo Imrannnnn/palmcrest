@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function SuperAdmin() {
@@ -93,7 +93,9 @@ export default function SuperAdmin() {
             return;
         }
 
-        fetchAdminData();
+        Promise.resolve().then(() => {
+            fetchAdminData();
+        });
 
         // Sticky Header effect on scroll
         const handleScroll = () => {
@@ -125,7 +127,7 @@ export default function SuperAdmin() {
             window.removeEventListener('scroll', handleScroll);
             document.removeEventListener('mousemove', handleMouseMove);
         };
-    }, []);
+    }, [navigate]);
 
     const handleOnboardSpecialist = async () => {
         const name = prompt("Enter Specialist Name:");
@@ -140,7 +142,6 @@ export default function SuperAdmin() {
         if (!phone) return;
 
         try {
-            const token = localStorage.getItem('token');
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -579,7 +580,7 @@ export default function SuperAdmin() {
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
                                         {paginatedDoctors.length > 0 ? (
-                                            paginatedDoctors.map((s, idx) => (
+                                            paginatedDoctors.map((s) => (
                                                 <tr key={s._id} className="hover:bg-white/40 transition-colors group">
                                                     <td className="px-8 py-6">
                                                         <div className="flex items-center gap-4">

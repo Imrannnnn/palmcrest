@@ -5,6 +5,7 @@
  * App.jsx already contains <BrowserRouter>, so we test the page components
  * directly with MemoryRouter to avoid the double-router error.
  */
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import LandingPage from '../pages/LandingPage';

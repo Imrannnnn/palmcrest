@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function AuthPortal() {
@@ -18,7 +18,7 @@ export default function AuthPortal() {
     const [errors, setErrors] = useState({});
     const [success, setSuccess] = useState({});
     
-    const [focusedFields, setFocusedFields] = useState({
+    const [, setFocusedFields] = useState({
         fullName: false,
         email: false,
         password: false

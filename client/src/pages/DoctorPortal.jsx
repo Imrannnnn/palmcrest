@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function DoctorPortal() {
@@ -6,7 +6,10 @@ export default function DoctorPortal() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [user, setUser] = useState(null);
+    const [user] = useState(() => {
+        const u = localStorage.getItem('user');
+        return u ? JSON.parse(u) : null;
+    });
     const [selectedDay, setSelectedDay] = useState('WED');
 
     const initialScheduleData = {
@@ -42,15 +45,7 @@ export default function DoctorPortal() {
     const [scheduleData, setScheduleData] = useState(initialScheduleData);
     const [surgeries, setSurgeries] = useState([]);
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'Completed': return 'bg-emerald-100 text-emerald-800';
-            case 'Approved': return 'bg-blue-100 text-blue-800';
-            case 'Pending': return 'bg-yellow-100 text-yellow-800';
-            case 'Cancelled': return 'bg-red-100 text-red-800';
-            default: return 'bg-surface-container text-on-surface';
-        }
-    };
+
 
     const fetchDoctorData = async () => {
         try {
@@ -143,8 +138,9 @@ export default function DoctorPortal() {
             return;
         }
 
-        setUser(parsedUser);
-        fetchDoctorData();
+        Promise.resolve().then(() => {
+            fetchDoctorData();
+        });
 
         // Simple entrance animation for cards
         const cards = document.querySelectorAll('.glass-card');
@@ -186,7 +182,7 @@ export default function DoctorPortal() {
             document.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('resize', handleResize);
         };
-    }, []);
+    }, [navigate]);
 
     const toggleNotifications = () => {
         setIsNotificationsOpen(!isNotificationsOpen);
