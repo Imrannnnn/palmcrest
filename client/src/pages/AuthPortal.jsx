@@ -11,6 +11,7 @@ export default function AuthPortal() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [specialization, setSpecialization] = useState('General ENT');
+    const [gender, setGender] = useState('Male'); // 'Male' | 'Female'
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [rememberMe, setRememberMe] = useState(false);
     
@@ -114,7 +115,7 @@ export default function AuthPortal() {
         try {
             const endpoint = tab === 'register' ? '/api/auth/register' : '/api/auth/login';
             const payload = tab === 'register' 
-                ? { fullName, email, password, role, specialization }
+                ? { fullName, email, password, role, specialization, gender }
                 : { email, password, role };
 
             const response = await fetch(endpoint, {
@@ -139,7 +140,10 @@ export default function AuthPortal() {
                 email: data.email,
                 role: data.role,
                 patientId: data.patientId,
-                specialization: data.specialization
+                specialization: data.specialization,
+                phoneNumber: data.phoneNumber,
+                gender: data.gender,
+                dateOfBirth: data.dateOfBirth
             }));
 
             setIsSubmitting(false);
@@ -363,6 +367,20 @@ export default function AuthPortal() {
                                         </div>
                                     )}
 
+                                    {tab === 'register' && role === 'patient' && (
+                                        <div className="space-y-1 animate-slide-up">
+                                            <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Gender</label>
+                                            <select
+                                                className="w-full bg-white/40 border border-[#00c3da]/25 rounded-xl py-3 px-4 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none"
+                                                value={gender}
+                                                onChange={(e) => setGender(e.target.value)}
+                                            >
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                            </select>
+                                        </div>
+                                    )}
+
                                     {tab === 'register' && role === 'doctor' && (
                                         <div className="space-y-1 animate-slide-up">
                                             <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Specialization</label>
@@ -568,6 +586,23 @@ export default function AuthPortal() {
                     </div>
                 </section>
             </main>
+
+            {/* Loader Overlay */}
+            {isSubmitting && (
+                <div className="fixed inset-0 bg-on-surface/30 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
+                    <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col items-center gap-4">
+                        <img 
+                            src="/logo-ent.jpeg" 
+                            alt="PalmCrest Logo" 
+                            className="w-16 h-16 rounded-2xl shadow-md animate-pulse object-contain" 
+                        />
+                        <div className="flex flex-col items-center gap-1">
+                            <span className="font-label-md text-primary font-bold tracking-wide uppercase text-xs">PalmCrest ENT</span>
+                            <span className="text-body-md text-on-surface-variant font-medium animate-pulse">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

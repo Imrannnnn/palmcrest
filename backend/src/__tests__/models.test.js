@@ -48,6 +48,7 @@ describe('Mongoose Models Schema Verification', () => {
         fullName: 'Jane Doe',
         email: 'jane@example.com',
         password: 'securepassword123',
+        gender: 'Female',
       });
       const error = patient.validateSync();
       expect(error).toBeUndefined();

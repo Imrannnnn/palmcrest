@@ -62,7 +62,8 @@ describe('Auth Routes Integration Tests', () => {
           fullName: 'Johnathan Doe',
           email: 'johnathan@example.com',
           password: 'securePassword123',
-          role: 'patient'
+          role: 'patient',
+          gender: 'Male'
         });
 
       expect(response.statusCode).toBe(201);
@@ -111,7 +112,8 @@ describe('Auth Routes Integration Tests', () => {
           fullName: 'Duplicate User',
           email: 'taken@example.com',
           password: 'securePassword123',
-          role: 'patient'
+          role: 'patient',
+          gender: 'Male'
         });
 
       expect(response.statusCode).toBe(400);

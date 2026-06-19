@@ -7,7 +7,8 @@ const {
   getAllDoctors,
   getAllPatients,
   registerAdmin,
-  getAllAdmins
+  getAllAdmins,
+  updateUserProfile
 } = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -17,6 +18,7 @@ router.post('/login', loginUser);
 
 // Protected endpoints
 router.get('/profile', protect, getUserProfile);
+router.put('/profile', protect, updateUserProfile);
 router.get('/doctors', protect, getAllDoctors);
 router.get('/patients', protect, authorize('admin'), getAllPatients);
 

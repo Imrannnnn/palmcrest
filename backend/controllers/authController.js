@@ -34,6 +34,17 @@ const registerUser = async (req, res, next) => {
       throw new Error('Invalid user role specified');
     }
 
+    if (targetRole === 'patient') {
+      if (!gender) {
+        res.status(400);
+        throw new Error('Gender is required for patients');
+      }
+      if (!['Male', 'Female'].includes(gender)) {
+        res.status(400);
+        throw new Error('Invalid gender. Must be Male or Female');
+      }
+    }
+
     // Check email uniqueness across all tables to avoid overlaps
     const emailLower = email.toLowerCase();
     const patientExists = await Patient.findOne({ email: emailLower });
@@ -79,6 +90,9 @@ const registerUser = async (req, res, next) => {
         email: user.email,
         role: user.role,
         token: generateToken(user._id, user.role),
+        phoneNumber: user.phoneNumber,
+        gender: user.gender,
+        dateOfBirth: user.dateOfBirth,
         ...(user.patientId && { patientId: user.patientId }),
         ...(user.specialization && { specialization: user.specialization })
       });
@@ -127,6 +141,9 @@ const loginUser = async (req, res, next) => {
         email: user.email,
         role: user.role,
         token: generateToken(user._id, user.role),
+        phoneNumber: user.phoneNumber,
+        gender: user.gender,
+        dateOfBirth: user.dateOfBirth,
         ...(user.patientId && { patientId: user.patientId }),
         ...(user.specialization && { specialization: user.specialization })
       });
@@ -247,6 +264,64 @@ const getAllAdmins = async (req, res, next) => {
   }
 };
 
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateUserProfile = async (req, res, next) => {
+  try {
+    const { role, _id } = req.user;
+    let user;
+
+    if (role === 'patient') {
+      user = await Patient.findById(_id);
+      if (!user) {
+        res.status(404);
+        throw new Error('Patient not found');
+      }
+      user.fullName = req.body.fullName || user.fullName;
+      user.phoneNumber = req.body.phoneNumber !== undefined ? req.body.phoneNumber : user.phoneNumber;
+      user.dateOfBirth = req.body.dateOfBirth !== undefined ? req.body.dateOfBirth : user.dateOfBirth;
+      user.gender = req.body.gender !== undefined ? req.body.gender : user.gender;
+      
+      await user.save();
+      
+      const updatedUser = await Patient.findById(_id).select('-password');
+      res.json(updatedUser);
+    } else if (role === 'doctor') {
+      user = await Doctor.findById(_id);
+      if (!user) {
+        res.status(404);
+        throw new Error('Doctor not found');
+      }
+      user.fullName = req.body.fullName || user.fullName;
+      user.phoneNumber = req.body.phoneNumber !== undefined ? req.body.phoneNumber : user.phoneNumber;
+      user.specialization = req.body.specialization || user.specialization;
+      
+      await user.save();
+      
+      const updatedUser = await Doctor.findById(_id).select('-password');
+      res.json(updatedUser);
+    } else if (role === 'admin') {
+      user = await Admin.findById(_id);
+      if (!user) {
+        res.status(404);
+        throw new Error('Admin not found');
+      }
+      user.fullName = req.body.fullName || user.fullName;
+      
+      await user.save();
+      
+      const updatedUser = await Admin.findById(_id).select('-password');
+      res.json(updatedUser);
+    } else {
+      res.status(400);
+      throw new Error('Invalid role');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -255,4 +330,5 @@ module.exports = {
   getAllPatients,
   registerAdmin,
   getAllAdmins,
+  updateUserProfile,
 };

@@ -9,7 +9,7 @@ export default function PatientPortal() {
 
     // Tab state
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [user] = useState(() => {
+    const [user, setUser] = useState(() => {
         const u = localStorage.getItem('user');
         return u ? JSON.parse(u) : null;
     });
@@ -18,7 +18,38 @@ export default function PatientPortal() {
     const [doctors, setDoctors] = useState([]);
     const [specialist, setSpecialist] = useState('');
     const [bookingDate, setBookingDate] = useState('');
+    const [bookingTime, setBookingTime] = useState('09:00 AM');
+    const [bookingReason, setBookingReason] = useState('Clinical Consultation');
+    const [customReason, setCustomReason] = useState('');
     const [bookings, setBookings] = useState([]);
+
+    // Profile Update Modal state
+    const [showProfileModal, setShowProfileModal] = useState(() => {
+        if (!user) return false;
+        const isPhoneMissing = !user.phoneNumber;
+        const isDobMissing = !user.dateOfBirth;
+        const isGenderMissing = user.gender !== 'Male' && user.gender !== 'Female';
+        return isPhoneMissing || isDobMissing || isGenderMissing;
+    });
+    const [profilePhone, setProfilePhone] = useState(() => {
+        return user?.phoneNumber || '';
+    });
+    const [profileDob, setProfileDob] = useState(() => {
+        if (!user?.dateOfBirth) return '';
+        try {
+            return new Date(user.dateOfBirth).toISOString().split('T')[0];
+        } catch {
+            return '';
+        }
+    });
+    const [profileGender, setProfileGender] = useState(() => {
+        if (!user) return 'Male';
+        const isGenderMissing = user.gender !== 'Male' && user.gender !== 'Female';
+        return isGenderMissing ? 'Male' : user.gender;
+    });
+
+    // Loader state
+    const [isLoading, setIsLoading] = useState(false);
 
     // Live Concierge Chat state
     const [chatInput, setChatInput] = useState('');
@@ -121,6 +152,8 @@ export default function PatientPortal() {
             return;
         }
 
+        // Profile verification details check is handled synchronously during state initialization
+
         Promise.resolve().then(() => {
             fetchDoctors();
             fetchAppointments();
@@ -161,6 +194,15 @@ export default function PatientPortal() {
         if (!bookingDate) return alert('Please select a date.');
         if (!specialist) return alert('Please select a doctor.');
 
+        let titleToBook = bookingReason;
+        if (bookingReason === 'Other (Specify below...)') {
+            if (!customReason.trim()) {
+                return alert('Please specify your reason for the appointment.');
+            }
+            titleToBook = customReason.trim();
+        }
+
+        setIsLoading(true);
         try {
             const token = localStorage.getItem('token');
             const response = await fetch('/api/appointments', {
@@ -171,9 +213,9 @@ export default function PatientPortal() {
                 },
                 body: JSON.stringify({
                     doctor: specialist,
-                    title: 'Clinical Consultation',
+                    title: titleToBook,
                     date: bookingDate,
-                    timeSlot: '09:00 AM',
+                    timeSlot: bookingTime,
                     type: 'Appointment'
                 })
             });
@@ -185,11 +227,56 @@ export default function PatientPortal() {
             }
 
             setBookingDate('');
+            setBookingTime('09:00 AM');
+            setBookingReason('Clinical Consultation');
+            setCustomReason('');
             alert('Appointment request submitted successfully!');
             fetchAppointments();
         } catch (err) {
             console.error('Error booking appointment:', err);
             alert('Network error booking appointment.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleUpdateProfile = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const storedUser = localStorage.getItem('user');
+            const parsedUser = JSON.parse(storedUser);
+
+            const response = await fetch('/api/auth/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    phoneNumber: profilePhone,
+                    dateOfBirth: profileDob,
+                    gender: profileGender
+                })
+            });
+
+            if (response.ok) {
+                const updatedUser = await response.json();
+                const mergedUser = { ...parsedUser, ...updatedUser };
+                localStorage.setItem('user', JSON.stringify(mergedUser));
+                setUser(mergedUser);
+                alert('Profile updated successfully!');
+                setShowProfileModal(false);
+            } else {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to update profile.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error updating profile details.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -202,7 +289,10 @@ export default function PatientPortal() {
         if (!title) return;
         const date = prompt("Enter preferred surgery date (YYYY-MM-DD):", "2026-06-20");
         if (!date) return;
+        const time = prompt("Enter preferred surgery time (e.g. 08:30 AM):", "08:30 AM");
+        if (!time) return;
 
+        setIsLoading(true);
         try {
             const token = localStorage.getItem('token');
             const response = await fetch('/api/appointments', {
@@ -215,7 +305,7 @@ export default function PatientPortal() {
                     doctor: specialist,
                     title: title,
                     date: date,
-                    timeSlot: '08:30 AM',
+                    timeSlot: time,
                     type: 'Surgery'
                 })
             });
@@ -231,6 +321,8 @@ export default function PatientPortal() {
         } catch (err) {
             console.error(err);
             alert('Network error submitting surgery request.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -547,33 +639,90 @@ export default function PatientPortal() {
                                                 Book New Appointment
                                             </h4>
                                         </div>
-                                        <form onSubmit={handleBookNow} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-stack-sm items-end">
-                                            <div>
-                                                <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Select Specialist</label>
-                                                <select
-                                                    value={specialist}
-                                                    onChange={(e) => setSpecialist(e.target.value)}
-                                                    className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
-                                                >
-                                                    {doctors.map(doc => (
-                                                        <option key={doc._id} value={doc._id}>
-                                                            {doc.fullName} ({doc.specialization})
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                        <form onSubmit={handleBookNow} className="space-y-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-stack-sm">
+                                                <div>
+                                                    <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Select Specialist</label>
+                                                    <select
+                                                        value={specialist}
+                                                        onChange={(e) => setSpecialist(e.target.value)}
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                    >
+                                                        {doctors.map(doc => (
+                                                            <option key={doc._id} value={doc._id}>
+                                                                {doc.fullName} ({doc.specialization})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Preferred Date</label>
+                                                    <input
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                        type="date"
+                                                        value={bookingDate}
+                                                        onChange={(e) => setBookingDate(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Preferred Time</label>
+                                                    <select
+                                                        value={bookingTime}
+                                                        onChange={(e) => setBookingTime(e.target.value)}
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                    >
+                                                        <option value="08:00 AM">08:00 AM</option>
+                                                        <option value="08:30 AM">08:30 AM</option>
+                                                        <option value="09:00 AM">09:00 AM</option>
+                                                        <option value="09:30 AM">09:30 AM</option>
+                                                        <option value="10:00 AM">10:00 AM</option>
+                                                        <option value="10:30 AM">10:30 AM</option>
+                                                        <option value="11:00 AM">11:00 AM</option>
+                                                        <option value="11:30 AM">11:30 AM</option>
+                                                        <option value="12:00 PM">12:00 PM</option>
+                                                        <option value="12:30 PM">12:30 PM</option>
+                                                        <option value="01:00 PM">01:00 PM</option>
+                                                        <option value="01:30 PM">01:30 PM</option>
+                                                        <option value="02:00 PM">02:00 PM</option>
+                                                        <option value="02:30 PM">02:30 PM</option>
+                                                        <option value="03:00 PM">03:00 PM</option>
+                                                        <option value="03:30 PM">03:30 PM</option>
+                                                        <option value="04:00 PM">04:00 PM</option>
+                                                        <option value="04:30 PM">04:30 PM</option>
+                                                        <option value="05:00 PM">05:00 PM</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Reason for Appointment</label>
+                                                    <select
+                                                        value={bookingReason}
+                                                        onChange={(e) => setBookingReason(e.target.value)}
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                    >
+                                                        <option value="Clinical Consultation">Clinical Consultation</option>
+                                                        <option value="Ear Ache / Infection">Ear Ache / Infection</option>
+                                                        <option value="Nasal Congestion / Allergy">Nasal Congestion / Allergy</option>
+                                                        <option value="Hearing Evaluation">Hearing Evaluation</option>
+                                                        <option value="Throat Pain / Tonsils">Throat Pain / Tonsils</option>
+                                                        <option value="Other (Specify below...)">Other (Specify below...)</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Preferred Date</label>
-                                                <input
-                                                    className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
-                                                    type="date"
-                                                    value={bookingDate}
-                                                    onChange={(e) => setBookingDate(e.target.value)}
-                                                />
-                                            </div>
-                                            <div>
+                                            {bookingReason === 'Other (Specify below...)' && (
+                                                <div className="transition-all duration-300">
+                                                    <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Specify Custom Reason</label>
+                                                    <input
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                        type="text"
+                                                        placeholder="E.g., Difficulty swallowing, ear ringing, sinus pressure..."
+                                                        value={customReason}
+                                                        onChange={(e) => setCustomReason(e.target.value)}
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="flex justify-end pt-2">
                                                 <button
-                                                    className="w-full btn-primary-gradient text-white py-3 rounded-xl font-label-md shadow-lg shadow-primary/10"
+                                                    className="w-full sm:w-auto px-8 py-3 btn-primary-gradient text-white rounded-xl font-label-md shadow-lg shadow-primary/10"
                                                     type="submit"
                                                 >
                                                     Book Now
@@ -645,6 +794,105 @@ export default function PatientPortal() {
                             <p className="text-caption text-on-surface-variant">© 2026 PalmCrest ENT Hospital. Advanced Sanctuary of Care.</p>
                         </div>
                     </footer>
+
+                    {/* Profile Update Modal */}
+                    {showProfileModal && (
+                        <div className="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left">
+                                {/* Decorative background blob */}
+                                <div className="absolute top-[-50px] right-[-50px] w-[150px] h-[150px] bg-primary/10 rounded-full blur-xl pointer-events-none"></div>
+                                
+                                <div className="relative z-10 flex flex-col gap-4">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                            <span className="material-symbols-outlined">account_box</span>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-headline-md font-headline-md text-primary font-bold">Complete Profile</h3>
+                                            <p className="text-caption text-on-surface-variant font-label-md">Clinical Record Verification</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <p className="text-body-md text-on-surface-variant">
+                                        Please take a moment to update your contact and clinical details to complete your patient file.
+                                    </p>
+                                    
+                                    <form onSubmit={handleUpdateProfile} className="space-y-4">
+                                        <div>
+                                            <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Phone Number</label>
+                                            <input
+                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                                type="tel"
+                                                placeholder="+1 (555) 000-0000"
+                                                value={profilePhone}
+                                                onChange={(e) => setProfilePhone(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Date of Birth</label>
+                                            <input
+                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                                type="date"
+                                                value={profileDob}
+                                                onChange={(e) => setProfileDob(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+
+                                        {(!user?.gender || (user?.gender !== 'Male' && user?.gender !== 'Female')) && (
+                                            <div>
+                                                <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Gender</label>
+                                                <select
+                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                                    value={profileGender}
+                                                    onChange={(e) => setProfileGender(e.target.value)}
+                                                    required
+                                                >
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                </select>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="flex gap-3 pt-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowProfileModal(false)}
+                                                className="flex-1 py-3 border-2 border-outline-variant/40 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container transition-all"
+                                            >
+                                                Later
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="flex-1 py-3 btn-primary-gradient text-white rounded-xl font-label-md shadow-lg shadow-primary/10"
+                                            >
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Loader Overlay */}
+                    {isLoading && (
+                        <div className="fixed inset-0 bg-on-surface/30 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
+                            <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col items-center gap-4">
+                                <img 
+                                    src="/logo-ent.jpeg" 
+                                    alt="PalmCrest Logo" 
+                                    className="w-16 h-16 rounded-2xl shadow-md animate-pulse object-contain" 
+                                />
+                                <div className="flex flex-col items-center gap-1">
+                                    <span className="font-label-md text-primary font-bold tracking-wide uppercase text-xs">PalmCrest ENT</span>
+                                    <span className="text-body-md text-on-surface-variant font-medium animate-pulse">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </main>
         </div>
     );
