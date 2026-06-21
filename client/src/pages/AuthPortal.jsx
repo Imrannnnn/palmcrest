@@ -210,6 +210,11 @@ export default function AuthPortal() {
                 {/* Decorative concentric circles in main background */}
                 <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[50px] border-primary/[0.15] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
                 <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[40px] border-primary/[0.10] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
+
+                {/* Faint Background Logo */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] sm:w-[320px] md:w-[420px] opacity-[0.035] pointer-events-none select-none z-[-1]">
+                    <img src="/logo-ent.jpeg" alt="" className="w-full h-auto object-contain rounded-[20%]" />
+                </div>
             </div>
 
             {/* Main Container */}
@@ -255,6 +260,14 @@ export default function AuthPortal() {
 
                 {/* Right Side: Auth Form */}
                 <section className="p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left h-full bg-transparent relative z-10">
+                    {/* Mobile Logo Branding */}
+                    <div className="flex md:hidden items-center gap-3 mb-6">
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-xl border border-white/20" />
+                        <div>
+                            <h1 className="font-headline-sm text-headline-sm text-primary leading-none font-extrabold">PalmCrest ENT</h1>
+                            <p className="text-[10px] text-on-surface-variant font-bold tracking-wider uppercase mt-1">Clinical Excellence</p>
+                        </div>
+                    </div>
                     
                     {step === 'form' ? (
                         <>
@@ -367,7 +380,7 @@ export default function AuthPortal() {
                                         </div>
                                     )}
 
-                                    {tab === 'register' && role === 'patient' && (
+                                    {tab === 'register' && (role === 'patient' || role === 'doctor') && (
                                         <div className="space-y-1 animate-slide-up">
                                             <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Gender</label>
                                             <select
@@ -490,18 +503,6 @@ export default function AuthPortal() {
                                         </span>
                                     )}
                                 </button>
-                                
-                                {/* Security Indicator */}
-                                <div className="flex items-center justify-center gap-2 mt-4 text-on-surface-variant bg-surface-container-low py-2.5 rounded-xl border border-outline-variant/30">
-                                    <span className="material-symbols-outlined text-[16px] text-tertiary-fixed-dim">lock</span>
-                                    <span className="font-caption text-caption font-semibold">256-bit Secure Encryption</span>
-                                </div>
-
-                                {tab === 'register' && (
-                                    <p className="font-caption text-caption text-on-surface-variant text-center mt-4 px-4 leading-relaxed">
-                                        By registering, you agree to PalmCrest's <a className="text-primary font-semibold hover:underline" href="#">Terms of Service</a> and <a className="text-primary font-semibold hover:underline" href="#">Privacy Protocol</a>.
-                                    </p>
-                                )}
                             </form>
                         </>
                     ) : (
@@ -577,13 +578,6 @@ export default function AuthPortal() {
                             </form>
                         </div>
                     )}
-
-                    <div className="mt-auto border-t border-outline-variant/20 pt-4 text-center">
-                        <p className="font-body-md text-caption text-on-surface-variant">
-                            Authorized Healthcare Portal
-                            <span className="block text-[10px] font-caption mt-1 opacity-70 font-semibold uppercase tracking-wider font-label">PalmCrest ENT | Clinical Data Security v4.2</span>
-                        </p>
-                    </div>
                 </section>
             </main>
 

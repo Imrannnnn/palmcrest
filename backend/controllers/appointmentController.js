@@ -17,6 +17,21 @@ const createAppointment = async (req, res, next) => {
       throw new Error('Please include doctor, title, date, and timeSlot');
     }
 
+    // Prevent booking a previous day (past dates)
+    const apptDateObj = new Date(date);
+    const apptYear = apptDateObj.getUTCFullYear();
+    const apptMonth = apptDateObj.getUTCMonth();
+    const apptDay = apptDateObj.getUTCDate();
+    const apptMidnight = Date.UTC(apptYear, apptMonth, apptDay);
+
+    const today = new Date();
+    const todayMidnight = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+
+    if (apptMidnight < todayMidnight) {
+      res.status(400);
+      throw new Error('Appointment date cannot be in the past');
+    }
+
     const appointment = await Appointment.create({
       patient: req.user._id,
       doctor,

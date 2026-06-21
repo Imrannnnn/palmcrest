@@ -17,13 +17,18 @@ export default function DoctorPortal() {
     // Profile Update Modal state
     const [showProfileModal, setShowProfileModal] = useState(() => {
         if (!user) return false;
-        return !user.phoneNumber;
+        const isPhoneMissing = !user.phoneNumber;
+        const isGenderMissing = user.gender !== 'Male' && user.gender !== 'Female';
+        return isPhoneMissing || isGenderMissing;
     });
     const [profilePhone, setProfilePhone] = useState(() => {
         return user?.phoneNumber || '';
     });
     const [profileSpecialization, setProfileSpecialization] = useState(() => {
         return user?.specialization || 'General ENT';
+    });
+    const [profileGender, setProfileGender] = useState(() => {
+        return user?.gender || 'Male';
     });
     const getCurrentDayName = () => {
         const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -401,7 +406,8 @@ export default function DoctorPortal() {
                 },
                 body: JSON.stringify({
                     phoneNumber: profilePhone,
-                    specialization: profileSpecialization
+                    specialization: profileSpecialization,
+                    gender: profileGender
                 })
             });
 
@@ -613,11 +619,15 @@ export default function DoctorPortal() {
                                 <p className="text-label-md text-primary font-bold">{user?.fullName || 'Dr. Julian Harrison'}</p>
                                 <p className="text-caption text-on-surface-variant">{user?.specialization || 'Otolaryngologist'}</p>
                             </div>
-                            <img
-                                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                                data-alt="A professional portrait of a male doctor in his late 40s wearing a white clinical coat and a stethoscope. He is in a brightly lit modern ENT clinic with soft turquoise and white accents. The image has a clean, high-end medical aesthetic with a shallow depth of field and soft natural lighting."
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEfwrYELVZRi4rlkzlD2Ghlvt9plvprxRtoEu2OyiHaieVFnO_a_badEnUUhNhIX6OPEZobaKxBV-nzdsZjDnrEemhvhDkfOhonMRo5rxEYxgQv6YVl3HjRSzbmmwxMlFoc1D0PICPvOqyjk4o4eXHBFoVwyeNem_dkrcOgUA1As7Ftpo1WkvbcZIqcXF3YHpnmAm1svnX-bQRzSRgrfJ2Or_S5Y_h9GwgIq6CFYmaDUBRRXVB-Oo_WnaTKMCXs6viJlsHz2QN8uk"
-                            />
+                            {user?.gender === 'Female' ? (
+                                <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-white text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>woman</span>
+                                </div>
+                            ) : (
+                                <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-white text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>man</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </header>
@@ -764,25 +774,29 @@ export default function DoctorPortal() {
                                                     </div>
 
                                                     {/* Date and Time info */}
-                                                    <div className="mb-4 bg-surface-container-low/40 p-2.5 rounded-xl border border-outline-variant/15 flex items-center gap-2 text-caption">
-                                                        <span className="material-symbols-outlined text-[16px] text-secondary">calendar_today</span>
-                                                        <span className="font-semibold text-primary">{r.date}</span>
-                                                        <span className="text-on-surface-variant">•</span>
-                                                        <span className="material-symbols-outlined text-[16px] text-secondary">schedule</span>
-                                                        <span className="font-semibold text-primary">{r.timeSlot}</span>
+                                                    <div className="mb-4 bg-surface-container-low/40 p-2.5 rounded-xl border border-outline-variant/15 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption">
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[16px] text-secondary">calendar_today</span>
+                                                            <span className="font-semibold text-primary">{r.date}</span>
+                                                        </div>
+                                                        <span className="text-on-surface-variant hidden xs:inline">•</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[16px] text-secondary">schedule</span>
+                                                            <span className="font-semibold text-primary">{r.timeSlot}</span>
+                                                        </div>
                                                     </div>
 
                                                     {r.status === 'Pending' && (
-                                                        <div className="flex gap-2">
+                                                        <div className="flex flex-col sm:flex-row gap-2 w-full">
                                                             <button
                                                                 onClick={() => handleAccept(r.id)}
-                                                                className="flex-1 py-2 text-[12px] font-bold bg-[#2A7B4C] text-white rounded-xl hover:bg-[#1E5C38] transition-all text-center shadow-sm hover:shadow"
+                                                                className="w-full sm:flex-1 py-2.5 sm:py-2 text-[12px] font-bold bg-[#2A7B4C] text-white rounded-xl hover:bg-[#1E5C38] transition-all text-center shadow-sm hover:shadow"
                                                             >
                                                                 Approve
                                                             </button>
                                                             <button
                                                                 onClick={() => handleReject(r.id)}
-                                                                className="flex-1 py-2 text-[12px] font-bold bg-error-container/10 text-error border border-error/20 rounded-xl hover:bg-error hover:text-white transition-all text-center"
+                                                                className="w-full sm:flex-1 py-2.5 sm:py-2 text-[12px] font-bold bg-error-container/10 text-error border border-error/20 rounded-xl hover:bg-error hover:text-white transition-all text-center"
                                                             >
                                                                 Reject
                                                             </button>
@@ -954,6 +968,19 @@ export default function DoctorPortal() {
                                         <option value="Laryngologist">Laryngologist (Throat/Voice specialist)</option>
                                         <option value="Pediatric ENT">Pediatric ENT</option>
                                         <option value="Head and Neck Surgeon">Head and Neck Surgeon</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Gender</label>
+                                    <select
+                                        className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                        value={profileGender}
+                                        onChange={(e) => setProfileGender(e.target.value)}
+                                        required
+                                    >
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
                                     </select>
                                 </div>
 

@@ -73,7 +73,8 @@ const registerUser = async (req, res, next) => {
         email: emailLower,
         password,
         specialization,
-        phoneNumber
+        phoneNumber,
+        gender
       });
     } else if (targetRole === 'admin') {
       user = await Admin.create({
@@ -296,6 +297,7 @@ const updateUserProfile = async (req, res, next) => {
       user.fullName = req.body.fullName || user.fullName;
       user.phoneNumber = req.body.phoneNumber !== undefined ? req.body.phoneNumber : user.phoneNumber;
       user.specialization = req.body.specialization || user.specialization;
+      user.gender = req.body.gender !== undefined ? req.body.gender : user.gender;
       
       await user.save();
       

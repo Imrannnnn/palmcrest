@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 export default function PatientPortal() {
     const navigate = useNavigate();
+    const todayLocal = new Date();
+    const todayStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
 
     // Sidebar state
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
@@ -50,6 +52,107 @@ export default function PatientPortal() {
 
     // Loader state
     const [isLoading, setIsLoading] = useState(false);
+
+    // Notifications state
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [notes, setNotes] = useState([]);
+
+    const toggleNotifications = () => {
+        setIsNotificationsOpen(!isNotificationsOpen);
+    };
+
+    const fetchNotes = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const storedUser = localStorage.getItem('user');
+            if (!storedUser) return;
+            const parsedUser = JSON.parse(storedUser);
+            const response = await fetch(`/api/notes/patient/${parsedUser._id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setNotes(data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch patient notes:', err);
+        }
+    };
+
+    const getLiveNotifications = () => {
+        const list = [];
+
+        // 1. Bookings notifications
+        bookings.forEach(appt => {
+            let statusText = '';
+            let icon = 'calendar_today';
+            let badgeColor = 'border-l-primary bg-primary/5 text-primary';
+
+            if (appt.status === 'Pending') {
+                statusText = 'Awaiting confirmation';
+                badgeColor = 'border-l-amber-400 bg-amber-500/5 text-amber-800';
+            } else if (appt.status === 'Approved') {
+                statusText = 'Confirmed & Scheduled';
+                icon = 'check_circle';
+                badgeColor = 'border-l-emerald-500 bg-emerald-500/5 text-emerald-800';
+            } else if (appt.status === 'Cancelled') {
+                statusText = 'Cancelled';
+                icon = 'cancel';
+                badgeColor = 'border-l-rose-500 bg-rose-500/5 text-rose-800';
+            } else if (appt.status === 'Completed') {
+                statusText = 'Completed';
+                icon = 'task_alt';
+                badgeColor = 'border-l-blue-500 bg-blue-500/5 text-blue-800';
+            }
+
+            list.push({
+                id: `appt-${appt.id}`,
+                type: 'appt',
+                title: appt.title,
+                message: `${appt.title} is ${statusText}.`,
+                time: appt.date,
+                icon: icon,
+                badgeColor: badgeColor
+            });
+        });
+
+        // 2. Clinical Notes notifications
+        notes.forEach(note => {
+            const formattedDate = new Date(note.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            list.push({
+                id: `note-${note._id}`,
+                type: 'note',
+                title: `Clinical Record Update`,
+                message: `New observation: "${note.note.substring(0, 55)}${note.note.length > 55 ? '...' : ''}"`,
+                time: formattedDate,
+                icon: 'history_edu',
+                badgeColor: note.priority === 'Urgent'
+                    ? 'border-l-rose-500 bg-rose-500/5 text-rose-800'
+                    : 'border-l-secondary bg-secondary/5 text-secondary'
+            });
+        });
+
+        return list;
+    };
+
+    const getUpcomingAppointment = () => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const upcoming = bookings.filter(b => {
+            if (b.status === 'Completed' || b.status === 'Cancelled') return false;
+            const dateStr = b.date.split(' • ')[0];
+            const apptDate = new Date(dateStr);
+            return apptDate >= today;
+        });
+
+        return upcoming.length > 0 ? upcoming[0] : null;
+    };
 
     // Live Concierge Chat state
     const [chatInput, setChatInput] = useState('');
@@ -157,6 +260,7 @@ export default function PatientPortal() {
         Promise.resolve().then(() => {
             fetchDoctors();
             fetchAppointments();
+            fetchNotes();
         });
 
         // Handle window resize for sidebar
@@ -192,6 +296,7 @@ export default function PatientPortal() {
     const handleBookNow = async (e) => {
         e.preventDefault();
         if (!bookingDate) return alert('Please select a date.');
+        if (bookingDate < todayStr) return alert('You cannot book an appointment for a past date.');
         if (!specialist) return alert('Please select a doctor.');
 
         let titleToBook = bookingReason;
@@ -287,8 +392,12 @@ export default function PatientPortal() {
         }
         const title = prompt("Enter requested surgery procedure name:", "Septoplasty");
         if (!title) return;
-        const date = prompt("Enter preferred surgery date (YYYY-MM-DD):", "2026-06-20");
+        const date = prompt("Enter preferred surgery date (YYYY-MM-DD):", todayStr);
         if (!date) return;
+        if (date < todayStr) {
+            alert('You cannot request surgery for a past date.');
+            return;
+        }
         const time = prompt("Enter preferred surgery time (e.g. 08:30 AM):", "08:30 AM");
         if (!time) return;
 
@@ -472,21 +581,29 @@ export default function PatientPortal() {
                                         type="text"
                                     />
                                 </div>
-                                <button className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-surface-container transition-colors relative">
+                                <button 
+                                    onClick={toggleNotifications}
+                                    className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-surface-container transition-colors relative"
+                                >
                                     <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-                                    <span className="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
+                                    {getLiveNotifications().length > 0 && (
+                                        <span className="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
+                                    )}
                                 </button>
                                 <div className="flex items-center gap-3 ml-4">
                                     <div className="text-right hidden sm:block">
                                         <p className="font-label-md text-primary">{user?.fullName || 'Patient'}</p>
                                         <p className="text-caption text-on-surface-variant">Patient ID: {user?.patientId || '#PC-8821'}</p>
                                     </div>
-                                    <img
-                                        alt="User Profile"
-                                        className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                                        data-alt="A close-up professional headshot portrait of a middle-aged man with a friendly expression, set against a blurred medical facility background with soft teal and white lighting to match a clean healthcare aesthetic."
-                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjuDRbTP53Ivvm65IP0JFpa8tc0nOPqkJXT5klpiVc3omo7NTSG0Eah7ZiTQ94ztjjo7W-TMnlzuE-iP5ZpD6jUJ_Fgd9Q_tsxATUa1OSF4iv54Yqe7MFf95qe9JdntigyOMIf2U-0hULKS-2_vEw-R7DPN2CiHL9a1OaEZZL_kv94O-G5XXamNuqVLpGSIiKwr9QrYf901sPHVGjnC5OmRUinumcs4Rd1cGn08KFdAIjm979fuO_SPJ8hROzjutv59v0iAem2IQw"
-                                    />
+                                    {user?.gender === 'Female' ? (
+                                        <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                            <span className="material-symbols-outlined text-white text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>woman</span>
+                                        </div>
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center flex-shrink-0">
+                                            <span className="material-symbols-outlined text-white text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>man</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -500,12 +617,13 @@ export default function PatientPortal() {
                                 <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[400px] h-[400px] border-[40px] border-white/10 rounded-full pointer-events-none -ml-32"></div>
                                 <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[250px] h-[250px] border-[30px] border-white/5 rounded-full pointer-events-none -ml-16"></div>
 
-                                {/* Decorative icons in background */}
-                                <span className="material-symbols-outlined absolute bottom-[-30px] right-[10%] text-white/10 pointer-events-none" style={{ fontSize: '180px' }}>calendar_today</span>
-
                                 <div className="relative z-10 w-full md:w-2/3">
                                     <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Welcome back, {user?.fullName ? user.fullName.split(' ')[0] : 'Patient'}.</h3>
-                                    <p className="text-sm md:text-base text-white/90 max-w-2xl">Your health journey is our priority. You have an upcoming consultation with Dr. Aris in 2 days.</p>
+                                    {getUpcomingAppointment() ? (
+                                        <p className="text-sm md:text-base text-white/90 max-w-2xl">Your health journey is our priority. You have an upcoming consultation: {getUpcomingAppointment().title} on {getUpcomingAppointment().date}.</p>
+                                    ) : (
+                                        <p className="text-sm md:text-base text-white/90 max-w-2xl">Your health journey is our priority. You have no upcoming appointments scheduled.</p>
+                                    )}
                                 </div>
 
                                 {/* Decorative people image on the right */}
@@ -529,18 +647,18 @@ export default function PatientPortal() {
                                             </h4>
                                             <button onClick={() => setActiveTab('appointments')} className="text-secondary font-label-md hover:underline">Manage</button>
                                         </div>
-                                        {bookings.length > 0 ? (
+                                        {getUpcomingAppointment() ? (
                                             <div className="flex items-center gap-4 p-4 bg-white/40 rounded-2xl border border-white/60">
-                                                <div className={`w-12 h-12 ${bookings[0].bgClass} rounded-xl flex items-center justify-center ${bookings[0].iconColor}`}>
-                                                    <span className="material-symbols-outlined">{bookings[0].icon}</span>
+                                                <div className={`w-12 h-12 ${getUpcomingAppointment().bgClass} rounded-xl flex items-center justify-center ${getUpcomingAppointment().iconColor}`}>
+                                                    <span className="material-symbols-outlined">{getUpcomingAppointment().icon}</span>
                                                 </div>
                                                 <div>
-                                                    <p className="font-label-md text-primary">{bookings[0].title}</p>
-                                                    <p className="text-caption text-on-surface-variant">{bookings[0].date}</p>
+                                                    <p className="font-label-md text-primary">{getUpcomingAppointment().title}</p>
+                                                    <p className="text-caption text-on-surface-variant">{getUpcomingAppointment().date}</p>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <p className="text-body-md text-on-surface-variant">No upcoming appointments.</p>
+                                            <p className="text-body-md text-on-surface-variant">No upcoming appointment there.</p>
                                         )}
                                     </div>
 
@@ -661,6 +779,7 @@ export default function PatientPortal() {
                                                         className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                                         type="date"
                                                         value={bookingDate}
+                                                        min={todayStr}
                                                         onChange={(e) => setBookingDate(e.target.value)}
                                                     />
                                                 </div>
@@ -794,6 +913,50 @@ export default function PatientPortal() {
                             <p className="text-caption text-on-surface-variant">© 2026 PalmCrest ENT Hospital. Advanced Sanctuary of Care.</p>
                         </div>
                     </footer>
+
+                    {/* Notification Center Overlay */}
+                    <div
+                        className={`fixed right-0 top-0 h-full w-[85%] sm:w-[400px] bg-white/95 backdrop-blur-3xl shadow-2xl z-50 transform transition-transform duration-500 ease-smooth border-l border-outline-variant/30 ${isNotificationsOpen ? 'translate-x-0' : 'translate-x-full'
+                            }`}
+                        id="notification-center"
+                    >
+                        <div className="p-6 md:p-8 h-full flex flex-col text-left">
+                            <div className="flex justify-between items-center mb-6 flex-shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">notifications_active</span>
+                                    <h3 className="text-headline-md font-headline-md text-primary font-bold">Activity Center</h3>
+                                </div>
+                                <button className="p-2 hover:bg-surface-container-high rounded-full transition-colors" onClick={toggleNotifications}>
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <div className="flex-grow overflow-y-auto no-scrollbar space-y-4 pb-8">
+                                {getLiveNotifications().length > 0 ? (
+                                    getLiveNotifications().map(notif => (
+                                        <div
+                                            key={notif.id}
+                                            className={`p-4 rounded-2xl border-l-4 shadow-sm flex items-start gap-3 transition-all ${notif.badgeColor}`}
+                                        >
+                                            <span className="material-symbols-outlined text-[20px] mt-0.5">{notif.icon}</span>
+                                            <div className="text-left flex-grow min-w-0">
+                                                <p className="text-label-md font-bold text-primary leading-tight truncate">{notif.title}</p>
+                                                <p className="text-body-md text-on-surface-variant mt-1 text-xs leading-relaxed">{notif.message}</p>
+                                                <p className="text-[10px] mt-2 font-semibold opacity-70 flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[12px]">schedule</span>
+                                                    {notif.time}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="h-full flex flex-col items-center justify-center text-on-surface-variant/50 gap-2 py-12">
+                                        <span className="material-symbols-outlined text-4xl">notifications_off</span>
+                                        <p className="text-body-md font-label-md">No current activity notifications</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Profile Update Modal */}
                     {showProfileModal && (

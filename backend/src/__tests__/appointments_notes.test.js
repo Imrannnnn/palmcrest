@@ -65,13 +65,14 @@ describe('Appointments & Notes Routes Integration Tests', () => {
       };
       Appointment.create.mockResolvedValueOnce(mockAppointment);
 
+      const todayStr = new Date().toLocaleDateString('en-CA');
       const response = await request(app)
         .post('/api/appointments')
         .set('Authorization', `Bearer ${token}`)
         .send({
           doctor: 'doctor456',
           title: 'Audiology Exam',
-          date: '2026-06-15',
+          date: todayStr,
           timeSlot: '10:30 AM'
         });
 
@@ -88,18 +89,45 @@ describe('Appointments & Notes Routes Integration Tests', () => {
         select: jest.fn().mockResolvedValue(mockDoctor)
       });
 
+      const todayStr = new Date().toLocaleDateString('en-CA');
       const response = await request(app)
         .post('/api/appointments')
         .set('Authorization', `Bearer ${token}`)
         .send({
           doctor: 'doctor456',
           title: 'Audiology Exam',
-          date: '2026-06-15',
+          date: todayStr,
           timeSlot: '10:30 AM'
         });
 
       expect(response.statusCode).toBe(403);
       expect(response.body.message).toMatch(/only patients/i);
+    });
+
+    it('should reject appointment scheduling if date is in the past', async () => {
+      const mockPatient = { _id: 'patient123', role: 'patient' };
+      const token = jwt.sign({ id: mockPatient._id, role: mockPatient.role }, JWT_SECRET);
+
+      Patient.findById = jest.fn().mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockPatient)
+      });
+
+      // Get a past date (yesterday)
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+      const response = await request(app)
+        .post('/api/appointments')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          doctor: 'doctor456',
+          title: 'Audiology Exam',
+          date: yesterdayStr,
+          timeSlot: '10:30 AM'
+        });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toMatch(/cannot be in the past/i);
     });
 
     it('should return appointments for the logged-in patient', async () => {
