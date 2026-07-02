@@ -1,6 +1,37 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const isAppointmentPast = (dateStr, timeSlot) => {
+    if (!dateStr) return false;
+    const apptDate = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (apptDate < today) {
+        return true;
+    }
+    if (apptDate.toDateString() === today.toDateString()) {
+        if (!timeSlot) return false;
+        try {
+            const timeParts = timeSlot.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+            if (timeParts) {
+                let hours = parseInt(timeParts[1], 10);
+                const minutes = parseInt(timeParts[2], 10);
+                const ampm = timeParts[3].toUpperCase();
+                if (ampm === 'PM' && hours < 12) hours += 12;
+                if (ampm === 'AM' && hours === 12) hours = 0;
+                
+                const apptDateTime = new Date(apptDate);
+                apptDateTime.setHours(hours, minutes, 0, 0);
+                return apptDateTime < new Date();
+            }
+        } catch (e) {
+            console.error("Error parsing time slot", e);
+        }
+    }
+    return false;
+};
+
 export default function PatientPortal() {
     const navigate = useNavigate();
     const todayLocal = new Date();
@@ -201,12 +232,18 @@ export default function PatientPortal() {
                         day: 'numeric',
                         year: 'numeric'
                     });
+
+                    let displayStatus = appt.status;
+                    if (appt.status === 'Approved' && isAppointmentPast(appt.date, appt.timeSlot)) {
+                        displayStatus = 'Completed';
+                    }
+
                     return {
                         id: appt._id,
                         title: appt.title,
                         date: `${formattedDate} • ${appt.timeSlot}`,
-                        status: appt.status,
-                        statusColor: getStatusColor(appt.status),
+                        status: displayStatus,
+                        statusColor: getStatusColor(displayStatus),
                         bgClass: getBgClass(appt.type),
                         icon: getIcon(appt.title),
                         iconColor: getIconColor(appt.type)

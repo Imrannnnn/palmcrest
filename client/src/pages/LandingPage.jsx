@@ -610,7 +610,8 @@ export default function LandingPage() {
                     <div>
                         <h4 className="font-bold text-primary text-sm uppercase tracking-wider mb-5">Contact</h4>
                         <p className="text-on-surface-variant text-sm mb-1">100 Clinical Way, Medical District</p>
-                        <p className="text-on-surface-variant text-sm mb-5">info@palmcrestent.com</p>
+                        <p className="text-on-surface-variant text-sm mb-1">+234 805 691 3057</p>
+                        <p className="text-on-surface-variant text-sm mb-4">Palmcrestentspecialisthospital@gmail.com</p>
                         <div className="flex gap-3">
                             {['share', 'public', 'mail'].map(icon => (
                                 <div key={icon} className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all cursor-pointer border border-outline-variant/20">

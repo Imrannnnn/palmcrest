@@ -1,6 +1,37 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const isAppointmentPast = (dateStr, timeSlot) => {
+    if (!dateStr) return false;
+    const apptDate = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (apptDate < today) {
+        return true;
+    }
+    if (apptDate.toDateString() === today.toDateString()) {
+        if (!timeSlot) return false;
+        try {
+            const timeParts = timeSlot.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+            if (timeParts) {
+                let hours = parseInt(timeParts[1], 10);
+                const minutes = parseInt(timeParts[2], 10);
+                const ampm = timeParts[3].toUpperCase();
+                if (ampm === 'PM' && hours < 12) hours += 12;
+                if (ampm === 'AM' && hours === 12) hours = 0;
+                
+                const apptDateTime = new Date(apptDate);
+                apptDateTime.setHours(hours, minutes, 0, 0);
+                return apptDateTime < new Date();
+            }
+        } catch (e) {
+            console.error("Error parsing time slot", e);
+        }
+    }
+    return false;
+};
+
 export default function DoctorPortal() {
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
@@ -113,7 +144,50 @@ export default function DoctorPortal() {
     const [scheduleData, setScheduleData] = useState(initialScheduleData);
     const [surgeries, setSurgeries] = useState([]);
 
+    // New Clinical Note Modal state
+    const [showNoteModal, setShowNoteModal] = useState(false);
+    const [noteSearchQuery, setNoteSearchQuery] = useState('');
+    const [selectedPatientForNote, setSelectedPatientForNote] = useState(null);
+    const [newNoteText, setNewNoteText] = useState('');
+    const [newNotePriority, setNewNotePriority] = useState('Routine');
 
+    const todayAppointmentsCount = rawAppointments.filter(appt => {
+        if (!appt.date) return false;
+        const apptDate = new Date(appt.date);
+        return apptDate.toDateString() === new Date().toDateString() && appt.status !== 'Cancelled';
+    }).length;
+
+    const getTodayAppointments = () => {
+        const todayStr = new Date().toDateString();
+        return rawAppointments
+            .filter(appt => {
+                if (!appt.date) return false;
+                return new Date(appt.date).toDateString() === todayStr && appt.status !== 'Cancelled';
+            });
+    };
+
+    const getUniquePatients = () => {
+        const patientsMap = new Map();
+        rawAppointments.forEach(appt => {
+            if (appt.patient && appt.patient._id && appt.patient.fullName) {
+                patientsMap.set(appt.patient._id, {
+                    _id: appt.patient._id,
+                    fullName: appt.patient.fullName,
+                    patientId: appt.patient.patientId || ''
+                });
+            }
+        });
+        return Array.from(patientsMap.values());
+    };
+
+    const getFilteredPatients = () => {
+        const patients = getUniquePatients();
+        if (!noteSearchQuery.trim()) return patients;
+        return patients.filter(p => 
+            p.fullName.toLowerCase().includes(noteSearchQuery.toLowerCase()) ||
+            p.patientId.toLowerCase().includes(noteSearchQuery.toLowerCase())
+        );
+    };
 
     const fetchDoctorData = async () => {
         try {
@@ -125,12 +199,20 @@ export default function DoctorPortal() {
             let appts = [];
             if (apptRes.ok) {
                 appts = await apptRes.json();
-                setRawAppointments(appts);
+                
+                const mappedAppts = appts.map(appt => {
+                    if (appt.status === 'Approved' && isAppointmentPast(appt.date, appt.timeSlot)) {
+                        return { ...appt, status: 'Completed' };
+                    }
+                    return appt;
+                });
+                
+                setRawAppointments(mappedAppts);
 
                 // Group by day of week
                 const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                 const sched = { MON: [], TUE: [], WED: [], THU: [], FRI: [], SAT: [], SUN: [] };
-                appts.forEach(appt => {
+                mappedAppts.forEach(appt => {
                     const dateObj = new Date(appt.date);
                     const dayName = days[dateObj.getDay()];
                     if (sched[dayName] && appt.type === 'Appointment') {
@@ -154,11 +236,11 @@ export default function DoctorPortal() {
                 setScheduleData(sched);
 
                 // Group Surgeries
-                const surgList = appts.filter(appt => appt.type === 'Surgery');
+                const surgList = mappedAppts.filter(appt => appt.type === 'Surgery');
                 setSurgeries(surgList);
 
                 // Group Requests (Pending)
-                const reqList = appts.filter(appt => appt.status === 'Pending').map(appt => {
+                const reqList = mappedAppts.filter(appt => appt.status === 'Pending').map(appt => {
                     const nameParts = (appt.patient?.fullName || 'Unknown Patient').split(' ').filter(Boolean);
                     const initials = (nameParts.length > 1
                         ? [nameParts[0][0], nameParts[nameParts.length - 1][0]]
@@ -334,29 +416,24 @@ export default function DoctorPortal() {
         }
     };
 
-    const handleNewAnnotation = async () => {
-        const name = prompt("Enter Patient Name or Patient ID to find patient record:");
-        if (!name) return;
+    const handleNewAnnotation = () => {
+        setNoteSearchQuery('');
+        setSelectedPatientForNote(null);
+        setNewNoteText('');
+        setNewNotePriority('Routine');
+        setShowNoteModal(true);
+    };
 
-        // Search for patient in doctor's rawAppointments
-        const matchedAppt = rawAppointments.find(a =>
-            a.patient.fullName.toLowerCase().includes(name.toLowerCase()) ||
-            a.patient.patientId === name
-        );
-
-        if (!matchedAppt) {
-            alert("Patient record not found in your clinical appointments. Doctors can only write clinical notes for their active patients.");
+    const handleSubmitNote = async (e) => {
+        e.preventDefault();
+        if (!selectedPatientForNote) {
+            alert('Please select a patient first.');
             return;
         }
-
-        const patientId = matchedAppt.patient._id;
-        const patientName = matchedAppt.patient.fullName;
-
-        const noteText = prompt(`Enter Clinical Annotation for ${patientName}:`);
-        if (!noteText) return;
-
-        const badge = prompt("Enter Priority (Urgent, Routine, Monitoring):", "Routine");
-        if (!badge) return;
+        if (!newNoteText.trim()) {
+            alert('Please enter clinical note text.');
+            return;
+        }
 
         setIsLoading(true);
         try {
@@ -368,9 +445,9 @@ export default function DoctorPortal() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    patient: patientId,
-                    note: noteText,
-                    priority: badge
+                    patient: selectedPatientForNote._id,
+                    note: newNoteText,
+                    priority: newNotePriority
                 })
             });
 
@@ -381,6 +458,7 @@ export default function DoctorPortal() {
             }
 
             alert('Clinical note added successfully!');
+            setShowNoteModal(false);
             fetchDoctorData();
         } catch (err) {
             console.error(err);
@@ -594,7 +672,7 @@ export default function DoctorPortal() {
                         </button>
                         <div>
                             <h2 className="text-headline-md md:text-headline-lg font-headline-lg text-primary hidden sm:block">Physician Hub</h2>
-                            <p className="text-caption md:text-body-md text-on-surface-variant hidden sm:block">Welcome back, {user?.fullName || 'Dr. Julian Harrison'}. You have 8 appointments today.</p>
+                            <p className="text-caption md:text-body-md text-on-surface-variant hidden sm:block">Welcome back, {user?.fullName || 'Dr. Julian Harrison'}. You have {todayAppointmentsCount} appointment{todayAppointmentsCount === 1 ? '' : 's'} today.</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 md:gap-4">
@@ -634,13 +712,149 @@ export default function DoctorPortal() {
 
                 {/* Dashboard Grid */}
                 <div className="flex-grow overflow-y-auto px-4 md:px-margin-desktop pt-6 pb-10 no-scrollbar">
+                    {activeTab === 'dashboard' && (
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            {/* Card 1: Today's Engagements */}
+                            <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300">
+                                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-2xl">calendar_today</span>
+                                </div>
+                                <div>
+                                    <p className="text-caption text-on-surface-variant font-medium">Today's Schedule</p>
+                                    <h4 className="text-headline-md font-extrabold text-primary">{todayAppointmentsCount}</h4>
+                                </div>
+                            </div>
+
+                            {/* Card 2: Pending Requests */}
+                            <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300">
+                                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-2xl">pending_actions</span>
+                                </div>
+                                <div>
+                                    <p className="text-caption text-on-surface-variant font-medium">Pending Requests</p>
+                                    <h4 className="text-headline-md font-extrabold text-primary">
+                                        {rawAppointments.filter(a => a.status === 'Pending').length}
+                                    </h4>
+                                </div>
+                            </div>
+
+                            {/* Card 3: Completed / History */}
+                            <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300">
+                                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-2xl">history</span>
+                                </div>
+                                <div>
+                                    <p className="text-caption text-on-surface-variant font-medium">Completed</p>
+                                    <h4 className="text-headline-md font-extrabold text-primary">
+                                        {rawAppointments.filter(a => a.status === 'Completed').length}
+                                    </h4>
+                                </div>
+                            </div>
+
+                            {/* Card 4: Active Notes */}
+                            <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300">
+                                <div className="w-12 h-12 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-2xl">history_edu</span>
+                                </div>
+                                <div>
+                                    <p className="text-caption text-on-surface-variant font-medium">Active Notes</p>
+                                    <h4 className="text-headline-md font-extrabold text-primary">{notes.length}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-gutter">
-                        {/* Weekly Appointment Schedule (Calendar) - Spans 8 cols */}
-                        {(activeTab === 'dashboard' || activeTab === 'appointments') && (
-                            <section className={`col-span-1 md:col-span-12 ${activeTab === 'appointments' ? 'lg:col-span-8' : 'lg:col-span-8'} flex flex-col gap-4`}>
+                        {/* Dashboard Left Column: Today's Agenda */}
+                        {activeTab === 'dashboard' && (
+                            <section className="col-span-1 md:col-span-12 lg:col-span-8 flex flex-col gap-4">
                                 <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col min-h-[400px] h-[50dvh] md:h-[480px]">
                                     <div className="flex justify-between items-center mb-6">
-                                        <h3 className="text-headline-md font-headline-md text-primary">Agenda & Schedule</h3>
+                                        <h3 className="text-headline-md font-headline-md text-primary">Today's Agenda</h3>
+                                        <span className="font-label-md text-secondary uppercase tracking-[0.05em] text-caption bg-secondary/10 px-3 py-1 rounded-full">
+                                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                                        </span>
+                                    </div>
+                                    <div className="flex-grow overflow-y-auto pr-1 no-scrollbar">
+                                        {getTodayAppointments().length > 0 ? (
+                                            <div className="space-y-4">
+                                                {getTodayAppointments().map((event, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className={`flex items-center gap-6 p-4 rounded-2xl border-l-4 transition-all duration-300 bg-white/50 border border-outline-variant/10 hover:bg-white/90 ${
+                                                            event.status === 'Approved' ? 'border-l-[#2A7B4C]' : event.status === 'Pending' ? 'border-l-amber-400' : event.status === 'Completed' ? 'border-l-blue-400' : 'border-l-red-400'
+                                                        }`}
+                                                    >
+                                                        <div className="text-left min-w-[90px]">
+                                                            <p className="font-label-md text-caption text-secondary font-bold">
+                                                                {event.timeSlot}
+                                                            </p>
+                                                            <p className="text-[10px] text-on-surface-variant">
+                                                                {event.duration || 30} mins
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-left flex-grow">
+                                                            <div className="flex items-center gap-2">
+                                                                <h4 className="font-headline-md text-body-md font-bold text-primary">
+                                                                    {event.title}
+                                                                </h4>
+                                                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                                                                    event.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
+                                                                    event.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
+                                                                    event.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
+                                                                    'bg-red-100 text-red-800'
+                                                                }`}>
+                                                                    {event.status}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-caption text-on-surface-variant">
+                                                                Patient: {event.patient?.fullName || 'Unknown'} ({event.patient?.patientId || ''})
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="h-full flex flex-col items-center justify-center text-on-surface-variant/50 gap-2 py-12">
+                                                <span className="material-symbols-outlined text-4xl">calendar_today</span>
+                                                <p className="text-body-md font-label-md">No appointments scheduled for today</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* Telehealth CTA */}
+                                <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between border-2 border-secondary/30 bg-secondary/5 gap-4">
+                                    <div className="flex items-center gap-4 md:gap-6">
+                                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-secondary flex items-center justify-center text-white flex-shrink-0">
+                                            <span className="material-symbols-outlined text-2xl md:text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>videocam</span>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary">Launch Telehealth Session</h4>
+                                            {getNextAppointment() ? (
+                                                <p className="text-caption md:text-body-md text-on-surface-variant">
+                                                    Next up: {getNextAppointment().patient?.fullName} ({getNextAppointment().timeSlot})
+                                                </p>
+                                            ) : (
+                                                <p className="text-caption md:text-body-md text-on-surface-variant">
+                                                    No telehealth sessions scheduled
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <button className="w-full md:w-auto px-6 py-3 btn-gradient text-white rounded-xl font-label-md flex justify-center items-center gap-2 flex-shrink-0">
+                                        Enter Waiting Room
+                                        <span className="material-symbols-outlined">arrow_forward</span>
+                                    </button>
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Appointments Left Column: Weekly Schedule & Complete Appointment Log */}
+                        {activeTab === 'appointments' && (
+                            <section className="col-span-1 md:col-span-12 lg:col-span-8 flex flex-col gap-4">
+                                <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col min-h-[400px] h-[50dvh] md:h-[480px]">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-headline-md font-headline-md text-primary">Weekly Schedule</h3>
                                         <span className="font-label-md text-secondary uppercase tracking-[0.05em] text-caption bg-secondary/10 px-3 py-1 rounded-full">
                                             {getWeekRangeString()}
                                         </span>
@@ -692,8 +906,8 @@ export default function DoctorPortal() {
                                                                 </h4>
                                                                 <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${event.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
                                                                         event.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                                                                            event.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
-                                                                                'bg-red-100 text-red-800'
+                                                                        event.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
+                                                                        'bg-red-100 text-red-800'
                                                                     }`}>
                                                                     {event.status}
                                                                 </span>
@@ -716,29 +930,48 @@ export default function DoctorPortal() {
                                         )}
                                     </div>
                                 </div>
-                                {/* Video Consultation Quick-link */}
-                                <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between border-2 border-secondary/30 bg-secondary/5 gap-4">
-                                    <div className="flex items-center gap-4 md:gap-6">
-                                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-secondary flex items-center justify-center text-white flex-shrink-0">
-                                            <span className="material-symbols-outlined text-2xl md:text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>videocam</span>
-                                        </div>
-                                        <div>
-                                            <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary">Launch Telehealth Session</h4>
-                                            {getNextAppointment() ? (
-                                                <p className="text-caption md:text-body-md text-on-surface-variant">
-                                                    Next up: {getNextAppointment().patient?.fullName} ({getNextAppointment().timeSlot})
-                                                </p>
-                                            ) : (
-                                                <p className="text-caption md:text-body-md text-on-surface-variant">
-                                                    No telehealth sessions scheduled
-                                                </p>
-                                            )}
-                                        </div>
+
+                                {/* Complete Appointment Log */}
+                                <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col">
+                                    <h3 className="text-headline-md font-headline-md text-primary mb-6">Complete Appointment Log</h3>
+                                    <div className="overflow-y-auto max-h-[400px] pr-1 no-scrollbar space-y-4">
+                                        {rawAppointments.length > 0 ? (
+                                            rawAppointments.map((appt) => {
+                                                const formattedDate = new Date(appt.date).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    year: 'numeric'
+                                                });
+                                                return (
+                                                    <div key={appt._id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/40 rounded-2xl border border-white/60 hover:bg-white/60 transition-colors gap-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${appt.type === 'Surgery' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}`}>
+                                                                <span className="material-symbols-outlined">
+                                                                    {appt.type === 'Surgery' ? 'medical_services' : 'calendar_today'}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-label-md text-primary font-bold">{appt.title}</p>
+                                                                <p className="text-caption text-on-surface-variant">
+                                                                    {formattedDate} • {appt.timeSlot} • Patient: {appt.patient?.fullName || 'Unknown'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <span className={`px-3 py-1 rounded-full text-caption font-label-md ${
+                                                            appt.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
+                                                            appt.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
+                                                            appt.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
+                                                            'bg-red-100 text-red-800'
+                                                        }`}>
+                                                            {appt.status}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <p className="text-caption text-on-surface-variant">No appointments registered.</p>
+                                        )}
                                     </div>
-                                    <button className="w-full md:w-auto px-6 py-3 btn-gradient text-white rounded-xl font-label-md flex justify-center items-center gap-2 flex-shrink-0">
-                                        Enter Waiting Room
-                                        <span className="material-symbols-outlined">arrow_forward</span>
-                                    </button>
                                 </div>
                             </section>
                         )}
@@ -811,7 +1044,7 @@ export default function DoctorPortal() {
                                 {(activeTab === 'dashboard' || activeTab === 'appointments') && (
                                     <div className="glass-card rounded-3xl p-4 md:p-6 flex-grow">
                                         <div className="flex justify-between items-center mb-6">
-                                            <h3 class="text-headline-sm font-headline-md text-primary font-bold">Surgery Queue</h3>
+                                            <h3 className="text-headline-sm font-headline-md text-primary font-bold">Surgery Queue</h3>
                                             <span className="material-symbols-outlined text-on-surface-variant">more_vert</span>
                                         </div>
                                         <div className="space-y-6">
@@ -823,7 +1056,7 @@ export default function DoctorPortal() {
                                                     });
                                                     return (
                                                         <div key={surg._id} className="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-outline-variant/30">
-                                                            <div className={`absolute left-[-4px] top-0 w-2 h-2 rounded-full ${surg.status === 'Approved' ? 'bg-primary' : surg.status === 'Pending' ? 'bg-amber-400' : 'bg-outline-variant'}`}></div>
+                                                            <div className={`absolute left-[-4px] top-0 w-2 h-2 rounded-full ${surg.status === 'Approved' ? 'bg-primary' : surg.status === 'Pending' ? 'bg-amber-400' : surg.status === 'Completed' ? 'bg-blue-400' : 'bg-outline-variant'}`}></div>
                                                             <p className="text-caption font-bold text-primary">{formattedDate}, {surg.timeSlot} ({surg.status})</p>
                                                             <p className="text-body-md">{surg.title}</p>
                                                             <p className="text-caption text-on-surface-variant">Patient: {surg.patient.fullName}</p>
@@ -918,6 +1151,142 @@ export default function DoctorPortal() {
                     </div>
                 </div>
             </div>
+
+            {/* New Clinical Note Modal */}
+            {showNoteModal && (
+                <div className="fixed inset-0 bg-on-surface/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left flex flex-col max-h-[90vh]">
+                        {/* Decorative background blob */}
+                        <div className="absolute top-[-50px] right-[-50px] w-[150px] h-[150px] bg-secondary/10 rounded-full blur-xl pointer-events-none"></div>
+
+                        <div className="relative z-10 flex flex-col gap-4 overflow-hidden flex-grow">
+                            <div className="flex items-center gap-3 mb-2 flex-shrink-0">
+                                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                                    <span className="material-symbols-outlined">history_edu</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-headline-md font-headline-md text-primary font-bold">New Clinical Note</h3>
+                                    <p className="text-caption text-on-surface-variant font-label-md">Add Annotation to Patient Record</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-grow overflow-y-auto no-scrollbar pr-1 space-y-4">
+                                {!selectedPatientForNote ? (
+                                    <div className="flex flex-col gap-3">
+                                        <label className="block text-caption font-label-md text-on-surface-variant uppercase tracking-wider">Select Patient</label>
+                                        <div className="relative">
+                                            <input
+                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 pl-10 pr-4 min-h-[48px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md"
+                                                type="text"
+                                                placeholder="Search by name or patient ID..."
+                                                value={noteSearchQuery}
+                                                onChange={(e) => setNoteSearchQuery(e.target.value)}
+                                                autoFocus
+                                            />
+                                            <span className="material-symbols-outlined absolute left-3 top-3 text-on-surface-variant text-[22px]">search</span>
+                                        </div>
+                                        
+                                        <div className="border border-outline-variant/20 rounded-2xl max-h-[200px] overflow-y-auto bg-surface-container-lowest">
+                                            {getFilteredPatients().length > 0 ? (
+                                                <div className="divide-y divide-outline-variant/10">
+                                                    {getFilteredPatients().map(p => (
+                                                        <button
+                                                            key={p._id}
+                                                            type="button"
+                                                            onClick={() => setSelectedPatientForNote(p)}
+                                                            className="w-full px-4 py-3 text-left hover:bg-secondary/5 transition-all text-body-md font-medium text-primary flex items-center justify-between"
+                                                        >
+                                                            <span>{p.fullName}</span>
+                                                            <span className="text-caption text-on-surface-variant font-mono text-xs">{p.patientId}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="p-6 text-center text-caption text-on-surface-variant">
+                                                    No active patients match your search.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4 animate-fadeIn">
+                                        <div className="p-4 rounded-2xl bg-secondary/5 border border-secondary/20 flex items-center justify-between">
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-secondary tracking-wider">Selected Patient</p>
+                                                <h5 className="text-body-md font-bold text-primary">{selectedPatientForNote.fullName}</h5>
+                                                <p className="text-caption text-on-surface-variant font-mono">{selectedPatientForNote.patientId}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedPatientForNote(null)}
+                                                className="px-3 py-1.5 text-xs text-secondary hover:underline font-label-md"
+                                            >
+                                                Change
+                                            </button>
+                                        </div>
+
+                                        <form onSubmit={handleSubmitNote} className="space-y-4">
+                                            <div>
+                                                <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Clinical Annotation</label>
+                                                <textarea
+                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[100px] max-h-[160px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md resize-none"
+                                                    placeholder="Enter medical observations, treatment recommendations, or general notes..."
+                                                    value={newNoteText}
+                                                    onChange={(e) => setNewNoteText(e.target.value)}
+                                                    required
+                                                    rows={4}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Priority Level</label>
+                                                <select
+                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md"
+                                                    value={newNotePriority}
+                                                    onChange={(e) => setNewNotePriority(e.target.value)}
+                                                    required
+                                                >
+                                                    <option value="Routine">Routine</option>
+                                                    <option value="Monitoring">Monitoring</option>
+                                                    <option value="Urgent">Urgent</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="flex gap-3 pt-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowNoteModal(false)}
+                                                    className="flex-1 py-3 border-2 border-outline-variant/40 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container transition-all text-center"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    className="flex-1 py-3 btn-gradient text-white rounded-xl font-label-md shadow-lg shadow-secondary/10"
+                                                >
+                                                    Save Note
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                )}
+                            </div>
+
+                            {!selectedPatientForNote && (
+                                <div className="flex gap-3 pt-4 border-t border-outline-variant/10 flex-shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNoteModal(false)}
+                                        className="w-full py-3 border-2 border-outline-variant/40 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container transition-all text-center"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Profile Update Modal */}
             {showProfileModal && (
