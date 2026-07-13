@@ -18,7 +18,6 @@ const AdminSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
       minlength: [8, 'Password must be at least 8 characters long'],
     },
     role: {
@@ -26,6 +25,8 @@ const AdminSchema = new mongoose.Schema(
       default: 'admin',
       enum: ['admin'],
     },
+    setupToken: String,
+    setupTokenExpire: Date,
   },
   {
     timestamps: true,

@@ -44,6 +44,10 @@ const AppointmentSchema = new mongoose.Schema(
       enum: ['Appointment', 'Surgery'],
       default: 'Appointment',
     },
+    remindersSent: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

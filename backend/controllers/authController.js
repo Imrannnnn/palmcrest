@@ -1,7 +1,9 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const Patient = require('../model/Patient');
 const Doctor = require('../model/Doctor');
 const Admin = require('../model/Admin');
+const { sendWelcomeEmail, sendGeneralEmail, sendAdminInviteEmail, sendDirectPatientEmail } = require('../services/emailService');
 
 // Generate JWT Token
 const generateToken = (id, role) => {
@@ -85,6 +87,9 @@ const registerUser = async (req, res, next) => {
     }
 
     if (user) {
+      // Send welcome email asynchronously so it doesn't block response
+      sendWelcomeEmail(user).catch(err => console.error("Welcome email failed:", err));
+
       res.status(201).json({
         _id: user._id,
         fullName: user.fullName,
@@ -208,16 +213,16 @@ const getAllPatients = async (req, res, next) => {
   }
 };
 
-// @desc    Register a new admin (Internal/Protected)
+// @desc    Register a new admin (Internal/Protected) and send invite
 // @route   POST /api/auth/admin/register
 // @access  Private (Admin only)
 const registerAdmin = async (req, res, next) => {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, email } = req.body; // password removed, using token
 
-    if (!fullName || !email || !password) {
+    if (!fullName || !email) {
       res.status(400);
-      throw new Error('Please enter all required fields (fullName, email, password)');
+      throw new Error('Please enter all required fields (fullName, email)');
     }
 
     const emailLower = email.toLowerCase();
@@ -230,24 +235,74 @@ const registerAdmin = async (req, res, next) => {
       throw new Error('User already exists with this email address');
     }
 
+    // Generate random token for password setup
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const setupTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    // Token valid for 24 hours
+    const setupTokenExpire = Date.now() + 24 * 60 * 60 * 1000;
+
     const admin = await Admin.create({
       fullName,
       email: emailLower,
-      password
+      setupToken: setupTokenHash,
+      setupTokenExpire
     });
 
     if (admin) {
+      // Send invite email
+      const frontendUrl = process.env.FRONTEND_URL || 'https://palmcrestent.com';
+      const setupUrl = `${frontendUrl}/admin/setup/${resetToken}`;
+      sendAdminInviteEmail(admin, setupUrl).catch(err => console.error("Admin invite email failed:", err));
+
       res.status(201).json({
+        message: 'Admin invited successfully',
         _id: admin._id,
         fullName: admin.fullName,
         email: admin.email,
-        role: admin.role,
-        token: generateToken(admin._id, admin.role)
+        role: admin.role
       });
     } else {
       res.status(400);
       throw new Error('Invalid admin data received');
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Setup admin password from invite link
+// @route   POST /api/auth/admin/setup-password/:token
+// @access  Public
+const setupAdminPassword = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    const { token } = req.params;
+
+    if (!password) {
+      res.status(400);
+      throw new Error('Please provide a new password');
+    }
+
+    const setupTokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const admin = await Admin.findOne({
+      setupToken: setupTokenHash,
+      setupTokenExpire: { $gt: Date.now() }
+    });
+
+    if (!admin) {
+      res.status(400);
+      throw new Error('Invalid or expired setup token');
+    }
+
+    admin.password = password;
+    admin.setupToken = undefined;
+    admin.setupTokenExpire = undefined;
+    await admin.save();
+
+    res.status(200).json({
+      message: 'Password set successfully. You can now log in.',
+    });
   } catch (error) {
     next(error);
   }
@@ -324,6 +379,61 @@ const updateUserProfile = async (req, res, next) => {
   }
 };
 
+// @desc    Admin broadcasts email to all patients
+// @route   POST /api/auth/admin/broadcast
+// @access  Private (Admin only)
+const broadcastEmail = async (req, res, next) => {
+  try {
+    const { subject, message } = req.body;
+    
+    if (!subject || !message) {
+      res.status(400);
+      throw new Error('Please provide both subject and message.');
+    }
+
+    const patients = await Patient.find({}, 'email');
+    if (!patients || patients.length === 0) {
+      res.status(404);
+      throw new Error('No patients found to email.');
+    }
+
+    const emails = patients.map(p => p.email);
+    
+    // We run the email broadcast in background so we don't block the response
+    sendGeneralEmail(emails, subject, message).catch(err => console.error("Broadcast failed:", err));
+
+    res.status(200).json({ success: true, message: `Broadcast initiated to ${emails.length} patients.` });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin emails a specific patient
+// @route   POST /api/auth/admin/email-patient
+// @access  Private (Admin only)
+const emailIndividualPatient = async (req, res, next) => {
+  try {
+    const { email, subject, message } = req.body;
+    
+    if (!email || !subject || !message) {
+      res.status(400);
+      throw new Error('Please provide email, subject, and message.');
+    }
+
+    const patient = await Patient.findOne({ email: email.toLowerCase() });
+    if (!patient) {
+      res.status(404);
+      throw new Error('Patient not found with this email.');
+    }
+
+    sendDirectPatientEmail(patient.email, patient.fullName, subject, message).catch(err => console.error("Direct email failed:", err));
+
+    res.status(200).json({ success: true, message: `Email sent to ${patient.fullName}.` });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -333,4 +443,7 @@ module.exports = {
   registerAdmin,
   getAllAdmins,
   updateUserProfile,
+  broadcastEmail,
+  setupAdminPassword,
+  emailIndividualPatient
 };

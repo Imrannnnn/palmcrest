@@ -1,4 +1,6 @@
 const Appointment = require('../model/Appointment');
+const Doctor = require('../model/Doctor');
+const { sendBookingCreatedPatient, sendBookingCreatedDoctor, sendBookingStatusUpdate, sendAppointmentReminder, sendDoctorScheduleEmail } = require('../services/emailService');
 
 // @desc    Create a new appointment
 // @route   POST /api/appointments
@@ -42,6 +44,12 @@ const createAppointment = async (req, res, next) => {
       duration: duration || 30,
       type: type || 'Appointment'
     });
+
+    const doctorDoc = await Doctor.findById(doctor);
+    if (doctorDoc) {
+      sendBookingCreatedPatient(req.user, doctorDoc, appointment).catch(err => console.error("Email error:", err));
+      sendBookingCreatedDoctor(doctorDoc, req.user, appointment).catch(err => console.error("Email error:", err));
+    }
 
     res.status(201).json(appointment);
   } catch (error) {
@@ -115,7 +123,94 @@ const updateAppointmentStatus = async (req, res, next) => {
       .populate('patient', 'fullName email patientId')
       .populate('doctor', 'fullName email specialization');
 
+    if (updatedAppointment && updatedAppointment.patient && updatedAppointment.doctor) {
+      sendBookingStatusUpdate(updatedAppointment.patient, updatedAppointment.doctor, updatedAppointment).catch(err => console.error("Email error:", err));
+    }
+
     res.json(updatedAppointment);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Manually trigger post-visit email
+// @route   POST /api/appointments/:id/reminders/post-visit
+// @access  Private (Admin only)
+const triggerPostVisitEmail = async (req, res, next) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id)
+      .populate('patient')
+      .populate('doctor');
+
+    if (!appointment) {
+      res.status(404);
+      throw new Error('Appointment not found');
+    }
+
+    if (appointment.status !== 'Completed') {
+      res.status(400);
+      throw new Error('Can only send post-visit email for completed appointments');
+    }
+
+    if (appointment.remindersSent.includes('post4hr')) {
+      res.status(400);
+      throw new Error('Post-visit email has already been sent');
+    }
+
+    await sendAppointmentReminder(appointment.patient, appointment.doctor, appointment, 'post4hr');
+    
+    appointment.remindersSent.push('post4hr');
+    await appointment.save();
+
+    res.status(200).json({ success: true, message: 'Post-visit email sent successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin manually sends schedule to doctor
+// @route   POST /api/appointments/admin/send-schedule/:doctorId
+// @access  Private (Admin only)
+const sendDoctorSchedule = async (req, res, next) => {
+  try {
+    const { doctorId } = req.params;
+    const { timeframe } = req.body; // 'day', 'week', 'month'
+
+    if (!['day', 'week', 'month'].includes(timeframe)) {
+      res.status(400);
+      throw new Error('Invalid timeframe. Must be day, week, or month.');
+    }
+
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      res.status(404);
+      throw new Error('Doctor not found');
+    }
+
+    // Determine date range
+    const start = new Date();
+    start.setHours(0, 0, 0, 0); // Start of today
+
+    const end = new Date(start);
+    if (timeframe === 'day') {
+      end.setDate(end.getDate() + 1);
+    } else if (timeframe === 'week') {
+      end.setDate(end.getDate() + 7);
+    } else if (timeframe === 'month') {
+      end.setMonth(end.getMonth() + 1);
+    }
+
+    // Find appointments
+    const appointments = await Appointment.find({
+      doctor: doctorId,
+      date: { $gte: start, $lt: end },
+      status: { $in: ['Pending', 'Approved'] }
+    }).populate('patient', 'fullName');
+
+    // Send email
+    await sendDoctorScheduleEmail(doctor, timeframe, appointments);
+
+    res.status(200).json({ success: true, message: `Schedule sent to Dr. ${doctor.fullName} successfully` });
   } catch (error) {
     next(error);
   }
@@ -124,5 +219,7 @@ const updateAppointmentStatus = async (req, res, next) => {
 module.exports = {
   createAppointment,
   getMyAppointments,
-  updateAppointmentStatus
+  updateAppointmentStatus,
+  triggerPostVisitEmail,
+  sendDoctorSchedule
 };

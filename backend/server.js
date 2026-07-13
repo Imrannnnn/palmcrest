@@ -13,6 +13,8 @@ const errorHandler = require('./middleware/error')
 dotenv.config()
 
 connectDB()
+const { initCronJobs } = require('./services/cronService');
+initCronJobs();
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -22,6 +24,7 @@ const PORT = process.env.PORT || 5000
 const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
     : [
+        'https://palmcrestent.com',
         'https://palmcrestent.netlify.app',
         'http://localhost:5173'
     ];
