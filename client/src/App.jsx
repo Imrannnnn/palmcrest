@@ -4,6 +4,7 @@ import AuthPortal from './pages/AuthPortal';
 import PatientPortal from './pages/PatientPortal';
 import DoctorPortal from './pages/DoctorPortal';
 import SuperAdmin from './pages/SuperAdmin';
+import SetPassword from './pages/SetPassword';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/patient" element={<PatientPortal />} />
         <Route path="/doctor" element={<DoctorPortal />} />
         <Route path="/admin" element={<SuperAdmin />} />
+        <Route path="/admin/setup/:token" element={<SetPassword />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

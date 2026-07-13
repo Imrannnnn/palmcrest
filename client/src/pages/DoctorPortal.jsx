@@ -68,14 +68,26 @@ export default function DoctorPortal() {
 
     const [selectedDay, setSelectedDay] = useState(() => getCurrentDayName());
 
+    const getMonday = (d) => {
+        const dCopy = new Date(d);
+        const day = dCopy.getDay();
+        const diff = dCopy.getDate() - day + (day === 0 ? -6 : 1);
+        dCopy.setDate(diff);
+        dCopy.setHours(0, 0, 0, 0);
+        return dCopy;
+    };
+    
+    // Safely parse date string to local date, ignoring timezones
+    const parseLocalDate = (dateString) => {
+        if (!dateString) return new Date();
+        const str = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+        const [year, month, day] = str.split('-');
+        return new Date(year, month - 1, day);
+    };
+    const [currentWeekStart, setCurrentWeekStart] = useState(() => getMonday(new Date()));
+
     const getWeekRangeString = () => {
-        const today = new Date();
-        const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-        const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-
-        const monday = new Date(today);
-        monday.setDate(today.getDate() + distanceToMonday);
-
+        const monday = new Date(currentWeekStart);
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
 
@@ -84,13 +96,7 @@ export default function DoctorPortal() {
     };
 
     const getWeekDays = () => {
-        const today = new Date();
-        const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-        const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-
-        const monday = new Date(today);
-        monday.setDate(today.getDate() + distanceToMonday);
-
+        const monday = new Date(currentWeekStart);
         const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
         return days.map((day, index) => {
             const date = new Date(monday);
@@ -102,47 +108,67 @@ export default function DoctorPortal() {
         });
     };
 
-    const getNextAppointment = () => {
-        const approvedAppts = rawAppointments.filter(a => a.status === 'Approved' && a.type === 'Appointment');
-        if (approvedAppts.length === 0) return null;
 
-        // Sort by date and time
-        const sorted = [...approvedAppts].sort((a, b) => new Date(a.date) - new Date(b.date));
-        return sorted[0];
-    };
 
-    const initialScheduleData = {
-        MON: [
-            { time: '09:00 AM', title: 'Clinical Consultation', desc: 'General Ear/Nose diagnostics and reviews', duration: '60 mins', borderClass: 'border-l-secondary' }
-        ],
-        TUE: [
-            { time: '11:30 AM', title: 'Scheduled Surgery', desc: 'Septoplasty & Sinus clearing procedures', duration: '90 mins', borderClass: 'border-l-primary' }
-        ],
-        WED: [
-            { time: '09:00 AM', title: 'Morning Rounds', desc: 'Patient updates and chart alignment', duration: '45 mins', borderClass: 'border-l-primary' },
-            { time: '01:00 PM', title: 'ENT Exam (Current)', desc: 'Mrs. Eleanor Rigby (Sinus Pressure review)', duration: '30 mins', borderClass: 'border-l-secondary', isCurrent: true },
-            { time: '03:00 PM', title: 'Post-Op Follow up', desc: 'Mr. Thomas Shelby (septoplasty check)', duration: '30 mins', borderClass: 'border-l-secondary' }
-        ],
-        THU: [
-            { time: '10:00 AM', title: 'Academic Lectures', desc: 'Research presentation & case reviews', duration: '60 mins', borderClass: 'border-l-primary' }
-        ],
-        FRI: [
-            { time: '02:00 PM', title: 'New Patient Intake', desc: 'Initial otolaryngology consults', duration: '45 mins', borderClass: 'border-l-secondary' }
-        ],
-        SAT: [],
-        SUN: []
-    };
-
-    // Patient requests state
     const [requests, setRequests] = useState([]);
-
-    // Active Patient Notes state
     const [notes, setNotes] = useState([]);
-
-    // We also need the raw appointments from the DB
     const [rawAppointments, setRawAppointments] = useState([]);
-    const [scheduleData, setScheduleData] = useState(initialScheduleData);
+    const scheduleData = (() => {
+        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const sched = { MON: [], TUE: [], WED: [], THU: [], FRI: [], SAT: [], SUN: [] };
+        
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(currentWeekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+
+        rawAppointments.forEach(appt => {
+            if (!appt.date) return;
+            const dateObj = parseLocalDate(appt.date);
+            
+            // Check if appointment is within the current week
+            if (dateObj >= currentWeekStart && dateObj <= weekEnd && appt.type === 'Appointment') {
+                const dayName = days[dateObj.getDay()];
+                sched[dayName].push({
+                    id: appt._id,
+                    time: appt.timeSlot,
+                    title: appt.title,
+                    desc: `Patient: ${appt.patient?.fullName || 'Unknown'} (${appt.patient?.patientId || ''})`,
+                    date: dateObj.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    }),
+                    status: appt.status,
+                    duration: `${appt.duration || 30} mins`,
+                    borderClass: appt.status === 'Approved' ? 'border-l-[#2A7B4C]' : appt.status === 'Pending' ? 'border-l-amber-400' : 'border-l-red-400',
+                    isCurrent: false
+                });
+            }
+        });
+
+        // Sort appointments by time within each day
+        const parseTime = (timeStr) => {
+            if (!timeStr) return 0;
+            const parts = timeStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+            if (!parts) return 0;
+            let hours = parseInt(parts[1], 10);
+            const minutes = parseInt(parts[2], 10);
+            const ampm = parts[3].toUpperCase();
+            if (ampm === 'PM' && hours < 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+            return hours * 60 + minutes;
+        };
+
+        Object.keys(sched).forEach(day => {
+            sched[day].sort((a, b) => parseTime(a.time) - parseTime(b.time));
+        });
+
+        return sched;
+    })();
     const [surgeries, setSurgeries] = useState([]);
+
+    // Stat Modal state
+    const [statModal, setStatModal] = useState({ isOpen: false, title: '', type: '', data: [] });
 
     // New Clinical Note Modal state
     const [showNoteModal, setShowNoteModal] = useState(false);
@@ -153,7 +179,7 @@ export default function DoctorPortal() {
 
     const todayAppointmentsCount = rawAppointments.filter(appt => {
         if (!appt.date) return false;
-        const apptDate = new Date(appt.date);
+        const apptDate = parseLocalDate(appt.date);
         return apptDate.toDateString() === new Date().toDateString() && appt.status !== 'Cancelled';
     }).length;
 
@@ -162,7 +188,7 @@ export default function DoctorPortal() {
         return rawAppointments
             .filter(appt => {
                 if (!appt.date) return false;
-                return new Date(appt.date).toDateString() === todayStr && appt.status !== 'Cancelled';
+                return parseLocalDate(appt.date).toDateString() === todayStr && appt.status !== 'Cancelled';
             });
     };
 
@@ -208,32 +234,6 @@ export default function DoctorPortal() {
                 });
                 
                 setRawAppointments(mappedAppts);
-
-                // Group by day of week
-                const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                const sched = { MON: [], TUE: [], WED: [], THU: [], FRI: [], SAT: [], SUN: [] };
-                mappedAppts.forEach(appt => {
-                    const dateObj = new Date(appt.date);
-                    const dayName = days[dateObj.getDay()];
-                    if (sched[dayName] && appt.type === 'Appointment') {
-                        sched[dayName].push({
-                            id: appt._id,
-                            time: appt.timeSlot,
-                            title: appt.title,
-                            desc: `Patient: ${appt.patient?.fullName || 'Unknown'} (${appt.patient?.patientId || ''})`,
-                            date: new Date(appt.date).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                            }),
-                            status: appt.status,
-                            duration: `${appt.duration || 30} mins`,
-                            borderClass: appt.status === 'Approved' ? 'border-l-[#2A7B4C]' : appt.status === 'Pending' ? 'border-l-amber-400' : 'border-l-red-400',
-                            isCurrent: false
-                        });
-                    }
-                });
-                setScheduleData(sched);
 
                 // Group Surgeries
                 const surgList = mappedAppts.filter(appt => appt.type === 'Surgery');
@@ -411,6 +411,32 @@ export default function DoctorPortal() {
         } catch (err) {
             console.error(err.message);
             alert('Error updating status.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleTriggerPostVisit = async (id) => {
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/appointments/${id}/reminders/post-visit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                alert('Post-visit email sent successfully!');
+                fetchDoctorData();
+            } else {
+                const errData = await response.json();
+                alert(errData.message || 'Failed to send post-visit email.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error sending email.');
         } finally {
             setIsLoading(false);
         }
@@ -604,7 +630,7 @@ export default function DoctorPortal() {
 
                 <div className="flex flex-col h-full w-full relative z-10 gap-stack-sm">
                     <div className="flex items-center gap-3 mb-8">
-                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-xl" />
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-lg" />
                         <div>
                             <h1 className="text-headline-sm font-headline-md text-primary leading-none">PalmCrest ENT</h1>
                             <p className="text-caption text-on-surface-variant font-label-md">Clinical Excellence</p>
@@ -613,32 +639,35 @@ export default function DoctorPortal() {
                     <nav className="flex-grow flex flex-col gap-2">
                         <button
                             onClick={() => { setActiveTab('dashboard'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg font-bold transition-all duration-300 ease-smooth ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
                         >
                             <span className="material-symbols-outlined">dashboard</span>
                             <span className="text-label-md">Dashboard</span>
                         </button>
                         <button
                             onClick={() => { setActiveTab('patients'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'patients' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg font-bold transition-all duration-300 ease-smooth ${activeTab === 'patients' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
                         >
                             <span className="material-symbols-outlined">group</span>
                             <span className="text-label-md">Patients</span>
                         </button>
                         <button
                             onClick={() => { setActiveTab('appointments'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ease-smooth ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg font-bold transition-all duration-300 ease-smooth ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
                         >
                             <span className="material-symbols-outlined">calendar_today</span>
                             <span className="text-label-md">Appointments</span>
                         </button>
-                        <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-xl" href="#">
+                        <button
+                            onClick={() => { setActiveTab('settings'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg font-bold transition-all duration-300 ease-smooth ${activeTab === 'settings' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                        >
                             <span className="material-symbols-outlined">settings</span>
                             <span className="text-label-md">Settings</span>
-                        </a>
+                        </button>
                     </nav>
                     <div className="mt-auto flex flex-col gap-4">
-                        <button className="btn-gradient text-white font-label-md py-3 rounded-xl flex items-center justify-center gap-2">
+                        <button className="btn-gradient text-white font-label-md py-3 rounded-lg flex items-center justify-center gap-2">
                             <span className="material-symbols-outlined text-sm">emergency</span>
                             Emergency Portal
                         </button>
@@ -666,7 +695,7 @@ export default function DoctorPortal() {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="p-2 min-w-[44px] min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors text-primary flex items-center justify-center shadow-sm"
+                            className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-primary flex items-center justify-center shadow-sm"
                         >
                             <span className="material-symbols-outlined">menu</span>
                         </button>
@@ -715,50 +744,62 @@ export default function DoctorPortal() {
                     {activeTab === 'dashboard' && (
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             {/* Card 1: Today's Engagements */}
-                            <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300">
-                                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                            <div 
+                                onClick={() => setStatModal({ isOpen: true, title: "Today's Schedule", type: 'appointments', data: getTodayAppointments() })}
+                                className="glass-card rounded-xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300 cursor-pointer"
+                            >
+                                <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                                     <span className="material-symbols-outlined text-2xl">calendar_today</span>
                                 </div>
                                 <div>
                                     <p className="text-caption text-on-surface-variant font-medium">Today's Schedule</p>
-                                    <h4 className="text-headline-md font-extrabold text-primary">{todayAppointmentsCount}</h4>
+                                    <h4 className="text-headline-md font-bold text-primary">{todayAppointmentsCount}</h4>
                                 </div>
                             </div>
 
                             {/* Card 2: Pending Requests */}
-                            <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300">
-                                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center flex-shrink-0">
+                            <div 
+                                onClick={() => setStatModal({ isOpen: true, title: "Pending Requests", type: 'requests', data: requests })}
+                                className="glass-card rounded-xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300 cursor-pointer"
+                            >
+                                <div className="w-12 h-12 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center flex-shrink-0">
                                     <span className="material-symbols-outlined text-2xl">pending_actions</span>
                                 </div>
                                 <div>
                                     <p className="text-caption text-on-surface-variant font-medium">Pending Requests</p>
-                                    <h4 className="text-headline-md font-extrabold text-primary">
+                                    <h4 className="text-headline-md font-bold text-primary">
                                         {rawAppointments.filter(a => a.status === 'Pending').length}
                                     </h4>
                                 </div>
                             </div>
 
                             {/* Card 3: Completed / History */}
-                            <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300">
-                                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                            <div 
+                                onClick={() => setStatModal({ isOpen: true, title: "Completed Appointments", type: 'appointments', data: rawAppointments.filter(a => a.status === 'Completed') })}
+                                className="glass-card rounded-xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300 cursor-pointer"
+                            >
+                                <div className="w-12 h-12 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
                                     <span className="material-symbols-outlined text-2xl">history</span>
                                 </div>
                                 <div>
                                     <p className="text-caption text-on-surface-variant font-medium">Completed</p>
-                                    <h4 className="text-headline-md font-extrabold text-primary">
+                                    <h4 className="text-headline-md font-bold text-primary">
                                         {rawAppointments.filter(a => a.status === 'Completed').length}
                                     </h4>
                                 </div>
                             </div>
 
                             {/* Card 4: Active Notes */}
-                            <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300">
-                                <div className="w-12 h-12 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0">
+                            <div 
+                                onClick={() => setStatModal({ isOpen: true, title: "Active Notes", type: 'notes', data: notes })}
+                                className="glass-card rounded-xl p-4 flex items-center gap-4 hover:translate-y-[-2px] transition-all duration-300 cursor-pointer"
+                            >
+                                <div className="w-12 h-12 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0">
                                     <span className="material-symbols-outlined text-2xl">history_edu</span>
                                 </div>
                                 <div>
                                     <p className="text-caption text-on-surface-variant font-medium">Active Notes</p>
-                                    <h4 className="text-headline-md font-extrabold text-primary">{notes.length}</h4>
+                                    <h4 className="text-headline-md font-bold text-primary">{notes.length}</h4>
                                 </div>
                             </div>
                         </div>
@@ -768,7 +809,7 @@ export default function DoctorPortal() {
                         {/* Dashboard Left Column: Today's Agenda */}
                         {activeTab === 'dashboard' && (
                             <section className="col-span-1 md:col-span-12 lg:col-span-8 flex flex-col gap-4">
-                                <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col min-h-[400px] h-[50dvh] md:h-[480px]">
+                                <div className="glass-card rounded-2xl p-4 md:p-5 flex flex-col min-h-[400px] h-[50dvh] md:h-[480px]">
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className="text-headline-md font-headline-md text-primary">Today's Agenda</h3>
                                         <span className="font-label-md text-secondary uppercase tracking-[0.05em] text-caption bg-secondary/10 px-3 py-1 rounded-full">
@@ -781,7 +822,7 @@ export default function DoctorPortal() {
                                                 {getTodayAppointments().map((event, index) => (
                                                     <div
                                                         key={index}
-                                                        className={`flex items-center gap-6 p-4 rounded-2xl border-l-4 transition-all duration-300 bg-white/50 border border-outline-variant/10 hover:bg-white/90 ${
+                                                        className={`flex items-center gap-6 p-4 rounded-xl border-l-4 transition-all duration-300 bg-white/50 border border-outline-variant/10 hover:bg-white/90 ${
                                                             event.status === 'Approved' ? 'border-l-[#2A7B4C]' : event.status === 'Pending' ? 'border-l-amber-400' : event.status === 'Completed' ? 'border-l-blue-400' : 'border-l-red-400'
                                                         }`}
                                                     >
@@ -816,35 +857,11 @@ export default function DoctorPortal() {
                                             </div>
                                         ) : (
                                             <div className="h-full flex flex-col items-center justify-center text-on-surface-variant/50 gap-2 py-12">
-                                                <span className="material-symbols-outlined text-4xl">calendar_today</span>
+                                                <span className="material-symbols-outlined text-3xl">calendar_today</span>
                                                 <p className="text-body-md font-label-md">No appointments scheduled for today</p>
                                             </div>
                                         )}
                                     </div>
-                                </div>
-                                {/* Telehealth CTA */}
-                                <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between border-2 border-secondary/30 bg-secondary/5 gap-4">
-                                    <div className="flex items-center gap-4 md:gap-6">
-                                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-secondary flex items-center justify-center text-white flex-shrink-0">
-                                            <span className="material-symbols-outlined text-2xl md:text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>videocam</span>
-                                        </div>
-                                        <div>
-                                            <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary">Launch Telehealth Session</h4>
-                                            {getNextAppointment() ? (
-                                                <p className="text-caption md:text-body-md text-on-surface-variant">
-                                                    Next up: {getNextAppointment().patient?.fullName} ({getNextAppointment().timeSlot})
-                                                </p>
-                                            ) : (
-                                                <p className="text-caption md:text-body-md text-on-surface-variant">
-                                                    No telehealth sessions scheduled
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <button className="w-full md:w-auto px-6 py-3 btn-gradient text-white rounded-xl font-label-md flex justify-center items-center gap-2 flex-shrink-0">
-                                        Enter Waiting Room
-                                        <span className="material-symbols-outlined">arrow_forward</span>
-                                    </button>
                                 </div>
                             </section>
                         )}
@@ -852,21 +869,60 @@ export default function DoctorPortal() {
                         {/* Appointments Left Column: Weekly Schedule & Complete Appointment Log */}
                         {activeTab === 'appointments' && (
                             <section className="col-span-1 md:col-span-12 lg:col-span-8 flex flex-col gap-4">
-                                <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col min-h-[400px] h-[50dvh] md:h-[480px]">
+                                <div className="glass-card rounded-2xl p-4 md:p-5 flex flex-col min-h-[400px] h-[50dvh] md:h-[480px]">
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className="text-headline-md font-headline-md text-primary">Weekly Schedule</h3>
-                                        <span className="font-label-md text-secondary uppercase tracking-[0.05em] text-caption bg-secondary/10 px-3 py-1 rounded-full">
-                                            {getWeekRangeString()}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => {
+                                                    const newDate = new Date(currentWeekStart);
+                                                    newDate.setDate(newDate.getDate() - 7);
+                                                    setCurrentWeekStart(newDate);
+                                                }}
+                                                className="p-1 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant flex items-center justify-center"
+                                                title="Previous Week"
+                                            >
+                                                <span className="material-symbols-outlined">chevron_left</span>
+                                            </button>
+                                            
+                                            <div className="relative group">
+                                                <span className="font-label-md text-secondary uppercase tracking-[0.05em] text-caption bg-secondary/10 px-3 py-1.5 rounded-lg min-w-[200px] text-center inline-flex items-center justify-center gap-2 cursor-pointer hover:bg-secondary/20 transition-colors">
+                                                    <span className="material-symbols-outlined text-[16px]">calendar_month</span>
+                                                    {getWeekRangeString()}
+                                                </span>
+                                                <input 
+                                                    type="date"
+                                                    onChange={(e) => {
+                                                        if (e.target.value) {
+                                                            setCurrentWeekStart(getMonday(parseLocalDate(e.target.value)));
+                                                        }
+                                                    }}
+                                                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                                    title="Select Date to Jump"
+                                                />
+                                            </div>
+
+                                            <button 
+                                                onClick={() => {
+                                                    const newDate = new Date(currentWeekStart);
+                                                    newDate.setDate(newDate.getDate() + 7);
+                                                    setCurrentWeekStart(newDate);
+                                                }}
+                                                className="p-1 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant flex items-center justify-center"
+                                                title="Next Week"
+                                            >
+                                                <span className="material-symbols-outlined">chevron_right</span>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Daily Selector Tab Navigation */}
-                                    <div className="flex overflow-x-auto no-scrollbar gap-2 bg-surface-container-low p-2 rounded-2xl mb-6">
+                                    <div className="flex overflow-x-auto no-scrollbar gap-2 bg-surface-container-low p-2 rounded-xl mb-6">
                                         {getWeekDays().map((day) => (
                                             <button
                                                 key={day.name}
                                                 onClick={() => setSelectedDay(day.name)}
-                                                className={`flex-grow flex flex-col items-center py-2.5 px-2 rounded-xl text-caption transition-all duration-300 ${selectedDay === day.name
+                                                className={`flex-grow flex flex-col items-center py-2.5 px-2 rounded-lg text-caption transition-all duration-300 ${selectedDay === day.name
                                                         ? 'bg-primary text-white shadow-md scale-[1.02]'
                                                         : day.name === 'SAT' || day.name === 'SUN'
                                                             ? 'text-on-surface-variant opacity-40 hover:opacity-75 hover:bg-white/20'
@@ -874,7 +930,7 @@ export default function DoctorPortal() {
                                                     }`}
                                             >
                                                 <span className="font-bold tracking-wider text-[10px]">{day.name}</span>
-                                                <span className="text-body-md font-extrabold mt-0.5">{day.dayNum}</span>
+                                                <span className="text-body-md font-bold mt-0.5">{day.dayNum}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -886,7 +942,7 @@ export default function DoctorPortal() {
                                                 {scheduleData[selectedDay].map((event, index) => (
                                                     <div
                                                         key={index}
-                                                        className={`flex items-center gap-6 p-4 rounded-2xl border-l-4 transition-all duration-300 ${event.isCurrent
+                                                        className={`flex items-center gap-6 p-4 rounded-xl border-l-4 transition-all duration-300 ${event.isCurrent
                                                                 ? 'bg-secondary text-white shadow-lg shadow-secondary/20 ring-4 ring-secondary/5 border-l-secondary-fixed'
                                                                 : `bg-white/50 border border-outline-variant/10 hover:bg-white/90 ${event.borderClass}`
                                                             }`}
@@ -924,7 +980,7 @@ export default function DoctorPortal() {
                                             </div>
                                         ) : (
                                             <div className="h-full flex flex-col items-center justify-center text-on-surface-variant/50 gap-2 py-12">
-                                                <span className="material-symbols-outlined text-4xl">calendar_today</span>
+                                                <span className="material-symbols-outlined text-3xl">calendar_today</span>
                                                 <p className="text-body-md font-label-md">No appointments scheduled</p>
                                             </div>
                                         )}
@@ -932,20 +988,20 @@ export default function DoctorPortal() {
                                 </div>
 
                                 {/* Complete Appointment Log */}
-                                <div className="glass-card rounded-3xl p-4 md:p-6 flex flex-col">
+                                <div className="glass-card rounded-2xl p-4 md:p-5 flex flex-col">
                                     <h3 className="text-headline-md font-headline-md text-primary mb-6">Complete Appointment Log</h3>
                                     <div className="overflow-y-auto max-h-[400px] pr-1 no-scrollbar space-y-4">
                                         {rawAppointments.length > 0 ? (
                                             rawAppointments.map((appt) => {
-                                                const formattedDate = new Date(appt.date).toLocaleDateString('en-US', {
+                                                const formattedDate = parseLocalDate(appt.date).toLocaleDateString('en-US', {
                                                     month: 'short',
                                                     day: 'numeric',
                                                     year: 'numeric'
                                                 });
                                                 return (
-                                                    <div key={appt._id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/40 rounded-2xl border border-white/60 hover:bg-white/60 transition-colors gap-4">
+                                                    <div key={appt._id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/40 rounded-xl border border-white/60 hover:bg-white/60 transition-colors gap-4">
                                                         <div className="flex items-center gap-4">
-                                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${appt.type === 'Surgery' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}`}>
+                                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${appt.type === 'Surgery' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}`}>
                                                                 <span className="material-symbols-outlined">
                                                                     {appt.type === 'Surgery' ? 'medical_services' : 'calendar_today'}
                                                                 </span>
@@ -965,6 +1021,17 @@ export default function DoctorPortal() {
                                                         }`}>
                                                             {appt.status}
                                                         </span>
+                                                        {appt.status === 'Completed' && !appt.remindersSent?.includes('post4hr') && (
+                                                            <button
+                                                                onClick={() => handleTriggerPostVisit(appt._id)}
+                                                                className="ml-4 bg-primary/10 text-primary text-caption px-3 py-1.5 rounded-lg font-bold hover:bg-primary/20 animate-smooth"
+                                                            >
+                                                                Send Post-Visit
+                                                            </button>
+                                                        )}
+                                                        {appt.status === 'Completed' && appt.remindersSent?.includes('post4hr') && (
+                                                            <span className="ml-4 text-caption text-emerald-600 font-medium">Follow-up Sent</span>
+                                                        )}
                                                     </div>
                                                 );
                                             })
@@ -981,7 +1048,7 @@ export default function DoctorPortal() {
                             <section className={`col-span-1 md:col-span-12 ${activeTab === 'patients' ? 'lg:col-span-12' : 'lg:col-span-4'} flex flex-col gap-6 md:gap-gutter`}>
                                 {/* Patient Requests Queue */}
                                 {(activeTab === 'dashboard' || activeTab === 'patients') && (
-                                    <div className="glass-card rounded-3xl p-4 md:p-6">
+                                    <div className="glass-card rounded-2xl p-4 md:p-5">
                                         <div className="flex justify-between items-center mb-6">
                                             <h3 className="text-headline-sm font-headline-md text-primary font-bold">New Patient Requests</h3>
                                             <span className="bg-secondary text-white text-caption font-bold px-2 py-0.5 rounded-full">
@@ -990,7 +1057,7 @@ export default function DoctorPortal() {
                                         </div>
                                         <div className="flex flex-col gap-4">
                                             {requests.map(r => (
-                                                <div key={r.id} className="p-5 rounded-2xl bg-white/60 backdrop-blur-md border border-white/65 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300 group">
+                                                <div key={r.id} className="p-5 rounded-xl bg-white/60 backdrop-blur-md border border-white/65 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300 group">
                                                     <div className="flex items-start justify-between gap-3 mb-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shadow-inner flex-shrink-0">
@@ -1007,7 +1074,7 @@ export default function DoctorPortal() {
                                                     </div>
 
                                                     {/* Date and Time info */}
-                                                    <div className="mb-4 bg-surface-container-low/40 p-2.5 rounded-xl border border-outline-variant/15 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption">
+                                                    <div className="mb-4 bg-surface-container-low/40 p-2.5 rounded-lg border border-outline-variant/15 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption">
                                                         <div className="flex items-center gap-1">
                                                             <span className="material-symbols-outlined text-[16px] text-secondary">calendar_today</span>
                                                             <span className="font-semibold text-primary">{r.date}</span>
@@ -1023,13 +1090,13 @@ export default function DoctorPortal() {
                                                         <div className="flex flex-col sm:flex-row gap-2 w-full">
                                                             <button
                                                                 onClick={() => handleAccept(r.id)}
-                                                                className="w-full sm:flex-1 py-2.5 sm:py-2 text-[12px] font-bold bg-[#2A7B4C] text-white rounded-xl hover:bg-[#1E5C38] transition-all text-center shadow-sm hover:shadow"
+                                                                className="w-full sm:flex-1 py-2.5 sm:py-2 text-[12px] font-bold bg-[#2A7B4C] text-white rounded-lg hover:bg-[#1E5C38] transition-all text-center shadow-sm hover:shadow"
                                                             >
                                                                 Approve
                                                             </button>
                                                             <button
                                                                 onClick={() => handleReject(r.id)}
-                                                                className="w-full sm:flex-1 py-2.5 sm:py-2 text-[12px] font-bold bg-error-container/10 text-error border border-error/20 rounded-xl hover:bg-error hover:text-white transition-all text-center"
+                                                                className="w-full sm:flex-1 py-2.5 sm:py-2 text-[12px] font-bold bg-error-container/10 text-error border border-error/20 rounded-lg hover:bg-error hover:text-white transition-all text-center"
                                                             >
                                                                 Reject
                                                             </button>
@@ -1042,7 +1109,7 @@ export default function DoctorPortal() {
                                 )}
                                 {/* Surgery Queue */}
                                 {(activeTab === 'dashboard' || activeTab === 'appointments') && (
-                                    <div className="glass-card rounded-3xl p-4 md:p-6 flex-grow">
+                                    <div className="glass-card rounded-2xl p-4 md:p-5 flex-grow">
                                         <div className="flex justify-between items-center mb-6">
                                             <h3 className="text-headline-sm font-headline-md text-primary font-bold">Surgery Queue</h3>
                                             <span className="material-symbols-outlined text-on-surface-variant">more_vert</span>
@@ -1074,7 +1141,7 @@ export default function DoctorPortal() {
 
                         {/* Patient Medical Notes - Bento Section */}
                         {(activeTab === 'dashboard' || activeTab === 'patients') && (
-                            <section className="col-span-1 md:col-span-12 glass-card rounded-3xl p-6 md:p-8 mb-8">
+                            <section className="col-span-1 md:col-span-12 glass-card rounded-2xl p-6 md:p-5 mb-8">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                                     <div>
                                         <h3 className="text-headline-md font-headline-md text-primary">Active Patient Notes</h3>
@@ -1082,14 +1149,14 @@ export default function DoctorPortal() {
                                     </div>
                                     <button
                                         onClick={handleNewAnnotation}
-                                        className="w-full md:w-auto px-6 py-2 border-2 border-primary text-primary rounded-xl font-label-md hover:bg-primary hover:text-white transition-all text-center"
+                                        className="w-full md:w-auto px-6 py-2 border-2 border-primary text-primary rounded-lg font-label-md hover:bg-primary hover:text-white transition-all text-center"
                                     >
                                         New Annotation
                                     </button>
                                 </div>
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     {notes.map(n => (
-                                        <div key={n.id} className="p-6 rounded-2xl bg-white border border-outline-variant/20 shadow-sm flex flex-col gap-4">
+                                        <div key={n.id} className="p-6 rounded-xl bg-white border border-outline-variant/20 shadow-sm flex flex-col gap-4">
                                             <div className="flex items-center gap-3">
                                                 <span className="material-symbols-outlined text-secondary">history_edu</span>
                                                 <span className="text-label-md font-bold text-primary">{n.name}</span>
@@ -1104,6 +1171,98 @@ export default function DoctorPortal() {
                                 </div>
                             </section>
                         )}
+                        {/* Settings View */}
+                        {activeTab === 'settings' && (
+                            <section className="col-span-1 md:col-span-12 lg:col-span-12 flex flex-col gap-6 md:gap-gutter pb-8">
+                                <div className="glass-card rounded-2xl p-6 md:p-8 flex flex-col">
+                                    <h3 className="text-headline-md font-headline-md text-primary mb-2">Account Settings</h3>
+                                    <p className="text-body-md text-on-surface-variant mb-8">Manage your profile, preferences, and notifications.</p>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        {/* Profile Section */}
+                                        <div className="p-6 rounded-xl bg-surface-container-lowest border border-outline-variant/20 shadow-sm flex flex-col gap-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                    <span className="material-symbols-outlined">person</span>
+                                                </div>
+                                                <h4 className="text-label-md font-bold text-primary">Profile Information</h4>
+                                            </div>
+                                            <div className="space-y-2 mt-2">
+                                                <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                                                    <span className="text-caption text-on-surface-variant">Full Name</span>
+                                                    <span className="font-bold text-primary">{user?.fullName}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                                                    <span className="text-caption text-on-surface-variant">Specialization</span>
+                                                    <span className="font-bold text-primary">{profileSpecialization}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                                                    <span className="text-caption text-on-surface-variant">Phone</span>
+                                                    <span className="font-bold text-primary">{profilePhone || 'Not set'}</span>
+                                                </div>
+                                                <div className="pt-4 flex justify-end">
+                                                    <button onClick={() => setShowProfileModal(true)} className="px-4 py-2 bg-secondary/10 text-secondary hover:bg-secondary/20 rounded-lg text-label-md font-bold transition-colors">
+                                                        Edit Profile
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Notification Preferences */}
+                                        <div className="p-6 rounded-xl bg-surface-container-lowest border border-outline-variant/20 shadow-sm flex flex-col gap-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600">
+                                                    <span className="material-symbols-outlined">notifications</span>
+                                                </div>
+                                                <h4 className="text-label-md font-bold text-primary">Notification Preferences</h4>
+                                            </div>
+                                            <div className="space-y-4 mt-2">
+                                                <label className="flex items-center justify-between cursor-pointer">
+                                                    <span className="text-body-md text-on-surface-variant">Email Alerts for New Appointments</span>
+                                                    <input type="checkbox" defaultChecked className="toggle-checkbox w-5 h-5 accent-primary" />
+                                                </label>
+                                                <label className="flex items-center justify-between cursor-pointer">
+                                                    <span className="text-body-md text-on-surface-variant">SMS Reminders for Pending Requests</span>
+                                                    <input type="checkbox" defaultChecked className="toggle-checkbox w-5 h-5 accent-primary" />
+                                                </label>
+                                                <label className="flex items-center justify-between cursor-pointer">
+                                                    <span className="text-body-md text-on-surface-variant">Weekly Summary Reports</span>
+                                                    <input type="checkbox" className="toggle-checkbox w-5 h-5 accent-primary" />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {/* Security */}
+                                        <div className="p-6 rounded-xl bg-surface-container-lowest border border-outline-variant/20 shadow-sm flex flex-col gap-4 md:col-span-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                                                    <span className="material-symbols-outlined">security</span>
+                                                </div>
+                                                <h4 className="text-label-md font-bold text-primary">Security Settings</h4>
+                                            </div>
+                                            <div className="flex items-center justify-between mt-2 p-4 bg-white rounded-lg border border-outline-variant/10">
+                                                <div>
+                                                    <h5 className="font-bold text-primary">Password</h5>
+                                                    <p className="text-caption text-on-surface-variant">Last changed 3 months ago</p>
+                                                </div>
+                                                <button onClick={() => alert('Password reset link sent to your email.')} className="px-4 py-2 border border-outline-variant/30 text-primary hover:bg-surface-container rounded-lg text-label-md font-bold transition-colors">
+                                                    Update
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center justify-between mt-2 p-4 bg-white rounded-lg border border-outline-variant/10">
+                                                <div>
+                                                    <h5 className="font-bold text-primary">Two-Factor Authentication</h5>
+                                                    <p className="text-caption text-on-surface-variant">Add an extra layer of security to your account.</p>
+                                                </div>
+                                                <button onClick={() => alert('Feature coming soon')} className="px-4 py-2 border border-outline-variant/30 text-primary hover:bg-surface-container rounded-lg text-label-md font-bold transition-colors">
+                                                    Enable 2FA
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        )}
                     </div>
                 </div>
             </main>
@@ -1114,7 +1273,7 @@ export default function DoctorPortal() {
                     }`}
                 id="notification-center"
             >
-                <div className="p-6 md:p-8 h-full flex flex-col">
+                <div className="p-6 md:p-5 h-full flex flex-col">
                     <div className="flex justify-between items-center mb-6 flex-shrink-0">
                         <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary">notifications_active</span>
@@ -1129,7 +1288,7 @@ export default function DoctorPortal() {
                             getLiveNotifications().map(notif => (
                                 <div
                                     key={notif.id}
-                                    className={`p-4 rounded-2xl border-l-4 shadow-sm flex items-start gap-3 transition-all ${notif.badgeColor}`}
+                                    className={`p-4 rounded-xl border-l-4 shadow-sm flex items-start gap-3 transition-all ${notif.badgeColor}`}
                                 >
                                     <span className="material-symbols-outlined text-[20px] mt-0.5">{notif.icon}</span>
                                     <div className="text-left flex-grow min-w-0">
@@ -1144,7 +1303,7 @@ export default function DoctorPortal() {
                             ))
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-on-surface-variant/40 gap-2 py-12">
-                                <span className="material-symbols-outlined text-4xl">notifications_off</span>
+                                <span className="material-symbols-outlined text-3xl">notifications_off</span>
                                 <p className="text-body-md font-label-md">No current activity notifications</p>
                             </div>
                         )}
@@ -1155,13 +1314,13 @@ export default function DoctorPortal() {
             {/* New Clinical Note Modal */}
             {showNoteModal && (
                 <div className="fixed inset-0 bg-on-surface/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left flex flex-col max-h-[90vh]">
+                    <div className="bg-white rounded-2xl p-6 md:p-5 max-w-md w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left flex flex-col max-h-[90vh]">
                         {/* Decorative background blob */}
                         <div className="absolute top-[-50px] right-[-50px] w-[150px] h-[150px] bg-secondary/10 rounded-full blur-xl pointer-events-none"></div>
 
                         <div className="relative z-10 flex flex-col gap-4 overflow-hidden flex-grow">
                             <div className="flex items-center gap-3 mb-2 flex-shrink-0">
-                                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                                <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
                                     <span className="material-symbols-outlined">history_edu</span>
                                 </div>
                                 <div>
@@ -1176,7 +1335,7 @@ export default function DoctorPortal() {
                                         <label className="block text-caption font-label-md text-on-surface-variant uppercase tracking-wider">Select Patient</label>
                                         <div className="relative">
                                             <input
-                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 pl-10 pr-4 min-h-[48px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md"
+                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 pl-10 pr-4 min-h-[48px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md"
                                                 type="text"
                                                 placeholder="Search by name or patient ID..."
                                                 value={noteSearchQuery}
@@ -1186,7 +1345,7 @@ export default function DoctorPortal() {
                                             <span className="material-symbols-outlined absolute left-3 top-3 text-on-surface-variant text-[22px]">search</span>
                                         </div>
                                         
-                                        <div className="border border-outline-variant/20 rounded-2xl max-h-[200px] overflow-y-auto bg-surface-container-lowest">
+                                        <div className="border border-outline-variant/20 rounded-xl max-h-[200px] overflow-y-auto bg-surface-container-lowest">
                                             {getFilteredPatients().length > 0 ? (
                                                 <div className="divide-y divide-outline-variant/10">
                                                     {getFilteredPatients().map(p => (
@@ -1210,7 +1369,7 @@ export default function DoctorPortal() {
                                     </div>
                                 ) : (
                                     <div className="space-y-4 animate-fadeIn">
-                                        <div className="p-4 rounded-2xl bg-secondary/5 border border-secondary/20 flex items-center justify-between">
+                                        <div className="p-4 rounded-xl bg-secondary/5 border border-secondary/20 flex items-center justify-between">
                                             <div>
                                                 <p className="text-[10px] uppercase font-bold text-secondary tracking-wider">Selected Patient</p>
                                                 <h5 className="text-body-md font-bold text-primary">{selectedPatientForNote.fullName}</h5>
@@ -1229,7 +1388,7 @@ export default function DoctorPortal() {
                                             <div>
                                                 <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Clinical Annotation</label>
                                                 <textarea
-                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[100px] max-h-[160px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md resize-none"
+                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[100px] max-h-[160px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md resize-none"
                                                     placeholder="Enter medical observations, treatment recommendations, or general notes..."
                                                     value={newNoteText}
                                                     onChange={(e) => setNewNoteText(e.target.value)}
@@ -1241,7 +1400,7 @@ export default function DoctorPortal() {
                                             <div>
                                                 <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Priority Level</label>
                                                 <select
-                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md"
+                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/30 outline-none text-body-md"
                                                     value={newNotePriority}
                                                     onChange={(e) => setNewNotePriority(e.target.value)}
                                                     required
@@ -1256,13 +1415,13 @@ export default function DoctorPortal() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowNoteModal(false)}
-                                                    className="flex-1 py-3 border-2 border-outline-variant/40 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container transition-all text-center"
+                                                    className="flex-1 py-3 border-2 border-outline-variant/40 rounded-lg font-label-md text-on-surface-variant hover:bg-surface-container transition-all text-center"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     type="submit"
-                                                    className="flex-1 py-3 btn-gradient text-white rounded-xl font-label-md shadow-lg shadow-secondary/10"
+                                                    className="flex-1 py-3 btn-gradient text-white rounded-lg font-label-md shadow-lg shadow-secondary/10"
                                                 >
                                                     Save Note
                                                 </button>
@@ -1277,7 +1436,7 @@ export default function DoctorPortal() {
                                     <button
                                         type="button"
                                         onClick={() => setShowNoteModal(false)}
-                                        className="w-full py-3 border-2 border-outline-variant/40 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container transition-all text-center"
+                                        className="w-full py-3 border-2 border-outline-variant/40 rounded-lg font-label-md text-on-surface-variant hover:bg-surface-container transition-all text-center"
                                     >
                                         Close
                                     </button>
@@ -1291,13 +1450,13 @@ export default function DoctorPortal() {
             {/* Profile Update Modal */}
             {showProfileModal && (
                 <div className="fixed inset-0 bg-on-surface/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left">
+                    <div className="bg-white rounded-2xl p-6 md:p-5 max-w-md w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left">
                         {/* Decorative background blob */}
                         <div className="absolute top-[-50px] right-[-50px] w-[150px] h-[150px] bg-primary/10 rounded-full blur-xl pointer-events-none"></div>
 
                         <div className="relative z-10 flex flex-col gap-4">
                             <div className="flex items-center gap-3 mb-2">
-                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                     <span className="material-symbols-outlined">medical_information</span>
                                 </div>
                                 <div>
@@ -1314,7 +1473,7 @@ export default function DoctorPortal() {
                                 <div>
                                     <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Phone Number</label>
                                     <input
-                                        className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                        className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
                                         type="tel"
                                         placeholder="+1 (555) 000-0000"
                                         value={profilePhone}
@@ -1326,7 +1485,7 @@ export default function DoctorPortal() {
                                 <div>
                                     <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Clinical Specialization</label>
                                     <select
-                                        className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                        className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
                                         value={profileSpecialization}
                                         onChange={(e) => setProfileSpecialization(e.target.value)}
                                         required
@@ -1343,7 +1502,7 @@ export default function DoctorPortal() {
                                 <div>
                                     <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Gender</label>
                                     <select
-                                        className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                        className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
                                         value={profileGender}
                                         onChange={(e) => setProfileGender(e.target.value)}
                                         required
@@ -1357,13 +1516,13 @@ export default function DoctorPortal() {
                                     <button
                                         type="button"
                                         onClick={() => setShowProfileModal(false)}
-                                        className="flex-1 py-3 border-2 border-outline-variant/40 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container transition-all"
+                                        className="flex-1 py-3 border-2 border-outline-variant/40 rounded-lg font-label-md text-on-surface-variant hover:bg-surface-container transition-all"
                                     >
                                         Later
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 py-3 btn-primary-gradient text-white rounded-xl font-label-md shadow-lg shadow-primary/10"
+                                        className="flex-1 py-3 btn-primary-gradient text-white rounded-lg font-label-md shadow-lg shadow-primary/10"
                                     >
                                         Save Changes
                                     </button>
@@ -1374,14 +1533,69 @@ export default function DoctorPortal() {
                 </div>
             )}
 
+            {/* Stat Details Modal */}
+            {statModal.isOpen && (
+                <div className="fixed inset-0 bg-on-surface/40 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl p-6 md:p-5 max-w-lg w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left flex flex-col max-h-[85vh]">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-headline-md font-headline-md text-primary font-bold">{statModal.title}</h3>
+                            <button 
+                                onClick={() => setStatModal({ isOpen: false, title: '', type: '', data: [] })}
+                                className="p-2 hover:bg-surface-container-high rounded-full transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="flex-grow overflow-y-auto pr-2 no-scrollbar space-y-4">
+                            {statModal.data.length === 0 ? (
+                                <p className="text-on-surface-variant text-center py-8">No records found.</p>
+                            ) : (
+                                statModal.data.map((item, idx) => (
+                                    <div key={idx} className="p-4 rounded-xl border border-outline-variant/20 bg-surface-container-lowest">
+                                        {statModal.type === 'notes' ? (
+                                            <>
+                                                <div className="flex justify-between">
+                                                    <span className="font-bold text-primary">{item.name}</span>
+                                                    <span className={`text-[10px] font-bold ${item.badgeColor}`}>{item.badge}</span>
+                                                </div>
+                                                <p className="text-body-md text-on-surface-variant mt-2">{item.note}</p>
+                                                <p className="text-caption mt-2 text-on-surface-variant/80">{item.time}</p>
+                                            </>
+                                        ) : statModal.type === 'requests' ? (
+                                            <>
+                                                <div className="flex justify-between">
+                                                    <span className="font-bold text-primary">{item.name}</span>
+                                                    <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{item.status}</span>
+                                                </div>
+                                                <p className="text-body-md text-on-surface-variant mt-2">{item.condition}</p>
+                                                <p className="text-caption mt-2 text-on-surface-variant/80">{item.date} • {item.timeSlot}</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex justify-between">
+                                                    <span className="font-bold text-primary">{item.title}</span>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : item.status === 'Completed' ? 'bg-blue-100 text-blue-800' : 'bg-surface-container text-on-surface-variant'}`}>{item.status}</span>
+                                                </div>
+                                                <p className="text-body-md text-on-surface-variant mt-2">Patient: {item.patient?.fullName || 'Unknown'}</p>
+                                                <p className="text-caption mt-2 text-on-surface-variant/80">{item.date ? new Date(item.date).toLocaleDateString() : ''} • {item.timeSlot}</p>
+                                            </>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Loader Overlay */}
             {isLoading && (
                 <div className="fixed inset-0 bg-on-surface/30 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
-                    <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col items-center gap-4">
+                    <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-outline-variant/30 flex flex-col items-center gap-4">
                         <img
                             src="/logo-ent.jpeg"
                             alt="PalmCrest Logo"
-                            className="w-16 h-16 rounded-2xl shadow-md animate-pulse object-contain"
+                            className="w-16 h-16 rounded-xl shadow-md animate-pulse object-contain"
                         />
                         <div className="flex flex-col items-center gap-1">
                             <span className="font-label-md text-primary font-bold tracking-wide uppercase text-xs">PalmCrest ENT</span>

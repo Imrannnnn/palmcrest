@@ -63,14 +63,14 @@ module.exports = {
         full: "9999px"
       },
       spacing: {
-        "margin-desktop": "64px",
-        "margin-mobile": "20px",
-        "stack-lg": "48px",
-        "stack-sm": "12px",
-        gutter: "24px",
+        "margin-desktop": "48px",
+        "margin-mobile": "16px",
+        "stack-lg": "32px",
+        "stack-sm": "8px",
+        gutter: "16px",
         base: "8px",
         "container-max": "1440px",
-        "stack-md": "24px"
+        "stack-md": "20px"
       },
       fontFamily: {
         "headline-lg-mobile": ["Geist"],
@@ -86,14 +86,14 @@ module.exports = {
         label: ["Geist"]
       },
       fontSize: {
-        "headline-lg-mobile": ["24px", { lineHeight: "1.2", fontWeight: "500" }],
-        "label-md": ["14px", { lineHeight: "1.4", letterSpacing: "0.05em", fontWeight: "600" }],
-        "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
-        "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "500" }],
-        "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "0.01em", fontWeight: "500" }],
-        display: ["48px", { lineHeight: "1.1", letterSpacing: "0.02em", fontWeight: "600" }],
-        "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
-        caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }]
+        "headline-lg-mobile": ["22px", { lineHeight: "1.3", fontWeight: "500" }],
+        "label-md": ["13px", { lineHeight: "1.5", letterSpacing: "0.03em", fontWeight: "500" }],
+        "body-lg": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+        "headline-md": ["20px", { lineHeight: "1.4", fontWeight: "500" }],
+        "headline-lg": ["28px", { lineHeight: "1.3", letterSpacing: "0.01em", fontWeight: "500" }],
+        display: ["40px", { lineHeight: "1.2", letterSpacing: "0.01em", fontWeight: "600" }],
+        "body-md": ["14px", { lineHeight: "1.6", fontWeight: "400" }],
+        caption: ["12px", { lineHeight: "1.5", fontWeight: "400" }]
       }
     }
   },

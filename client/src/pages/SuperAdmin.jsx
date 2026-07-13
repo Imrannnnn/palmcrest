@@ -22,6 +22,13 @@ export default function SuperAdmin() {
     const [appointments, setAppointments] = useState([]);
     const [admins, setAdmins] = useState([]);
 
+    // Send Schedule state
+    const [showScheduleModal, setShowScheduleModal] = useState(false);
+    const [selectedDoctorForSchedule, setSelectedDoctorForSchedule] = useState(null);
+    const [scheduleTimeframe, setScheduleTimeframe] = useState('day');
+    const [isSendingSchedule, setIsSendingSchedule] = useState(false);
+    const [postVisitLoadingIds, setPostVisitLoadingIds] = useState({});
+
     const [doctorSearchInput, setDoctorSearchInput] = useState('');
     const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
     const [patientSearchInput, setPatientSearchInput] = useState('');
@@ -33,6 +40,23 @@ export default function SuperAdmin() {
     const [selectedDoctorFilter, setSelectedDoctorFilter] = useState('All');
     const [selectedTypeFilter, setSelectedTypeFilter] = useState('All');
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('All');
+
+    const [broadcastSubject, setBroadcastSubject] = useState('');
+    const [broadcastMessage, setBroadcastMessage] = useState('');
+    const [isBroadcasting, setIsBroadcasting] = useState(false);
+
+    const [emailingPatient, setEmailingPatient] = useState(null);
+    const [directSubject, setDirectSubject] = useState('');
+    const [directMessage, setDirectMessage] = useState('');
+    const [isSendingDirect, setIsSendingDirect] = useState(false);
+
+    // Safely parse date string to local date, ignoring timezones
+    const parseLocalDate = (dateString) => {
+        if (!dateString) return new Date();
+        const str = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+        const [year, month, day] = str.split('-');
+        return new Date(year, month - 1, day);
+    };
 
     const fetchAdminData = async () => {
         try {
@@ -174,8 +198,6 @@ export default function SuperAdmin() {
         if (!name) return;
         const email = prompt("Enter Administrator Email:");
         if (!email) return;
-        const password = prompt("Enter Administrator Password (min 8 chars):");
-        if (!password) return;
 
         try {
             const token = localStorage.getItem('token');
@@ -187,22 +209,21 @@ export default function SuperAdmin() {
                 },
                 body: JSON.stringify({
                     fullName: name,
-                    email: email,
-                    password: password
+                    email: email
                 })
             });
 
             if (!response.ok) {
                 const errData = await response.json();
-                alert(errData.message || 'Failed to onboard administrator.');
+                alert(errData.message || 'Failed to invite administrator.');
                 return;
             }
 
-            alert(`Administrator ${name} onboarded successfully!`);
+            alert(`Administrator ${name} invited successfully! An email with setup instructions has been sent.`);
             fetchAdminData();
         } catch (err) {
-            console.error('Error onboarding administrator:', err);
-            alert('Network error onboarding administrator.');
+            console.error('Error inviting administrator:', err);
+            alert('Network error inviting administrator.');
         }
     };
 
@@ -231,6 +252,59 @@ export default function SuperAdmin() {
         }
     };
 
+    const handleTriggerPostVisit = async (id) => {
+        if (!window.confirm("Are you sure you want to trigger the post-visit email now?")) return;
+        setPostVisitLoadingIds(prev => ({ ...prev, [id]: true }));
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/appointments/${id}/reminders/post-visit`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('Post-visit email triggered successfully.');
+                fetchAdminData(); // refresh to get updated remindersSent
+            } else {
+                alert(data.message || 'Failed to trigger email.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Network error triggering email.');
+        } finally {
+            setPostVisitLoadingIds(prev => ({ ...prev, [id]: false }));
+        }
+    };
+
+    const handleSendSchedule = async () => {
+        if (!selectedDoctorForSchedule) return;
+        setIsSendingSchedule(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`http://localhost:5000/api/appointments/admin/send-schedule/${selectedDoctorForSchedule._id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ timeframe: scheduleTimeframe }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to send schedule');
+            
+            alert(data.message || 'Schedule sent successfully');
+            setShowScheduleModal(false);
+            setSelectedDoctorForSchedule(null);
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setIsSendingSchedule(false);
+        }
+    };
+
     const handleViewLogs = () => {
         alert("System logs are clean. Database connectivity healthy. Database queries running normally.");
     };
@@ -250,6 +324,77 @@ export default function SuperAdmin() {
         e.preventDefault();
         setPatientSearchQuery(patientSearchInput);
         setPatientPage(1);
+    };
+
+    const handleDirectEmailSubmit = async (e) => {
+        e.preventDefault();
+        if (!directSubject || !directMessage) {
+            alert('Please provide both subject and message.');
+            return;
+        }
+
+        setIsSendingDirect(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/auth/admin/email-patient', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ email: emailingPatient.email, subject: directSubject, message: directMessage })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Email sent successfully.');
+                setDirectSubject('');
+                setDirectMessage('');
+                setEmailingPatient(null);
+            } else {
+                alert(data.message || 'Failed to send email.');
+            }
+        } catch (err) {
+            console.error('Direct email error:', err);
+            alert('Network error during direct email.');
+        } finally {
+            setIsSendingDirect(false);
+        }
+    };
+
+    const handleBroadcastSubmit = async (e) => {
+        e.preventDefault();
+        if (!broadcastSubject || !broadcastMessage) {
+            alert('Please provide both subject and message.');
+            return;
+        }
+
+        if (!window.confirm('Are you sure you want to send this email to ALL patients?')) return;
+
+        setIsBroadcasting(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/auth/admin/broadcast', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ subject: broadcastSubject, message: broadcastMessage })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Broadcast initiated successfully.');
+                setBroadcastSubject('');
+                setBroadcastMessage('');
+            } else {
+                alert(data.message || 'Failed to send broadcast.');
+            }
+        } catch (err) {
+            console.error('Broadcast error:', err);
+            alert('Network error during broadcast.');
+        } finally {
+            setIsBroadcasting(false);
+        }
     };
 
     const filteredDoctors = doctors.filter(doc => {
@@ -281,6 +426,13 @@ export default function SuperAdmin() {
         patientPage * ITEMS_PER_PAGE
     );
 
+    const filteredAppointments = appointments.filter(appt => {
+        if (selectedDoctorFilter !== 'All' && appt.doctor?._id !== selectedDoctorFilter) return false;
+        if (selectedTypeFilter !== 'All' && appt.type !== selectedTypeFilter) return false;
+        if (selectedStatusFilter !== 'All' && appt.status !== selectedStatusFilter) return false;
+        return true;
+    });
+
     return (
         <div className="text-[#191c1e] min-h-screen text-left font-body-md relative z-0 w-full max-w-full overflow-x-hidden">
             {/* Atmospheric Background */}
@@ -291,7 +443,6 @@ export default function SuperAdmin() {
                 <div className="wave-blob bg-primary-fixed top-[15%] right-[15%]" style={{ animationDelay: '-7s' }}></div>
                 <div className="wave-blob bg-secondary-container bottom-[35%] left-[5%]" style={{ animationDelay: '-13s' }}></div>
 
-                {/* Decorative concentric circles in main background */}
                 {/* Decorative concentric circles in main background */}
                 <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[280px] h-[280px] xs:w-[320px] xs:h-[320px] sm:w-[400px] sm:h-[400px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[48px] border-primary/[0.03] dark:border-white/[0.03] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
                 <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[180px] h-[180px] xs:w-[220px] xs:h-[220px] sm:w-[280px] sm:h-[280px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[32px] border-primary/[0.015] dark:border-white/[0.015] rounded-full pointer-events-none z-[-1] translate-x-1/2"></div>
@@ -305,7 +456,7 @@ export default function SuperAdmin() {
 
                 <div className="flex flex-col h-full w-full relative z-10 gap-stack-sm">
                     <div className="mb-stack-lg flex items-center gap-3">
-                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-xl" />
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-lg" />
                         <div>
                             <h1 className="text-headline-sm font-headline-md text-primary font-bold leading-tight">PalmCrest ENT</h1>
                             <p className="text-label-md font-label-md tracking-[0.05em] text-on-surface-variant opacity-70">Clinical Excellence</p>
@@ -314,38 +465,45 @@ export default function SuperAdmin() {
                     <nav className="flex-grow flex flex-col gap-2">
                         <button
                             onClick={() => setActiveTab('dashboard')}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold animate-smooth w-full text-left ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
                         >
                             <span className="material-symbols-outlined">dashboard</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Dashboard</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('doctors')}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'doctors' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold animate-smooth w-full text-left ${activeTab === 'doctors' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
                         >
                             <span className="material-symbols-outlined">medical_services</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Doctors</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('patients')}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'patients' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold animate-smooth w-full text-left ${activeTab === 'patients' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
                         >
                             <span className="material-symbols-outlined">group</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Patients</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('appointments')}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold animate-smooth w-full text-left ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
                         >
                             <span className="material-symbols-outlined">calendar_today</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Appointments</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('admins')}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold animate-smooth w-full text-left ${activeTab === 'admins' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold animate-smooth w-full text-left ${activeTab === 'admins' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
                         >
                             <span className="material-symbols-outlined">admin_panel_settings</span>
                             <span className="text-label-md font-label-md tracking-[0.05em]">Admins</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('broadcast')}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold animate-smooth w-full text-left ${activeTab === 'broadcast' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1'}`}
+                        >
+                            <span className="material-symbols-outlined">campaign</span>
+                            <span className="text-label-md font-label-md tracking-[0.05em]">Broadcast</span>
                         </button>
                     </nav>
                     <div className="mt-auto flex flex-col gap-2 pt-6 border-t border-outline-variant/20">
@@ -367,7 +525,7 @@ export default function SuperAdmin() {
             {/* Main Content Canvas */}
             <main className="md:ml-[280px] min-h-screen w-full md:w-[calc(100%-280px)] max-w-full overflow-x-hidden">
                 {/* TopAppBar */}
-                <header className="fixed top-0 right-0 left-0 md:left-[280px] z-50 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm px-4 sm:px-8 py-4 flex justify-between items-center">
+                <header className="fixed top-0 right-0 left-0 md:left-[280px] z-50 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm px-4 sm:px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-2 sm:gap-4">
                         <h2 className="text-lg sm:text-headline-md font-headline-md font-bold tracking-tight text-primary truncate max-w-[160px] xs:max-w-xs sm:max-w-none">
                             {activeTab === 'dashboard' && 'Overview'}
@@ -375,6 +533,7 @@ export default function SuperAdmin() {
                             {activeTab === 'patients' && 'Patient Directory'}
                             {activeTab === 'appointments' && 'Appointment Requests'}
                             {activeTab === 'admins' && 'Administrator Directory'}
+                            {activeTab === 'broadcast' && 'Broadcast Email'}
                         </h2>
                     </div>
                     <div className="flex items-center gap-3 sm:gap-gutter">
@@ -403,15 +562,15 @@ export default function SuperAdmin() {
                 </header>
 
                 {/* Dashboard Content */}
-                <div className="pt-24 px-4 sm:px-8 pb-28 md:pb-12 w-full max-w-full md:max-w-container-max mx-auto animate-smooth overflow-x-hidden">
+                <div className="pt-24 px-4 sm:px-6 pb-28 md:pb-12 w-full max-w-full md:max-w-container-max mx-auto animate-smooth overflow-x-hidden">
 
                     {activeTab === 'dashboard' && (
                         <>
                             {/* Bento Grid Overview */}
                             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-gutter mb-stack-lg animate-smooth">
-                                <div className="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                                <div className="glass-card p-4 sm:p-6 rounded-xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
                                     <div className="flex justify-between items-start">
-                                        <div className="p-3 bg-primary/10 rounded-xl">
+                                        <div className="p-3 bg-primary/10 rounded-lg">
                                             <span className="material-symbols-outlined text-primary">medical_services</span>
                                         </div>
                                         <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+12%</span>
@@ -421,9 +580,9 @@ export default function SuperAdmin() {
                                         <p className="text-label-md text-on-surface-variant">Total Doctors</p>
                                     </div>
                                 </div>
-                                <div className="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                                <div className="glass-card p-4 sm:p-6 rounded-xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
                                     <div className="flex justify-between items-start">
-                                        <div className="p-3 bg-secondary/10 rounded-xl">
+                                        <div className="p-3 bg-secondary/10 rounded-lg">
                                             <span className="material-symbols-outlined text-secondary">calendar_month</span>
                                         </div>
                                         <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-caption font-bold">+5.2%</span>
@@ -433,9 +592,9 @@ export default function SuperAdmin() {
                                         <p className="text-label-md text-on-surface-variant">Total Bookings</p>
                                     </div>
                                 </div>
-                                <div className="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
+                                <div className="glass-card p-4 sm:p-6 rounded-xl flex flex-col justify-between h-[160px] animate-smooth hover:-translate-y-1 hover:shadow-lg">
                                     <div className="flex justify-between items-start">
-                                        <div className="p-3 bg-tertiary/10 rounded-xl">
+                                        <div className="p-3 bg-tertiary/10 rounded-lg">
                                             <span className="material-symbols-outlined text-tertiary">biotech</span>
                                         </div>
                                         <span className="text-on-error-container bg-error-container/20 px-2 py-1 rounded text-caption font-bold">-2%</span>
@@ -449,7 +608,7 @@ export default function SuperAdmin() {
 
                             {/* Charts Section */}
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-gutter mb-stack-lg">
-                                <div className="lg:col-span-2 glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl min-h-[400px]">
+                                <div className="lg:col-span-2 glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl min-h-[400px]">
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                                         <div>
                                             <h3 className="text-headline-sm font-headline-md text-primary">Patient Inflow Analytics</h3>
@@ -485,7 +644,7 @@ export default function SuperAdmin() {
                                     </div>
                                 </div>
 
-                                <div className="glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl">
+                                <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl">
                                     <h3 className="text-headline-sm font-headline-md text-primary mb-6">Recent Activity</h3>
                                     <div className="space-y-6">
                                         <div className="flex gap-4">
@@ -512,7 +671,7 @@ export default function SuperAdmin() {
                                     </div>
                                     <button
                                         onClick={handleViewLogs}
-                                        className="w-full mt-8 py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors"
+                                        className="w-full mt-8 py-3 rounded-lg border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors"
                                     >
                                         View All Logs
                                     </button>
@@ -520,10 +679,63 @@ export default function SuperAdmin() {
                             </div>
                         </>
                     )}
-                                      {/* Manage Doctors Table */}
+
+                    {/* Broadcast Email Tab */}
+                    {activeTab === 'broadcast' && (
+                        <div className="glass-card rounded-xl sm:rounded-2xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-6 border-b border-white/40">
+                                <h3 className="text-headline-sm font-headline-md text-primary">Patient Broadcast</h3>
+                                <p className="text-body-md text-on-surface-variant">Send a general email to all registered patients</p>
+                            </div>
+                            <div className="p-4 sm:p-6">
+                                <form onSubmit={handleBroadcastSubmit} className="flex flex-col gap-4 max-w-2xl">
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-label-md font-bold text-on-surface">Subject</label>
+                                        <input
+                                            type="text"
+                                            className="bg-surface-container-low px-4 py-3 rounded-lg border border-outline-variant/30 text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                            placeholder="e.g. Health Tips / Clinic Update"
+                                            value={broadcastSubject}
+                                            onChange={(e) => setBroadcastSubject(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-label-md font-bold text-on-surface">Message (HTML supported)</label>
+                                        <textarea
+                                            className="bg-surface-container-low px-4 py-3 rounded-lg border border-outline-variant/30 text-body-md focus:outline-none focus:ring-2 focus:ring-primary min-h-[200px]"
+                                            placeholder="<p>Write your message here...</p>"
+                                            value={broadcastMessage}
+                                            onChange={(e) => setBroadcastMessage(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={isBroadcasting}
+                                        className={`self-start mt-2 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-all ${isBroadcasting ? 'opacity-70 cursor-wait' : 'hover:shadow-[0_0_15px_rgba(0,229,255,0.4)]'}`}
+                                    >
+                                        {isBroadcasting ? (
+                                            <>
+                                                <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="material-symbols-outlined">send</span>
+                                                Send Broadcast
+                                            </>
+                                        )}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Manage Doctors Table */}
                     {activeTab === 'doctors' && (
-                        <div className="glass-card rounded-2xl sm:rounded-3xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
-                            <div className="p-4 sm:p-8 border-b border-white/40 flex flex-col gap-6">
+                        <div className="glass-card rounded-xl sm:rounded-2xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-6 border-b border-white/40 flex flex-col gap-6">
                                 <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
                                     <div>
                                         <h3 className="text-headline-sm font-headline-md text-primary">Manage Medical Staff</h3>
@@ -531,7 +743,7 @@ export default function SuperAdmin() {
                                     </div>
                                     <button
                                         onClick={handleOnboardSpecialist}
-                                        className="w-full md:w-auto bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all animate-smooth"
+                                        className="w-full md:w-auto bg-gradient-to-r from-primary to-secondary text-white px-5 py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all animate-smooth"
                                     >
                                         <span className="material-symbols-outlined">person_add</span>
                                         Onboard Specialist
@@ -539,7 +751,7 @@ export default function SuperAdmin() {
                                 </div>
                                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between border-t border-outline-variant/10 pt-6">
                                     <form onSubmit={handleDoctorSearch} className="flex flex-wrap gap-2 items-center w-full">
-                                        <div className="flex items-center bg-surface-container-low px-4 py-2.5 rounded-xl border border-outline-variant/30 flex-grow w-full sm:max-w-md">
+                                        <div className="flex items-center bg-surface-container-low px-4 py-2.5 rounded-lg border border-outline-variant/30 flex-grow w-full sm:max-w-md">
                                             <span className="material-symbols-outlined text-on-surface-variant mr-2">search</span>
                                             <input
                                                 className="bg-transparent border-none focus:ring-0 text-body-md w-full outline-none"
@@ -551,7 +763,7 @@ export default function SuperAdmin() {
                                         </div>
                                         <button
                                             type="submit"
-                                            className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
+                                            className="bg-primary text-white px-5 py-2.5 rounded-lg font-bold hover:opacity-90 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
                                         >
                                             Search
                                         </button>
@@ -559,7 +771,7 @@ export default function SuperAdmin() {
                                             <button
                                                 type="button"
                                                 onClick={() => { setDoctorSearchInput(''); setDoctorSearchQuery(''); setDoctorPage(1); }}
-                                                className="bg-surface-variant/20 text-on-surface-variant px-4 py-2.5 rounded-xl font-bold hover:bg-surface-variant/40 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
+                                                className="bg-surface-variant/20 text-on-surface-variant px-4 py-2.5 rounded-lg font-bold hover:bg-surface-variant/40 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
                                             >
                                                 Clear
                                             </button>
@@ -571,18 +783,19 @@ export default function SuperAdmin() {
                                 <table className="w-full text-left">
                                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                                         <tr>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Specialist</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Department / specialization</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Contact Email</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Phone Number</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Status</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Specialist</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Department / specialization</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Contact Email</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Phone Number</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Status</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
                                         {paginatedDoctors.length > 0 ? (
                                             paginatedDoctors.map((s) => (
                                                 <tr key={s._id} className="hover:bg-white/40 transition-colors group">
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold">
                                                                 {s.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -592,23 +805,34 @@ export default function SuperAdmin() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                         <span className="text-body-md text-primary">{s.specialization}</span>
                                                     </td>
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                         {s.email}
                                                     </td>
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                         {s.phoneNumber || 'N/A'}
                                                     </td>
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                         <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-caption font-bold">Active</span>
+                                                    </td>
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-right">
+                                                        <button 
+                                                            onClick={() => {
+                                                                setSelectedDoctorForSchedule(s);
+                                                                setShowScheduleModal(true);
+                                                            }}
+                                                            className="text-primary hover:text-primary-container bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg text-label-md font-bold transition-colors"
+                                                        >
+                                                            Send Schedule
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-4 sm:px-8 py-4 sm:py-6 text-center text-on-surface-variant">
+                                                <td colSpan="5" className="px-4 sm:px-6 py-4 sm:py-6 text-center text-on-surface-variant">
                                                     {doctorSearchQuery ? 'No specialists match the search query.' : 'No specialists onboarded yet.'}
                                                 </td>
                                             </tr>
@@ -616,7 +840,7 @@ export default function SuperAdmin() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex flex-col sm:flex-row justify-between items-center gap-4 px-4 sm:px-8">
+                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex flex-col sm:flex-row justify-between items-center gap-4 px-4 sm:px-6">
                                 <span className="text-caption text-on-surface-variant font-medium text-center sm:text-left">
                                     Page {doctorPage} of {totalDoctorPages} (Total {filteredDoctors.length} staff)
                                 </span>
@@ -624,30 +848,32 @@ export default function SuperAdmin() {
                                     <button
                                         disabled={doctorPage === 1}
                                         onClick={() => setDoctorPage(p => Math.max(p - 1, 1))}
-                                        className="px-4 py-2 rounded-xl text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
+                                        className="px-4 py-2 rounded-lg text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
                                     >
                                         Previous
                                     </button>
                                     <button
                                         disabled={doctorPage === totalDoctorPages}
                                         onClick={() => setDoctorPage(p => Math.min(p + 1, totalDoctorPages))}
-                                        className="px-4 py-2 rounded-xl text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
+                                        className="px-4 py-2 rounded-lg text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
                                     >
                                         Next
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    )}                      {/* Patient Directory */}
+                    )}
+
+                    {/* Patient Directory */}
                     {activeTab === 'patients' && (
-                        <div className="glass-card rounded-2xl sm:rounded-3xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
-                            <div className="p-4 sm:p-8 border-b border-white/40 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+                        <div className="glass-card rounded-xl sm:rounded-2xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-6 border-b border-white/40 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
                                 <div>
                                     <h3 className="text-headline-sm font-headline-md text-primary">Patient Directory</h3>
                                     <p className="text-body-md text-on-surface-variant">View all registered patients and clinical IDs</p>
                                 </div>
                                 <form onSubmit={handlePatientSearch} className="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto">
-                                    <div className="flex items-center bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/30 flex-grow w-full sm:w-64 md:w-80">
+                                    <div className="flex items-center bg-surface-container-low px-4 py-2 rounded-lg border border-outline-variant/30 flex-grow w-full sm:w-64 md:w-80">
                                         <span className="material-symbols-outlined text-on-surface-variant mr-2">search</span>
                                         <input
                                             className="bg-transparent border-none focus:ring-0 text-body-md w-full outline-none"
@@ -659,7 +885,7 @@ export default function SuperAdmin() {
                                     </div>
                                     <button
                                         type="submit"
-                                        className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:opacity-90 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
+                                        className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
                                     >
                                         Search
                                     </button>
@@ -667,7 +893,7 @@ export default function SuperAdmin() {
                                         <button
                                             type="button"
                                             onClick={() => { setPatientSearchInput(''); setPatientSearchQuery(''); setPatientPage(1); }}
-                                            className="bg-surface-variant/20 text-on-surface-variant px-3 py-2 rounded-xl font-bold hover:bg-surface-variant/40 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
+                                            className="bg-surface-variant/20 text-on-surface-variant px-3 py-2 rounded-lg font-bold hover:bg-surface-variant/40 transition-all text-label-md flex-grow sm:flex-grow-0 text-center"
                                         >
                                             Clear
                                         </button>
@@ -678,37 +904,48 @@ export default function SuperAdmin() {
                                 <table className="w-full text-left">
                                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                                         <tr>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Patient Name</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Patient ID</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Email Address</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Phone Number</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Gender</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Patient Name</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Patient ID</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Email Address</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Phone Number</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Gender</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
                                         {paginatedPatients.length > 0 ? (
                                             paginatedPatients.map(p => (
                                                 <tr key={p._id} className="hover:bg-white/40 transition-colors group">
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                         <p className="text-body-md font-bold text-primary">{p.fullName}</p>
                                                     </td>
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                         <span className="text-body-md font-semibold text-secondary">{p.patientId}</span>
                                                     </td>
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                         {p.email}
                                                     </td>
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                         {p.phoneNumber || 'N/A'}
                                                     </td>
-                                                    <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                         {p.gender || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
+                                                        <button 
+                                                            onClick={() => setEmailingPatient(p)}
+                                                            className="text-primary hover:text-secondary flex items-center gap-1 transition-colors"
+                                                            title="Email Patient"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[20px]">mail</span>
+                                                            <span className="text-label-sm font-bold">Email</span>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-4 sm:px-8 py-4 sm:py-6 text-center text-on-surface-variant">
+                                                <td colSpan="6" className="px-4 sm:px-6 py-4 sm:py-6 text-center text-on-surface-variant">
                                                     {patientSearchQuery ? 'No patients match the search query.' : 'No patients registered.'}
                                                 </td>
                                             </tr>
@@ -716,7 +953,7 @@ export default function SuperAdmin() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex flex-col sm:flex-row justify-between items-center gap-4 px-4 sm:px-8">
+                            <div className="p-4 border-t border-white/40 bg-surface-container-low/40 flex flex-col sm:flex-row justify-between items-center gap-4 px-4 sm:px-6">
                                 <span className="text-caption text-on-surface-variant font-medium text-center sm:text-left">
                                     Page {patientPage} of {totalPatientPages} (Total {filteredPatients.length} patients)
                                 </span>
@@ -724,14 +961,14 @@ export default function SuperAdmin() {
                                     <button
                                         disabled={patientPage === 1}
                                         onClick={() => setPatientPage(p => Math.max(p - 1, 1))}
-                                        className="px-4 py-2 rounded-xl text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
+                                        className="px-4 py-2 rounded-lg text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
                                     >
                                         Previous
                                     </button>
                                     <button
                                         disabled={patientPage === totalPatientPages}
                                         onClick={() => setPatientPage(p => Math.min(p + 1, totalPatientPages))}
-                                        className="px-4 py-2 rounded-xl text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
+                                        className="px-4 py-2 rounded-lg text-caption font-bold bg-white border border-outline-variant/30 text-primary disabled:opacity-40 disabled:pointer-events-none hover:bg-primary/5 transition-all"
                                     >
                                         Next
                                     </button>
@@ -742,8 +979,8 @@ export default function SuperAdmin() {
 
                     {/* Appointments Management */}
                     {activeTab === 'appointments' && (
-                        <div className="glass-card rounded-2xl sm:rounded-3xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
-                            <div className="p-4 sm:p-8 border-b border-white/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="glass-card rounded-xl sm:rounded-2xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-6 border-b border-white/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <div>
                                     <h3 className="text-headline-sm font-headline-md text-primary">All Appointments & Surgery Requests</h3>
                                     <p className="text-body-md text-on-surface-variant">Review, approve, or cancel clinician requests across the hospital</p>
@@ -752,7 +989,7 @@ export default function SuperAdmin() {
                                     <select
                                         value={selectedDoctorFilter}
                                         onChange={(e) => setSelectedDoctorFilter(e.target.value)}
-                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-lg text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
                                     >
                                         <option value="All">All Doctors</option>
                                         {doctors.map(doc => (
@@ -762,7 +999,7 @@ export default function SuperAdmin() {
                                     <select
                                         value={selectedTypeFilter}
                                         onChange={(e) => setSelectedTypeFilter(e.target.value)}
-                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-lg text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
                                     >
                                         <option value="All">All Types</option>
                                         <option value="Appointment">Appointments</option>
@@ -771,7 +1008,7 @@ export default function SuperAdmin() {
                                     <select
                                         value={selectedStatusFilter}
                                         onChange={(e) => setSelectedStatusFilter(e.target.value)}
-                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-xl text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
+                                        className="w-full sm:w-auto bg-surface-container-low border-none rounded-lg text-label-md px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20"
                                     >
                                         <option value="All">All Statuses</option>
                                         <option value="Pending">Pending</option>
@@ -785,50 +1022,44 @@ export default function SuperAdmin() {
                                 <table className="w-full text-left">
                                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                                         <tr>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Doctor</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Patient</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Title / Purpose</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Date & Time</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Type</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Status</th>
-                                            <th className="px-4 sm:px-8 py-4 text-right whitespace-nowrap">Actions</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Doctor</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Patient</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Title / Purpose</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Date & Time</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Type</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Status</th>
+                                            <th className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
-                                        {appointments
-                                            .filter(appt => {
-                                                if (selectedDoctorFilter !== 'All' && appt.doctor?._id !== selectedDoctorFilter) return false;
-                                                if (selectedTypeFilter !== 'All' && appt.type !== selectedTypeFilter) return false;
-                                                if (selectedStatusFilter !== 'All' && appt.status !== selectedStatusFilter) return false;
-                                                return true;
-                                            })
-                                            .map(appt => {
-                                                const formattedDate = new Date(appt.date).toLocaleDateString('en-US', {
+                                        {filteredAppointments.length > 0 ? (
+                                            filteredAppointments.map(appt => {
+                                                const formattedDate = parseLocalDate(appt.date).toLocaleDateString('en-US', {
                                                     month: 'short',
                                                     day: 'numeric',
                                                     year: 'numeric'
                                                 });
                                                 return (
                                                     <tr key={appt._id} className="hover:bg-white/40 transition-colors group">
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 font-bold text-primary whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 font-bold text-primary whitespace-nowrap">
                                                             {appt.doctor?.fullName || 'Unknown'}
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                             <p className="text-body-md font-semibold text-primary">{appt.patient?.fullName || 'Unknown'}</p>
                                                             <p className="text-caption text-on-surface-variant">{appt.patient?.patientId || ''}</p>
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-body-md font-medium text-primary whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 text-body-md font-medium text-primary whitespace-nowrap">
                                                             {appt.title}
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-body-md text-on-surface-variant whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 text-body-md text-on-surface-variant whitespace-nowrap">
                                                             {formattedDate} • {appt.timeSlot}
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                             <span className={`px-3 py-1 rounded-full text-caption font-bold ${appt.type === 'Surgery' ? 'bg-secondary/15 text-secondary' : 'bg-primary/15 text-primary'}`}>
                                                                 {appt.type}
                                                             </span>
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                             <span className={`px-3 py-1 rounded-full text-caption font-bold ${appt.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
                                                                     appt.status === 'Approved' ? 'bg-blue-100 text-blue-800' :
                                                                         appt.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -837,7 +1068,7 @@ export default function SuperAdmin() {
                                                                 {appt.status}
                                                             </span>
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-right space-x-2 whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 text-right space-x-2 whitespace-nowrap">
                                                             {appt.status === 'Pending' && (
                                                                 <button
                                                                     onClick={() => handleUpdateStatus(appt._id, 'Approved')}
@@ -862,20 +1093,34 @@ export default function SuperAdmin() {
                                                                     Complete
                                                                 </button>
                                                             )}
+                                                            {appt.status === 'Completed' && !appt.remindersSent?.includes('post4hr') && (
+                                                                <button
+                                                                    onClick={() => handleTriggerPostVisit(appt._id)}
+                                                                    disabled={postVisitLoadingIds[appt._id]}
+                                                                    className={`px-3 py-1.5 rounded-lg font-bold transition-opacity flex items-center gap-2 ${postVisitLoadingIds[appt._id] ? 'bg-primary text-white opacity-70 cursor-wait' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}
+                                                                >
+                                                                    {postVisitLoadingIds[appt._id] ? (
+                                                                        <>
+                                                                            <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                                                                            Sending...
+                                                                        </>
+                                                                    ) : (
+                                                                        'Send Post-Visit'
+                                                                    )}
+                                                                </button>
+                                                            )}
+                                                            {appt.status === 'Completed' && appt.remindersSent?.includes('post4hr') && (
+                                                                <span className="text-caption text-emerald-600 font-medium">Follow-up Sent</span>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 );
-                                            })}
-                                        {appointments.filter(appt => {
-                                            if (selectedDoctorFilter !== 'All' && appt.doctor?._id !== selectedDoctorFilter) return false;
-                                            if (selectedTypeFilter !== 'All' && appt.type !== selectedTypeFilter) return false;
-                                            if (selectedStatusFilter !== 'All' && appt.status !== selectedStatusFilter) return false;
-                                            return true;
-                                        }).length === 0 && (
-                                                <tr>
-                                                    <td colSpan="7" className="px-8 py-6 text-center text-on-surface-variant">No appointments match the selected filters.</td>
-                                                </tr>
-                                            )}
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="7" className="px-6 py-6 text-center text-on-surface-variant">No appointments match the selected filters.</td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -884,15 +1129,15 @@ export default function SuperAdmin() {
 
                     {/* Admins Directory */}
                     {activeTab === 'admins' && (
-                        <div className="glass-card rounded-2xl sm:rounded-3xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
-                            <div className="p-4 sm:p-8 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="glass-card rounded-xl sm:rounded-2xl overflow-hidden mb-stack-lg animate-smooth w-full max-w-full">
+                            <div className="p-4 sm:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <div>
                                     <h3 className="text-headline-sm font-headline-md text-primary">System Administrators</h3>
                                     <p className="text-body-md text-on-surface-variant">Oversee system administrators and access permissions</p>
                                 </div>
                                 <button
                                     onClick={handleOnboardAdmin}
-                                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] animate-smooth"
+                                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-white px-5 py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] animate-smooth"
                                 >
                                     <span className="material-symbols-outlined">person_add</span>
                                     Onboard Admin
@@ -902,11 +1147,11 @@ export default function SuperAdmin() {
                                 <table className="w-full text-left">
                                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                                         <tr>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Administrator</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Contact Email</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Role</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Date Joined</th>
-                                            <th className="px-4 sm:px-8 py-4 whitespace-nowrap">Status</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Administrator</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Contact Email</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Role</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Date Joined</th>
+                                            <th className="px-4 sm:px-6 py-4 whitespace-nowrap">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-outline-variant/10">
@@ -919,7 +1164,7 @@ export default function SuperAdmin() {
                                                 });
                                                 return (
                                                     <tr key={adm._id} className="hover:bg-white/40 transition-colors group">
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                             <div className="flex items-center gap-4">
                                                                 <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold">
                                                                     {adm.fullName ? adm.fullName.split(' ').map(n => n[0]).join('').toUpperCase() : 'A'}
@@ -929,16 +1174,16 @@ export default function SuperAdmin() {
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                             {adm.email}
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-primary capitalize font-semibold">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-body-md text-primary capitalize font-semibold">
                                                             {adm.role}
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap text-body-md text-on-surface-variant">
                                                             {formattedDate}
                                                         </td>
-                                                        <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                                        <td className="px-4 sm:px-6 py-4 sm:py-6 whitespace-nowrap">
                                                             <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-caption font-bold">Active</span>
                                                         </td>
                                                     </tr>
@@ -946,7 +1191,7 @@ export default function SuperAdmin() {
                                             })
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-4 sm:px-8 py-4 sm:py-6 text-center text-on-surface-variant">No administrators found.</td>
+                                                <td colSpan="5" className="px-4 sm:px-6 py-4 sm:py-6 text-center text-on-surface-variant">No administrators found.</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -1026,7 +1271,125 @@ export default function SuperAdmin() {
                     <span className="material-symbols-outlined">admin_panel_settings</span>
                     <span className="text-[10px]">Admins</span>
                 </button>
+                <button
+                    onClick={() => setActiveTab('broadcast')}
+                    className={`flex flex-col items-center gap-1 ${activeTab === 'broadcast' ? 'text-primary' : 'text-on-surface-variant'}`}
+                >
+                    <span className="material-symbols-outlined">campaign</span>
+                    <span className="text-[10px]">Broadcast</span>
+                </button>
             </nav>
+
+            {/* Direct Email Modal */}
+            {emailingPatient && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-smooth">
+                    <div className="bg-surface-container rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+                        <div className="p-6 border-b border-outline-variant/30 flex justify-between items-center bg-white/50">
+                            <h3 className="text-headline-sm font-headline-md text-primary">Email {emailingPatient.fullName}</h3>
+                            <button onClick={() => setEmailingPatient(null)} className="p-2 hover:bg-surface-variant/30 rounded-full transition-colors">
+                                <span className="material-symbols-outlined text-on-surface-variant">close</span>
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto max-h-[70vh]">
+                            <form onSubmit={handleDirectEmailSubmit} className="flex flex-col gap-6" id="direct-email-form">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-label-md font-bold text-on-surface">Subject</label>
+                                    <input
+                                        type="text"
+                                        className="bg-surface-container-low px-4 py-3 rounded-lg border border-outline-variant/30 text-body-md focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                                        placeholder="e.g. Follow-up regarding your recent visit"
+                                        value={directSubject}
+                                        onChange={(e) => setDirectSubject(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-label-md font-bold text-on-surface">Message (HTML supported)</label>
+                                    <textarea
+                                        className="bg-surface-container-low px-4 py-3 rounded-lg border border-outline-variant/30 text-body-md focus:outline-none focus:ring-2 focus:ring-primary w-full min-h-[150px]"
+                                        placeholder="<p>Dear Patient...</p>"
+                                        value={directMessage}
+                                        onChange={(e) => setDirectMessage(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-outline-variant/30 bg-surface-container-low/50 flex justify-end gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setEmailingPatient(null)}
+                                className="px-6 py-2.5 rounded-lg font-bold text-on-surface-variant hover:bg-surface-variant/30 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                form="direct-email-form"
+                                disabled={isSendingDirect}
+                                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-2.5 rounded-lg font-bold hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all flex items-center gap-2 disabled:opacity-50"
+                            >
+                                {isSendingDirect ? 'Sending...' : 'Send Email'}
+                                {!isSendingDirect && <span className="material-symbols-outlined text-[18px]">send</span>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Send Schedule Modal */}
+            {showScheduleModal && selectedDoctorForSchedule && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-surface-container rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+                        <div className="flex justify-between items-center mb-6 border-b border-outline-variant/20 pb-4">
+                            <div>
+                                <h3 className="text-title-lg font-headline-md font-bold text-primary">Send Schedule</h3>
+                                <p className="text-body-sm text-on-surface-variant">To Dr. {selectedDoctorForSchedule.fullName}</p>
+                            </div>
+                            <button onClick={() => setShowScheduleModal(false)} className="text-on-surface-variant hover:text-error transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="flex flex-col gap-4 mb-6">
+                            <label className="text-label-md font-bold text-on-surface">Timeframe</label>
+                            <select 
+                                value={scheduleTimeframe}
+                                onChange={(e) => setScheduleTimeframe(e.target.value)}
+                                className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary/40 outline-none"
+                            >
+                                <option value="day">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button 
+                                onClick={() => setShowScheduleModal(false)} 
+                                className="px-4 py-2 rounded-xl font-bold text-on-surface-variant hover:bg-surface-variant/20 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSendSchedule}
+                                disabled={isSendingSchedule}
+                                className={`px-4 py-2 rounded-xl font-bold bg-primary text-white transition-opacity flex items-center gap-2 ${isSendingSchedule ? 'opacity-70 cursor-wait' : 'hover:opacity-90'}`}
+                            >
+                                {isSendingSchedule ? (
+                                    <>
+                                        <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                                        Sending...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined text-sm">send</span>
+                                        Send
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

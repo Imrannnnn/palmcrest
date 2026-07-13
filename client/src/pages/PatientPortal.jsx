@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 
 const isAppointmentPast = (dateStr, timeSlot) => {
     if (!dateStr) return false;
-    const apptDate = new Date(dateStr);
+    
+    const str = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const [year, month, day] = str.split('-');
+    const apptDate = new Date(year, month - 1, day);
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -30,6 +34,14 @@ const isAppointmentPast = (dateStr, timeSlot) => {
         }
     }
     return false;
+};
+
+// Safely parse date string to local date, ignoring timezones
+const parseLocalDate = (dateString) => {
+    if (!dateString) return new Date();
+    const str = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+    const [year, month, day] = str.split('-');
+    return new Date(year, month - 1, day);
 };
 
 export default function PatientPortal() {
@@ -177,8 +189,10 @@ export default function PatientPortal() {
 
         const upcoming = bookings.filter(b => {
             if (b.status === 'Completed' || b.status === 'Cancelled') return false;
-            const dateStr = b.date.split(' • ')[0];
-            const apptDate = new Date(dateStr);
+            const dateStr = b.date.split(' • ')[0]; // wait, b.date here might be the already formatted string? No, b.date is from bookings, which is transformed in fetchAppointments.
+            // Wait, fetchAppointments maps `date` to `formattedDate` and stores it back as `date: formattedDate`.
+            // So b.date IS actually already formatted! e.g., "Jul 3, 2026"
+            const apptDate = new Date(dateStr); 
             return apptDate >= today;
         });
 
@@ -227,7 +241,7 @@ export default function PatientPortal() {
             if (response.ok) {
                 const data = await response.json();
                 const transformed = data.map(appt => {
-                    const formattedDate = new Date(appt.date).toLocaleDateString('en-US', {
+                    const formattedDate = parseLocalDate(appt.date).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
@@ -540,7 +554,7 @@ export default function PatientPortal() {
                     <div className="mb-8 flex items-center gap-3">
                         <img
                             alt="PalmCrest ENT Logo"
-                            className="h-10 w-auto object-contain shadow-sm rounded-xl"
+                            className="h-10 w-auto object-contain shadow-sm rounded-lg"
                             src="/logo-ent.jpeg"
                         />
                         <div>
@@ -551,7 +565,7 @@ export default function PatientPortal() {
                     <nav className="flex-1 space-y-2">
                         <button
                             onClick={() => { setActiveTab('dashboard'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg font-bold transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
                         >
                             <span className="material-symbols-outlined" style={activeTab === 'dashboard' ? { fontVariationSettings: "'FILL' 1" } : {}}>dashboard</span>
                             <span className="font-label-md tracking-[0.05em]">Dashboard</span>
@@ -559,13 +573,13 @@ export default function PatientPortal() {
 
                         <button
                             onClick={() => { setActiveTab('appointments'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg font-bold transition-all duration-300 ${activeTab === 'appointments' ? 'bg-white/70 backdrop-blur-md text-primary' : 'text-on-surface-variant hover:translate-x-1 hover:bg-secondary-container/10'}`}
                         >
                             <span className="material-symbols-outlined" style={activeTab === 'appointments' ? { fontVariationSettings: "'FILL' 1" } : {}}>calendar_today</span>
                             <span className="font-label-md tracking-[0.05em]">Appointments</span>
                         </button>
 
-                        <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-xl" href="#">
+                        <a className="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:translate-x-1 transition-transform hover:bg-secondary-container/10 rounded-lg" href="#">
                             <span className="material-symbols-outlined">settings</span>
                             <span className="font-label-md tracking-[0.05em]">Settings</span>
                         </a>
@@ -573,7 +587,7 @@ export default function PatientPortal() {
                     <div className="mt-auto space-y-4">
                         <button
                             onClick={handleEmergencyPortal}
-                            className="w-full btn-primary-gradient text-white py-3 px-4 rounded-xl font-label-md flex items-center justify-center gap-2"
+                            className="w-full btn-primary-gradient text-white py-3 px-4 rounded-lg font-label-md flex items-center justify-center gap-2"
                         >
                             <span className="material-symbols-outlined text-[20px]">emergency</span>
                             Emergency Portal
@@ -603,7 +617,7 @@ export default function PatientPortal() {
                             <div className="flex items-center gap-4">
                                 <button
                                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                    className="p-2 min-w-[44px] min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors text-primary flex items-center justify-center shadow-sm"
+                                    className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-primary flex items-center justify-center shadow-sm"
                                 >
                                     <span className="material-symbols-outlined">menu</span>
                                 </button>
@@ -649,7 +663,7 @@ export default function PatientPortal() {
                     <div className="pt-20 px-4 md:px-margin-desktop pb-8 max-w-container-max mx-auto">
                         {/* Hero Greeting Banner */}
                         <section className="mb-6">
-                            <div className="relative bg-[#2A7B4C] rounded-2xl p-6 md:px-8 md:py-6 overflow-hidden flex items-center justify-between shadow-md">
+                            <div className="relative bg-[#2A7B4C] rounded-xl p-6 md:px-6 md:py-6 overflow-hidden flex items-center justify-between shadow-md">
                                 {/* Decorative concentric circles */}
                                 <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[400px] h-[400px] border-[40px] border-white/10 rounded-full pointer-events-none -ml-32"></div>
                                 <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[250px] h-[250px] border-[30px] border-white/5 rounded-full pointer-events-none -ml-16"></div>
@@ -676,7 +690,7 @@ export default function PatientPortal() {
                                 {/* Left Column: Summary & Quick Actions */}
                                 <div className="lg:col-span-8 space-y-6 md:space-y-gutter">
                                     {/* Upcoming Appointment Summary */}
-                                    <div className="glass-card rounded-3xl p-6 md:p-stack-md relative overflow-hidden border-l-4 border-secondary">
+                                    <div className="glass-card rounded-2xl p-6 md:p-stack-md relative overflow-hidden border-l-4 border-secondary">
                                         <div className="flex justify-between items-center mb-4">
                                             <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-secondary">event_available</span>
@@ -685,8 +699,8 @@ export default function PatientPortal() {
                                             <button onClick={() => setActiveTab('appointments')} className="text-secondary font-label-md hover:underline">Manage</button>
                                         </div>
                                         {getUpcomingAppointment() ? (
-                                            <div className="flex items-center gap-4 p-4 bg-white/40 rounded-2xl border border-white/60">
-                                                <div className={`w-12 h-12 ${getUpcomingAppointment().bgClass} rounded-xl flex items-center justify-center ${getUpcomingAppointment().iconColor}`}>
+                                            <div className="flex items-center gap-4 p-4 bg-white/40 rounded-xl border border-white/60">
+                                                <div className={`w-12 h-12 ${getUpcomingAppointment().bgClass} rounded-lg flex items-center justify-center ${getUpcomingAppointment().iconColor}`}>
                                                     <span className="material-symbols-outlined">{getUpcomingAppointment().icon}</span>
                                                 </div>
                                                 <div>
@@ -700,7 +714,7 @@ export default function PatientPortal() {
                                     </div>
 
                                     {/* Surgery Request Card */}
-                                    <div className="bg-primary text-white rounded-3xl p-6 md:p-stack-md shadow-xl relative overflow-hidden">
+                                    <div className="bg-primary text-white rounded-2xl p-6 md:p-stack-md shadow-xl relative overflow-hidden">
                                         <div className="absolute top-0 right-0 w-32 h-32 bg-secondary rounded-full blur-[60px] opacity-20 -mr-16 -mt-16"></div>
                                         <h4 className="text-headline-sm md:text-headline-md font-headline-md mb-4 flex items-center gap-2">
                                             <span className="material-symbols-outlined text-secondary-fixed">medical_services</span>
@@ -708,13 +722,13 @@ export default function PatientPortal() {
                                         </h4>
                                         <p className="text-body-md text-on-primary-container mb-6">Need to schedule a procedure? Submit a fast-track request for our surgical team.</p>
                                         <div className="space-y-4">
-                                            <div className="bg-white/10 p-4 rounded-xl border border-white/10 text-left">
+                                            <div className="bg-white/10 p-4 rounded-lg border border-white/10 text-left">
                                                 <p className="text-caption font-label-md text-secondary-fixed mb-1">Fast Track Process</p>
                                                 <p className="text-body-md text-white/90">Typical review time: 24-48 hours</p>
                                             </div>
                                             <button 
                                                 onClick={handleRequestSurgery}
-                                                className="w-full bg-white text-primary py-3 rounded-xl font-label-md hover:bg-secondary-fixed transition-colors"
+                                                className="w-full bg-white text-primary py-3 rounded-lg font-label-md hover:bg-secondary-fixed transition-colors"
                                             >
                                                 Start Request
                                             </button>
@@ -725,7 +739,7 @@ export default function PatientPortal() {
                                 {/* Right Column: Support & Tips */}
                                 <div className="lg:col-span-4 space-y-6 md:space-y-gutter">
                                     {/* Chat Support */}
-                                    <div className="glass-card rounded-3xl p-6 md:p-stack-md border-t-4 border-t-secondary">
+                                    <div className="glass-card rounded-2xl p-6 md:p-stack-md border-t-4 border-t-secondary">
                                         <div className="flex items-center gap-4 mb-6">
                                             <div className="relative">
                                                 <img
@@ -744,7 +758,7 @@ export default function PatientPortal() {
                                             {chatMessages.map((msg) => (
                                                 <div
                                                     key={msg.id}
-                                                    className={`p-3 rounded-2xl text-body-md ${msg.sender === 'user'
+                                                    className={`p-3 rounded-xl text-body-md ${msg.sender === 'user'
                                                             ? 'bg-primary text-white ml-6 text-right'
                                                             : 'bg-surface-container-low text-on-surface-variant mr-6 text-left italic'
                                                         }`}
@@ -771,8 +785,8 @@ export default function PatientPortal() {
                                     </div>
 
                                     {/* Health Tip Card */}
-                                    <div className="p-6 bg-tertiary-container rounded-3xl text-on-tertiary">
-                                        <span className="material-symbols-outlined text-tertiary-fixed text-4xl mb-4">lightbulb</span>
+                                    <div className="p-6 bg-tertiary-container rounded-2xl text-on-tertiary">
+                                        <span className="material-symbols-outlined text-tertiary-fixed text-3xl mb-4">lightbulb</span>
                                         <h5 className="font-headline-md mb-2 text-white">Winter ENT Care</h5>
                                         <p className="text-body-md text-white/80 mb-4">Keep indoor humidity between 30% and 50% to prevent dry nasal passages during the colder months.</p>
                                         <a className="text-tertiary-fixed font-label-md flex items-center gap-1 hover:gap-2 transition-all" href="#">
@@ -787,7 +801,7 @@ export default function PatientPortal() {
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-gutter">
                                 <div className="lg:col-span-12 space-y-6 md:space-y-gutter">
                                     {/* Book Appointment Widget */}
-                                    <div className="glass-card rounded-3xl p-6 md:p-stack-md">
+                                    <div className="glass-card rounded-2xl p-6 md:p-stack-md">
                                         <div className="flex justify-between items-center mb-6">
                                             <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-secondary">add_task</span>
@@ -801,7 +815,7 @@ export default function PatientPortal() {
                                                     <select
                                                         value={specialist}
                                                         onChange={(e) => setSpecialist(e.target.value)}
-                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                                     >
                                                         {doctors.map(doc => (
                                                             <option key={doc._id} value={doc._id}>
@@ -813,7 +827,7 @@ export default function PatientPortal() {
                                                 <div>
                                                     <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Preferred Date</label>
                                                     <input
-                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                                         type="date"
                                                         value={bookingDate}
                                                         min={todayStr}
@@ -825,7 +839,7 @@ export default function PatientPortal() {
                                                     <select
                                                         value={bookingTime}
                                                         onChange={(e) => setBookingTime(e.target.value)}
-                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                                     >
                                                         <option value="08:00 AM">08:00 AM</option>
                                                         <option value="08:30 AM">08:30 AM</option>
@@ -853,7 +867,7 @@ export default function PatientPortal() {
                                                     <select
                                                         value={bookingReason}
                                                         onChange={(e) => setBookingReason(e.target.value)}
-                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                                     >
                                                         <option value="Clinical Consultation">Clinical Consultation</option>
                                                         <option value="Ear Ache / Infection">Ear Ache / Infection</option>
@@ -868,7 +882,7 @@ export default function PatientPortal() {
                                                 <div className="transition-all duration-300">
                                                     <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Specify Custom Reason</label>
                                                     <input
-                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
+                                                        className="w-full bg-white/50 border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-secondary/50 outline-none text-body-md"
                                                         type="text"
                                                         placeholder="E.g., Difficulty swallowing, ear ringing, sinus pressure..."
                                                         value={customReason}
@@ -878,7 +892,7 @@ export default function PatientPortal() {
                                             )}
                                             <div className="flex justify-end pt-2">
                                                 <button
-                                                    className="w-full sm:w-auto px-8 py-3 btn-primary-gradient text-white rounded-xl font-label-md shadow-lg shadow-primary/10"
+                                                    className="w-full sm:w-auto px-5 py-2 btn-primary-gradient text-white rounded-lg font-label-md shadow-lg shadow-primary/10"
                                                     type="submit"
                                                 >
                                                     Book Now
@@ -888,7 +902,7 @@ export default function PatientPortal() {
                                     </div>
 
                                     {/* Booking History List */}
-                                    <div className="glass-card rounded-3xl p-6 md:p-stack-md overflow-hidden">
+                                    <div className="glass-card rounded-2xl p-6 md:p-stack-md overflow-hidden">
                                         <div className="flex justify-between items-center mb-6">
                                             <h4 className="text-headline-sm md:text-headline-md font-headline-md text-primary">All Appointments</h4>
                                         </div>
@@ -896,15 +910,22 @@ export default function PatientPortal() {
                                             {bookings.map((b) => (
                                                 <div
                                                     key={b.id}
-                                                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/40 rounded-2xl border border-white/60 hover:bg-white/60 transition-colors gap-4"
+                                                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/40 rounded-xl border border-white/60 hover:bg-white/60 transition-colors gap-4"
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`w-12 h-12 ${b.bgClass} rounded-xl flex items-center justify-center ${b.iconColor}`}>
+                                                        <div className={`w-12 h-12 ${b.bgClass} rounded-lg flex items-center justify-center ${b.iconColor}`}>
                                                             <span className="material-symbols-outlined">{b.icon}</span>
                                                         </div>
-                                                        <div>
-                                                            <p className="font-label-md text-primary">{b.title}</p>
-                                                            <p className="text-caption text-on-surface-variant">{b.date}</p>
+                                                        <div className="flex-grow min-w-0">
+                                                            <h4 className="font-label-md text-body-md font-bold text-on-surface truncate">
+                                                                {b.title}
+                                                            </h4>
+                                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-caption text-on-surface-variant">
+                                                                <div className="flex items-center gap-1">
+                                                                    <span className="material-symbols-outlined text-[14px]">event</span>
+                                                                    <span>{parseLocalDate(b.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <span className={`px-3 py-1 rounded-full text-caption font-label-md ${b.statusColor}`}>{b.status}</span>
@@ -957,7 +978,7 @@ export default function PatientPortal() {
                             }`}
                         id="notification-center"
                     >
-                        <div className="p-6 md:p-8 h-full flex flex-col text-left">
+                        <div className="p-6 md:p-5 h-full flex flex-col text-left">
                             <div className="flex justify-between items-center mb-6 flex-shrink-0">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-primary">notifications_active</span>
@@ -972,7 +993,7 @@ export default function PatientPortal() {
                                     getLiveNotifications().map(notif => (
                                         <div
                                             key={notif.id}
-                                            className={`p-4 rounded-2xl border-l-4 shadow-sm flex items-start gap-3 transition-all ${notif.badgeColor}`}
+                                            className={`p-4 rounded-xl border-l-4 shadow-sm flex items-start gap-3 transition-all ${notif.badgeColor}`}
                                         >
                                             <span className="material-symbols-outlined text-[20px] mt-0.5">{notif.icon}</span>
                                             <div className="text-left flex-grow min-w-0">
@@ -987,7 +1008,7 @@ export default function PatientPortal() {
                                     ))
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-on-surface-variant/50 gap-2 py-12">
-                                        <span className="material-symbols-outlined text-4xl">notifications_off</span>
+                                        <span className="material-symbols-outlined text-3xl">notifications_off</span>
                                         <p className="text-body-md font-label-md">No current activity notifications</p>
                                     </div>
                                 )}
@@ -998,13 +1019,13 @@ export default function PatientPortal() {
                     {/* Profile Update Modal */}
                     {showProfileModal && (
                         <div className="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left">
+                            <div className="bg-white rounded-2xl p-6 md:p-5 max-w-md w-full shadow-2xl border border-outline-variant/20 relative overflow-hidden text-left">
                                 {/* Decorative background blob */}
                                 <div className="absolute top-[-50px] right-[-50px] w-[150px] h-[150px] bg-primary/10 rounded-full blur-xl pointer-events-none"></div>
                                 
                                 <div className="relative z-10 flex flex-col gap-4">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                             <span className="material-symbols-outlined">account_box</span>
                                         </div>
                                         <div>
@@ -1021,7 +1042,7 @@ export default function PatientPortal() {
                                         <div>
                                             <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Phone Number</label>
                                             <input
-                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
                                                 type="tel"
                                                 placeholder="+1 (555) 000-0000"
                                                 value={profilePhone}
@@ -1033,7 +1054,7 @@ export default function PatientPortal() {
                                         <div>
                                             <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Date of Birth</label>
                                             <input
-                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
                                                 type="date"
                                                 value={profileDob}
                                                 onChange={(e) => setProfileDob(e.target.value)}
@@ -1045,7 +1066,7 @@ export default function PatientPortal() {
                                             <div>
                                                 <label className="block text-caption font-label-md mb-2 text-on-surface-variant uppercase tracking-wider">Gender</label>
                                                 <select
-                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
+                                                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg py-3 px-4 min-h-[48px] focus:ring-2 focus:ring-primary/30 outline-none text-body-md"
                                                     value={profileGender}
                                                     onChange={(e) => setProfileGender(e.target.value)}
                                                     required
@@ -1060,13 +1081,13 @@ export default function PatientPortal() {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowProfileModal(false)}
-                                                className="flex-1 py-3 border-2 border-outline-variant/40 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container transition-all"
+                                                className="flex-1 py-3 border-2 border-outline-variant/40 rounded-lg font-label-md text-on-surface-variant hover:bg-surface-container transition-all"
                                             >
                                                 Later
                                             </button>
                                             <button
                                                 type="submit"
-                                                className="flex-1 py-3 btn-primary-gradient text-white rounded-xl font-label-md shadow-lg shadow-primary/10"
+                                                className="flex-1 py-3 btn-primary-gradient text-white rounded-lg font-label-md shadow-lg shadow-primary/10"
                                             >
                                                 Save Changes
                                             </button>
@@ -1080,11 +1101,11 @@ export default function PatientPortal() {
                     {/* Loader Overlay */}
                     {isLoading && (
                         <div className="fixed inset-0 bg-on-surface/30 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
-                            <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col items-center gap-4">
+                            <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-outline-variant/30 flex flex-col items-center gap-4">
                                 <img 
                                     src="/logo-ent.jpeg" 
                                     alt="PalmCrest Logo" 
-                                    className="w-16 h-16 rounded-2xl shadow-md animate-pulse object-contain" 
+                                    className="w-16 h-16 rounded-xl shadow-md animate-pulse object-contain" 
                                 />
                                 <div className="flex flex-col items-center gap-1">
                                     <span className="font-label-md text-primary font-bold tracking-wide uppercase text-xs">PalmCrest ENT</span>

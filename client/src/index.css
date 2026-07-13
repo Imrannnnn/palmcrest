@@ -20,8 +20,8 @@ body {
 .glass-card, .glass {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 4px 24px 0 rgba(0, 51, 54, 0.05), 0 1px 2px 0 rgba(0,0,0,0.03), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.01);
 }
 
 /* Custom Buttons with Cyan-Teal Gradients */
@@ -31,8 +31,8 @@ body {
 }
 
 .btn-primary:hover, .btn-primary-gradient:hover, .btn-gradient:hover {
-    box-shadow: 0 4px 15px rgba(0, 75, 80, 0.15), 0 0 20px rgba(0, 195, 218, 0.35);
-    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(0, 75, 80, 0.1), 0 0 15px rgba(0, 195, 218, 0.2);
+    transform: translateY(-1px);
 }
 
 /* Floating Atmospheric Blobs */
@@ -65,14 +65,11 @@ body {
 
 /* ── Faint Semi-Transparent Light Blue Glassmorphic Surfaces ── */
 .glass-portal {
-    background: rgba(240, 252, 255, 0.72);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
-    border: 1px solid rgba(0, 195, 218, 0.22);
-    box-shadow: 
-        0 24px 64px -12px rgba(0, 75, 80, 0.08), 
-        0 8px 24px -8px rgba(0, 195, 218, 0.05),
-        inset 0 1px 1px 0 rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 
@@ -205,9 +202,9 @@ body {
 }
 
 .glow-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px -15px rgba(0, 75, 80, 0.15), 0 0 30px -5px rgba(0, 195, 218, 0.25);
-    border-color: rgba(0, 195, 218, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 195, 218, 0.15);
 }
 
 .glow-card:hover::after {
@@ -284,7 +281,7 @@ nav {
 
 /* Hero image card hover shadow */
 .hero-card-shadow {
-    box-shadow: 0 32px 80px -12px rgba(0, 75, 80, 0.25), 0 0 0 4px rgba(255,255,255,0.9);
+    box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.08);
 }
 
 /* Atmospheric Wave Background */

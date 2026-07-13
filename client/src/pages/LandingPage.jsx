@@ -130,7 +130,7 @@ export default function LandingPage() {
                 }`}>
                 <div className="flex justify-between items-center px-6 md:px-12 max-w-[1440px] mx-auto">
                     <div className="flex items-center">
-                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-12 sm:h-14 w-auto object-contain rounded-xl shadow-sm" />
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-12 sm:h-14 w-auto object-contain rounded-lg shadow-sm" />
                     </div>
                     <div className="hidden md:flex items-center gap-8">
                         {['Services', 'Specialists', 'Emergency', 'About'].map(item => (
@@ -138,7 +138,7 @@ export default function LandingPage() {
                         ))}
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-xl hover:bg-primary/5 text-primary transition-colors" onClick={toggleMobileNav}>
+                        <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-lg hover:bg-primary/5 text-primary transition-colors" onClick={toggleMobileNav}>
                             <span className="material-symbols-outlined">menu</span>
                         </button>
                         <button
@@ -178,7 +178,7 @@ export default function LandingPage() {
 
                             {/* Headline */}
                             <div>
-                                <h1 className="font-display leading-[1.04] tracking-tight font-extrabold">
+                                <h1 className="font-display leading-[1.04] tracking-tight font-bold">
                                     <span className="block text-[40px] sm:text-[52px] md:text-[60px] lg:text-[64px] text-gradient-primary">Advanced Ear, Nose</span>
                                     <span className="block text-[40px] sm:text-[52px] md:text-[60px] lg:text-[64px]">
                                         &amp; <span className="bg-gradient-to-r from-secondary via-[#b87800] to-secondary bg-clip-text text-transparent">Throat Care</span>
@@ -193,12 +193,12 @@ export default function LandingPage() {
                             <div className="flex flex-col sm:flex-row gap-3 pt-1 w-full max-w-sm mx-auto lg:mx-0 lg:max-w-none">
                                 <button
                                     onClick={handleBookClick}
-                                    className="btn-primary w-full text-white px-8 py-4 rounded-2xl font-bold text-sm uppercase tracking-wider min-h-[52px] shadow-lg shadow-primary/15 hover:shadow-primary/30 flex items-center justify-center gap-2.5 transition-all duration-300"
+                                    className="btn-primary w-full text-white px-6 py-4 rounded-xl font-bold text-sm uppercase tracking-wider min-h-[52px] shadow-lg shadow-primary/15 hover:shadow-primary/30 flex items-center justify-center gap-2.5 transition-all duration-300"
                                 >
                                     <span className="material-symbols-outlined text-[20px]">calendar_today</span>
                                     Book Appointment
                                 </button>
-                                <button className="bg-white/75 w-full backdrop-blur-md border border-outline-variant/30 text-primary px-8 py-4 rounded-2xl font-bold text-sm hover:bg-white hover:border-primary/20 hover:shadow-lg transition-all min-h-[52px] flex items-center justify-center gap-2.5">
+                                <button className="bg-white/75 w-full backdrop-blur-md border border-outline-variant/30 text-primary px-6 py-4 rounded-xl font-bold text-sm hover:bg-white hover:border-primary/20 hover:shadow-lg transition-all min-h-[52px] flex items-center justify-center gap-2.5">
                                     <span className="material-symbols-outlined text-[20px]">groups</span>
                                     Meet Our Specialists
                                 </button>
@@ -213,14 +213,14 @@ export default function LandingPage() {
                                 <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-[0_32px_80px_-12px_rgba(0,75,80,0.25)] bg-primary border-4 border-white/90 group">
                                     <img src="/ent_hero.png" alt="PalmCrest Clinical Facility" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/10 to-transparent"></div>
-                                    <div className="absolute bottom-5 left-5 right-5 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                                    <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/15">
                                         <p className="text-white/70 text-[10px] font-bold uppercase tracking-[0.15em] mb-1">Sanctuary Facility</p>
                                         <p className="text-white text-sm font-semibold leading-snug">State-of-the-art diagnostic & clinical consultation suites.</p>
                                     </div>
                                 </div>
 
                                 {/* Floating Widget 3 — Rating */}
-                                <div className="absolute -left-4 sm:-left-8 bottom-20 z-20 bg-white/95 backdrop-blur-xl px-4 py-3 rounded-2xl shadow-xl border border-white/70 animate-float-slow" style={{ animationDelay: '2s' }}>
+                                <div className="absolute -left-4 sm:-left-8 bottom-20 z-20 bg-white/95 backdrop-blur-xl px-4 py-3 rounded-xl shadow-xl border border-white/70 animate-float-slow" style={{ animationDelay: '2s' }}>
                                     <div className="flex gap-0.5 mb-1">
                                         {[1, 2, 3, 4, 5].map(s => (
                                             <span key={s} className="material-symbols-outlined text-[14px] text-amber-400" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -250,7 +250,7 @@ export default function LandingPage() {
                 <div className="px-6 md:px-12 max-w-[1440px] mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                         {/* Large image */}
-                        <div className="md:col-span-7 rounded-3xl overflow-hidden glass-card h-[280px] sm:h-[400px] md:h-[520px] relative group">
+                        <div className="md:col-span-7 rounded-2xl overflow-hidden glass-card h-[280px] sm:h-[400px] md:h-[520px] relative group">
                             <img alt="Specialist" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="/1p.jpeg" />
                             <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent"></div>
                             <div className="absolute bottom-6 left-6 right-6">
@@ -261,9 +261,9 @@ export default function LandingPage() {
 
                         <div className="md:col-span-5 flex flex-col gap-5">
                             {/* Tech card */}
-                            <div className="glass-card p-7 rounded-3xl flex-1 flex flex-col justify-between glow-card">
+                            <div className="glass-card p-6 rounded-2xl flex-1 flex flex-col justify-between glow-card">
                                 <div>
-                                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-5">
+                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-5">
                                         <span className="material-symbols-outlined text-primary text-[24px]">biotech</span>
                                     </div>
                                     <h4 className="font-bold text-primary text-xl mb-2">Pioneering Technology</h4>
@@ -275,9 +275,9 @@ export default function LandingPage() {
                             </div>
 
                             {/* Ethics card */}
-                            <div className="glass-card p-7 rounded-3xl flex-1 flex flex-col justify-between glow-card">
+                            <div className="glass-card p-6 rounded-2xl flex-1 flex flex-col justify-between glow-card">
                                 <div>
-                                    <div className="w-12 h-12 bg-secondary/10 rounded-2xl flex items-center justify-center mb-5">
+                                    <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center mb-5">
                                         <span className="material-symbols-outlined text-secondary text-[24px]">verified_user</span>
                                     </div>
                                     <h4 className="font-bold text-primary text-xl mb-2">Patient-First Ethics</h4>
@@ -301,7 +301,7 @@ export default function LandingPage() {
                 <div className="px-6 md:px-12 max-w-[1440px] mx-auto">
                     <div className="text-center mb-12 md:mb-16">
                         <span className="inline-block text-secondary text-[11px] font-bold uppercase tracking-[0.22em] mb-3">Our Expertise</span>
-                        <h2 className="font-display text-3xl md:text-5xl font-extrabold text-primary leading-tight">Specialized ENT Solutions</h2>
+                        <h2 className="font-display text-2xl md:text-4xl font-bold text-primary leading-tight">Specialized ENT Solutions</h2>
                         <p className="text-on-surface-variant mt-4 max-w-xl mx-auto text-base leading-relaxed">Comprehensive care spanning the full spectrum of ear, nose, and throat medicine — from routine checks to complex surgical interventions.</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -310,10 +310,10 @@ export default function LandingPage() {
                             { icon: 'air', title: 'Nasal Health', color: 'bg-secondary/8', iconColor: 'text-secondary', desc: 'Expert treatment for chronic sinusitis, allergic rhinitis, and functional rhinoplasty using minimally invasive endoscopy.', tag: 'Rhinology' },
                             { icon: 'record_voice_over', title: 'Throat & Voice', color: 'bg-tertiary/8', iconColor: 'text-tertiary', desc: 'Specialized care for vocal fold disorders, swallowing difficulties, and comprehensive head and neck oncology screening.', tag: 'Laryngology' },
                         ].map((svc) => (
-                            <div key={svc.title} className="glow-card glass-card p-8 rounded-3xl flex flex-col gap-6 group">
+                            <div key={svc.title} className="glow-card glass-card p-6 rounded-2xl flex flex-col gap-6 group">
                                 <div>
                                     <div className="flex items-center justify-between mb-5">
-                                        <div className={`w-14 h-14 ${svc.color} rounded-2xl flex items-center justify-center`}>
+                                        <div className={`w-14 h-14 ${svc.color} rounded-xl flex items-center justify-center`}>
                                             <span className={`material-symbols-outlined text-[28px] ${svc.iconColor}`}>{svc.icon}</span>
                                         </div>
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/30 px-3 py-1 rounded-full">{svc.tag}</span>
@@ -339,7 +339,7 @@ export default function LandingPage() {
                 <div className="px-6 md:px-12 max-w-[1440px] mx-auto">
                     <div className="text-center mb-10 md:mb-14">
                         <span className="inline-block text-secondary text-[11px] font-bold uppercase tracking-[0.22em] mb-3">Clinical Deep-Dive</span>
-                        <h2 className="font-display text-3xl md:text-5xl font-extrabold text-primary">Interactive Department Explorer</h2>
+                        <h2 className="font-display text-2xl md:text-4xl font-bold text-primary">Interactive Department Explorer</h2>
                         <p className="text-on-surface-variant mt-4 max-w-lg mx-auto text-base">Explore cutting-edge diagnostic tools and board-certified treatments at PalmCrest.</p>
                     </div>
 
@@ -349,7 +349,7 @@ export default function LandingPage() {
                             <button
                                 key={t.id}
                                 onClick={() => setActiveExploreTab(t.id)}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-300 ${activeExploreTab === t.id
+                                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${activeExploreTab === t.id
                                     ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.03]'
                                     : 'bg-white/70 backdrop-blur-md text-on-surface-variant hover:text-primary hover:bg-white border border-outline-variant/20 hover:shadow-md'
                                     }`}
@@ -364,7 +364,7 @@ export default function LandingPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
                         {/* Left card */}
                         <div className="lg:col-span-5">
-                            <div className="glass-card rounded-3xl p-7 h-full border border-white/60 relative overflow-hidden">
+                            <div className="glass-card rounded-2xl p-6 h-full border border-white/60 relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full pointer-events-none"></div>
                                 <span className="bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest inline-block mb-5">{dept.label}</span>
                                 <h3 className="font-display text-2xl font-bold text-primary mb-3">{dept.title}</h3>
@@ -393,7 +393,7 @@ export default function LandingPage() {
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {dept.diagnostics.map(d => (
-                                        <div key={d.name} className="bg-white rounded-2xl p-5 border border-outline-variant/20 hover:border-primary/20 hover:shadow-md transition-all cursor-default">
+                                        <div key={d.name} className="bg-white rounded-xl p-5 border border-outline-variant/20 hover:border-primary/20 hover:shadow-md transition-all cursor-default">
                                             <p className="font-bold text-primary text-sm mb-1.5">{d.name}</p>
                                             <p className="text-on-surface-variant text-[11px] leading-relaxed">{d.desc}</p>
                                         </div>
@@ -409,7 +409,7 @@ export default function LandingPage() {
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {dept.therapeutics.map(t => (
-                                        <div key={t.name} className="bg-white rounded-2xl p-5 border border-outline-variant/20 hover:border-secondary/30 hover:shadow-md transition-all cursor-default">
+                                        <div key={t.name} className="bg-white rounded-xl p-5 border border-outline-variant/20 hover:border-secondary/30 hover:shadow-md transition-all cursor-default">
                                             <p className="font-bold text-primary text-sm mb-1.5">{t.name}</p>
                                             <p className="text-on-surface-variant text-[11px] leading-relaxed">{t.desc}</p>
                                         </div>
@@ -418,12 +418,12 @@ export default function LandingPage() {
                             </div>
 
                             {/* CTA strip */}
-                            <div className="bg-primary rounded-2xl p-5 flex items-center justify-between gap-4">
+                            <div className="bg-primary rounded-xl p-5 flex items-center justify-between gap-4">
                                 <div>
                                     <p className="text-white font-bold text-sm">Ready to consult our {dept.label.split(' ')[0]} experts?</p>
                                     <p className="text-white/70 text-xs mt-0.5">Same-week appointments available.</p>
                                 </div>
-                                <button onClick={handleBookClick} className="flex-shrink-0 bg-white text-primary px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-white/90 transition-all flex items-center gap-2">
+                                <button onClick={handleBookClick} className="flex-shrink-0 bg-white text-primary px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-white/90 transition-all flex items-center gap-2">
                                     Book Now <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                                 </button>
                             </div>
@@ -442,20 +442,20 @@ export default function LandingPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                         {/* Image side */}
                         <div className="relative">
-                            <div className="relative rounded-3xl overflow-hidden aspect-[4/4.5] shadow-[0_32px_80px_-12px_rgba(0,75,80,0.2)]">
+                            <div className="relative rounded-2xl overflow-hidden aspect-[4/4.5] shadow-[0_32px_80px_-12px_rgba(0,75,80,0.2)]">
                                 <img alt="PalmCrest Sanctuary" className="w-full h-full object-cover" src="/2p.jpeg" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-primary/50 via-transparent to-transparent"></div>
                             </div>
 
                             {/* Stat badge */}
-                            <div className="absolute -bottom-5 -right-5 md:-bottom-8 md:-right-8 glass-card p-5 md:p-7 rounded-2xl shadow-2xl border border-white/60 text-center">
-                                <p className="font-display text-3xl md:text-4xl font-extrabold text-primary">25+</p>
+                            <div className="absolute -bottom-5 -right-5 md:-bottom-8 md:-right-8 glass-card p-5 md:p-5 rounded-xl shadow-2xl border border-white/60 text-center">
+                                <p className="font-display text-2xl md:text-3xl font-bold text-primary">25+</p>
                                 <p className="text-[10px] md:text-xs text-on-surface-variant uppercase tracking-wider font-bold mt-1">Years of<br />Clinical Pedigree</p>
                             </div>
 
                             {/* Accent badge */}
-                            <div className="absolute -top-5 -left-5 md:-top-6 md:-left-6 glass-card p-4 rounded-2xl shadow-xl border border-white/60 flex items-center gap-3">
-                                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                            <div className="absolute -top-5 -left-5 md:-top-6 md:-left-6 glass-card p-4 rounded-xl shadow-xl border border-white/60 flex items-center gap-3">
+                                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                                     <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>award_star</span>
                                 </div>
                                 <div>
@@ -468,7 +468,7 @@ export default function LandingPage() {
                         {/* Content side */}
                         <div>
                             <span className="inline-block text-secondary text-[11px] font-bold uppercase tracking-[0.22em] mb-4">Our Story</span>
-                            <h2 className="font-display text-3xl md:text-5xl font-extrabold text-primary leading-tight mb-6">
+                            <h2 className="font-display text-2xl md:text-4xl font-bold text-primary leading-tight mb-6">
                                 An Advanced<br />Sanctuary of Care
                             </h2>
                             <p className="text-on-surface-variant text-base leading-relaxed mb-8">
@@ -482,7 +482,7 @@ export default function LandingPage() {
                                     { icon: 'smart_toy', title: 'AI-Assisted Diagnostics', desc: 'On-site surgical suites equipped with next-generation AI-assisted diagnostic tools.' },
                                 ].map(item => (
                                     <li key={item.title} className="flex items-start gap-4">
-                                        <div className="w-10 h-10 bg-primary/8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <div className="w-10 h-10 bg-primary/8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                                             <span className="material-symbols-outlined text-primary text-[20px]">{item.icon}</span>
                                         </div>
                                         <div>
@@ -493,7 +493,7 @@ export default function LandingPage() {
                                 ))}
                             </ul>
 
-                            <button className="btn-primary text-white px-8 py-4 rounded-2xl font-bold text-sm uppercase tracking-wider min-h-[52px] flex items-center gap-2.5 shadow-lg shadow-primary/15 hover:shadow-primary/30 transition-all duration-300">
+                            <button className="btn-primary text-white px-6 py-4 rounded-xl font-bold text-sm uppercase tracking-wider min-h-[52px] flex items-center gap-2.5 shadow-lg shadow-primary/15 hover:shadow-primary/30 transition-all duration-300">
                                 <span className="material-symbols-outlined text-[20px]">history_edu</span>
                                 Our Full History
                             </button>
@@ -515,7 +515,7 @@ export default function LandingPage() {
                 <div className="px-6 md:px-12 max-w-[1440px] mx-auto">
                     <div className="text-center mb-12 md:mb-14">
                         <span className="inline-block text-secondary text-[11px] font-bold uppercase tracking-[0.22em] mb-3">Patient Stories</span>
-                        <h2 className="font-display text-3xl md:text-5xl font-extrabold text-primary">Voices of Recovery</h2>
+                        <h2 className="font-display text-2xl md:text-4xl font-bold text-primary">Voices of Recovery</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -533,7 +533,7 @@ export default function LandingPage() {
                                 name: 'Amara Osei-Bonsu', role: 'Voice Therapy Patient', rating: 5, initials: 'AO',
                             },
                         ].map((t, i) => (
-                            <div key={i} className="glass-card p-7 rounded-3xl flex flex-col justify-between gap-5 glow-card">
+                            <div key={i} className="glass-card p-6 rounded-2xl flex flex-col justify-between gap-5 glow-card">
                                 <div>
                                     {/* Stars */}
                                     <div className="flex gap-0.5 mb-4">
@@ -559,19 +559,19 @@ export default function LandingPage() {
 
             {/* ── EMERGENCY CTA ── */}
             <section className="px-6 md:px-12 max-w-[1440px] mx-auto py-16 md:py-24 reveal">
-                <div className="bg-primary rounded-[2rem] p-8 sm:p-12 md:p-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="bg-primary rounded-[2rem] p-6 sm:p-12 md:p-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
                     {/* Decorative mesh */}
                     <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.4) 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[60px] pointer-events-none"></div>
 
                     <div className="relative z-10 text-white max-w-xl">
                         <span className="bg-error px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest mb-5 inline-block">24/7 Priority Access</span>
-                        <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold mb-5 leading-tight">Emergency ENT Portal</h2>
+                        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-5 leading-tight">Emergency ENT Portal</h2>
                         <p className="text-white/75 text-base leading-relaxed">Acute ear trauma, sudden hearing loss, or airway emergencies require immediate specialist intervention. Our priority unit is always standing by.</p>
                     </div>
 
                     <div className="relative z-10 flex flex-col items-center gap-3 w-full md:w-auto flex-shrink-0">
-                        <a className="bg-white text-primary px-8 py-5 md:px-12 md:py-6 rounded-2xl font-display text-lg sm:text-xl flex items-center justify-center gap-4 hover:scale-[1.03] transition-transform w-full md:w-auto shadow-xl" href="tel:1-800-PALM-ENT">
+                        <a className="bg-white text-primary px-6 py-5 md:px-12 md:py-6 rounded-xl font-display text-lg sm:text-xl flex items-center justify-center gap-4 hover:scale-[1.03] transition-transform w-full md:w-auto shadow-xl" href="tel:1-800-PALM-ENT">
                             <span className="material-symbols-outlined text-primary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>call</span>
                             +1-800-PALM-ENT
                         </a>
@@ -585,7 +585,7 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 px-6 md:px-12 max-w-[1440px] mx-auto mb-12">
                     <div>
                         <div className="flex items-center gap-3 mb-5">
-                            <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-xl" />
+                            <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-lg" />
                             <span className="font-bold text-primary text-lg">PalmCrest ENT</span>
                         </div>
                         <p className="text-on-surface-variant text-sm leading-relaxed">The Advanced Sanctuary of Care. Leading ENT medicine through innovation and empathy.</p>
@@ -642,7 +642,7 @@ export default function LandingPage() {
                             <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-9 w-auto object-contain rounded-lg" />
                             <span className="font-bold text-primary text-lg">PalmCrest</span>
                         </div>
-                        <button className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-primary/5 text-primary transition-colors" onClick={toggleMobileNav}>
+                        <button className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-primary/5 text-primary transition-colors" onClick={toggleMobileNav}>
                             <span className="material-symbols-outlined">close</span>
                         </button>
                     </div>
@@ -653,20 +653,20 @@ export default function LandingPage() {
                             { icon: 'emergency', label: 'Emergency' },
                             { icon: 'contact_support', label: 'Contact' },
                         ].map(item => (
-                            <a key={item.label} className="flex items-center gap-4 text-lg font-medium text-on-surface-variant hover:text-primary hover:bg-primary/5 transition-all py-3 px-4 rounded-2xl" href="#" onClick={toggleMobileNav}>
+                            <a key={item.label} className="flex items-center gap-4 text-lg font-medium text-on-surface-variant hover:text-primary hover:bg-primary/5 transition-all py-3 px-4 rounded-xl" href="#" onClick={toggleMobileNav}>
                                 <span className="material-symbols-outlined text-primary">{item.icon}</span>
                                 {item.label}
                             </a>
                         ))}
                         <div className="border-t border-outline-variant/10 my-2"></div>
-                        <a className="flex items-center gap-4 text-lg font-semibold text-primary hover:bg-primary/5 transition-all py-3 px-4 rounded-2xl cursor-pointer"
+                        <a className="flex items-center gap-4 text-lg font-semibold text-primary hover:bg-primary/5 transition-all py-3 px-4 rounded-xl cursor-pointer"
                             onClick={() => { toggleMobileNav(); navigate('/portal'); }}>
                             <span className="material-symbols-outlined text-primary">login</span>
                             Sign In
                         </a>
                     </div>
                     <div className="mt-auto">
-                        <button onClick={() => { toggleMobileNav(); handleBookClick(); }} className="w-full btn-primary text-white py-4 rounded-xl text-lg font-bold min-h-[52px] flex items-center justify-center gap-2">
+                        <button onClick={() => { toggleMobileNav(); handleBookClick(); }} className="w-full btn-primary text-white py-4 rounded-lg text-lg font-bold min-h-[52px] flex items-center justify-center gap-2">
                             <span className="material-symbols-outlined text-[20px]">calendar_today</span>
                             Book Appointment
                         </button>

@@ -190,7 +190,7 @@ export default function AuthPortal() {
     };
 
     const getInputClasses = (field) => {
-        let baseClasses = "w-full bg-white/40 border border-[#00c3da]/25 rounded-xl py-3 px-4 pr-12 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none ";
+        let baseClasses = "w-full bg-white/40 border border-[#00c3da]/25 rounded-lg py-3 px-4 pr-12 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none ";
         if (errors[field]) {
             return baseClasses + "border-error focus:border-error focus:ring-error/10 text-error";
         }
@@ -201,7 +201,7 @@ export default function AuthPortal() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center relative z-0 px-4 py-8 md:py-12 md:px-6 font-body-md text-body-md">
+        <div className="min-h-screen flex items-center justify-center relative z-0 px-4 py-6 md:py-12 md:px-6 font-body-md text-body-md">
             {/* Atmospheric Background */}
             <div className="absolute inset-0 z-[-2] overflow-hidden pointer-events-none">
                 <div className="absolute rounded-full filter blur-[120px] bg-[#00c3da]/[0.15] top-[-10%] left-[-10%]" style={{ width: '800px', height: '800px' }}></div>
@@ -218,7 +218,7 @@ export default function AuthPortal() {
             </div>
 
             {/* Main Container */}
-            <main className="w-full max-w-[1000px] grid md:grid-cols-2 glass-portal rounded-3xl overflow-hidden shadow-2xl relative">
+            <main className="w-full max-w-[1000px] grid md:grid-cols-2 glass-portal rounded-2xl overflow-hidden shadow-2xl relative">
                 {/* Left Side: Branding & Image */}
                 <section className="hidden md:flex flex-col justify-between p-12 bg-gradient-to-br from-primary via-[#004b50] to-[#008f9f] relative overflow-hidden">
                     {/* Faint Background Image */}
@@ -236,9 +236,9 @@ export default function AuthPortal() {
                     <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[400px] h-[400px] border-[40px] border-white/5 rounded-full pointer-events-none -ml-[230px] z-0"></div>
 
                     <div className="relative z-10 text-left flex items-center gap-4">
-                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-14 md:h-16 w-auto object-contain shadow-md rounded-2xl border border-white/25" />
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-14 md:h-16 w-auto object-contain shadow-md rounded-xl border border-white/25" />
                         <div>
-                            <h1 className="font-headline-lg text-headline-lg text-white mb-0.5 leading-tight font-extrabold tracking-tight">PalmCrest ENT</h1>
+                            <h1 className="font-headline-lg text-headline-lg text-white mb-0.5 leading-tight font-bold tracking-tight">PalmCrest ENT</h1>
                             <p className="font-body-md text-caption text-primary-fixed-dim font-bold tracking-widest uppercase">Clinical Excellence</p>
                         </div>
                     </div>
@@ -262,9 +262,9 @@ export default function AuthPortal() {
                 <section className="p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left h-full bg-transparent relative z-10">
                     {/* Mobile Logo Branding */}
                     <div className="flex md:hidden items-center gap-3 mb-6">
-                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-xl border border-white/20" />
+                        <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-lg border border-white/20" />
                         <div>
-                            <h1 className="font-headline-sm text-headline-sm text-primary leading-none font-extrabold">PalmCrest ENT</h1>
+                            <h1 className="font-headline-sm text-headline-sm text-primary leading-none font-bold">PalmCrest ENT</h1>
                             <p className="text-[10px] text-on-surface-variant font-bold tracking-wider uppercase mt-1">Clinical Excellence</p>
                         </div>
                     </div>
@@ -316,7 +316,7 @@ export default function AuthPortal() {
 
                             <form className="space-y-5" onSubmit={handleSubmit} noValidate>
                                 {errors.submit && (
-                                    <div className="bg-error/10 text-error p-3.5 rounded-xl border border-error/25 font-label-md text-caption text-left flex items-center gap-2 mb-2 animate-slide-up">
+                                    <div className="bg-error/10 text-error p-3.5 rounded-lg border border-error/25 font-label-md text-caption text-left flex items-center gap-2 mb-2 animate-slide-up">
                                         <span className="material-symbols-outlined text-[20px]">warning</span>
                                         <span>{errors.submit}</span>
                                     </div>
@@ -335,7 +335,7 @@ export default function AuthPortal() {
                                                     checked={role === r}
                                                     onChange={() => setRole(r)}
                                                 />
-                                                <div className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border transition-all text-center ${
+                                                <div className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-lg border transition-all text-center ${
                                                     role === r 
                                                     ? 'border-[#00c3da] bg-[#00c3da]/8 text-primary shadow-sm font-bold ring-2 ring-[#00c3da]/10' 
                                                     : 'border-[#00c3da]/20 text-on-surface-variant hover:bg-white/50 hover:border-[#00c3da]/50 hover:shadow-sm'
@@ -384,7 +384,7 @@ export default function AuthPortal() {
                                         <div className="space-y-1 animate-slide-up">
                                             <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Gender</label>
                                             <select
-                                                className="w-full bg-white/40 border border-[#00c3da]/25 rounded-xl py-3 px-4 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none"
+                                                className="w-full bg-white/40 border border-[#00c3da]/25 rounded-lg py-3 px-4 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none"
                                                 value={gender}
                                                 onChange={(e) => setGender(e.target.value)}
                                             >
@@ -398,7 +398,7 @@ export default function AuthPortal() {
                                         <div className="space-y-1 animate-slide-up">
                                             <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Specialization</label>
                                             <select
-                                                className="w-full bg-white/40 border border-[#00c3da]/25 rounded-xl py-3 px-4 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none"
+                                                className="w-full bg-white/40 border border-[#00c3da]/25 rounded-lg py-3 px-4 focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 backdrop-blur-[2px] transition-all font-body-md text-body-md text-on-surface outline-none"
                                                 value={specialization}
                                                 onChange={(e) => setSpecialization(e.target.value)}
                                             >
@@ -484,7 +484,7 @@ export default function AuthPortal() {
 
                                 {/* CTA Button */}
                                 <button
-                                    className="w-full py-3.5 rounded-xl text-white font-label-md text-label-md btn-gradient uppercase tracking-widest mt-4 flex items-center justify-center min-h-[48px] shadow-lg shadow-primary/10 hover:shadow-primary/30 focus:ring-4 focus:ring-primary/20 transition-all font-bold"
+                                    className="w-full py-3.5 rounded-lg text-white font-label-md text-label-md btn-gradient uppercase tracking-widest mt-4 flex items-center justify-center min-h-[48px] shadow-lg shadow-primary/10 hover:shadow-primary/30 focus:ring-4 focus:ring-primary/20 transition-all font-bold"
                                     type="submit"
                                     disabled={isSubmitting}
                                 >
@@ -541,13 +541,13 @@ export default function AuthPortal() {
                                             value={digit}
                                             onChange={(e) => handleOtpChange(index, e.target.value)}
                                             onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                                            className="w-9 h-11 sm:w-12 sm:h-14 text-center font-headline-md text-headline-md font-bold text-on-surface border border-[#00c3da]/25 rounded-xl focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 outline-none transition-all bg-white/40 backdrop-blur-[2px]"
+                                            className="w-9 h-11 sm:w-12 sm:h-14 text-center font-headline-md text-headline-md font-bold text-on-surface border border-[#00c3da]/25 rounded-lg focus:border-[#00c3da] focus:ring-4 focus:ring-[#00c3da]/15 outline-none transition-all bg-white/40 backdrop-blur-[2px]"
                                         />
                                     ))}
                                 </div>
                                 
                                 <button
-                                    className="w-full py-3.5 rounded-xl text-white font-label-md text-label-md btn-gradient uppercase tracking-widest flex items-center justify-center min-h-[48px] shadow-lg shadow-primary/10 hover:shadow-primary/30 focus:ring-4 focus:ring-primary/20 transition-all font-bold mt-4"
+                                    className="w-full py-3.5 rounded-lg text-white font-label-md text-label-md btn-gradient uppercase tracking-widest flex items-center justify-center min-h-[48px] shadow-lg shadow-primary/10 hover:shadow-primary/30 focus:ring-4 focus:ring-primary/20 transition-all font-bold mt-4"
                                     type="submit"
                                     disabled={isSubmitting || otp.join('').length < 6}
                                 >
@@ -584,11 +584,11 @@ export default function AuthPortal() {
             {/* Loader Overlay */}
             {isSubmitting && (
                 <div className="fixed inset-0 bg-on-surface/30 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
-                    <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col items-center gap-4">
+                    <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-outline-variant/30 flex flex-col items-center gap-4">
                         <img 
                             src="/logo-ent.jpeg" 
                             alt="PalmCrest Logo" 
-                            className="w-16 h-16 rounded-2xl shadow-md animate-pulse object-contain" 
+                            className="w-16 h-16 rounded-xl shadow-md animate-pulse object-contain" 
                         />
                         <div className="flex flex-col items-center gap-1">
                             <span className="font-label-md text-primary font-bold tracking-wide uppercase text-xs">PalmCrest ENT</span>
