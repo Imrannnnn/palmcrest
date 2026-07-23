@@ -54,25 +54,28 @@ describe('Appointments & Notes Routes Integration Tests', () => {
         select: jest.fn().mockResolvedValue(mockPatient)
       });
 
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toLocaleDateString('en-CA');
+
       const mockAppointment = {
         _id: 'appt123',
         patient: 'patient123',
         doctor: 'doctor456',
         title: 'Audiology Exam',
-        date: new Date(),
+        date: tomorrow,
         timeSlot: '10:30 AM',
         status: 'Pending'
       };
       Appointment.create.mockResolvedValueOnce(mockAppointment);
 
-      const todayStr = new Date().toLocaleDateString('en-CA');
       const response = await request(app)
         .post('/api/appointments')
         .set('Authorization', `Bearer ${token}`)
         .send({
           doctor: 'doctor456',
           title: 'Audiology Exam',
-          date: todayStr,
+          date: tomorrowStr,
           timeSlot: '10:30 AM'
         });
 
@@ -89,14 +92,17 @@ describe('Appointments & Notes Routes Integration Tests', () => {
         select: jest.fn().mockResolvedValue(mockDoctor)
       });
 
-      const todayStr = new Date().toLocaleDateString('en-CA');
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toLocaleDateString('en-CA');
+
       const response = await request(app)
         .post('/api/appointments')
         .set('Authorization', `Bearer ${token}`)
         .send({
           doctor: 'doctor456',
           title: 'Audiology Exam',
-          date: todayStr,
+          date: tomorrowStr,
           timeSlot: '10:30 AM'
         });
 
@@ -127,7 +133,45 @@ describe('Appointments & Notes Routes Integration Tests', () => {
         });
 
       expect(response.statusCode).toBe(400);
-      expect(response.body.message).toMatch(/cannot be in the past/i);
+      expect(response.body.message).toMatch(/past/i);
+    });
+
+    it('should reject appointment scheduling if date is today but the time slot has already passed', async () => {
+      const mockPatient = { _id: 'patient123', role: 'patient' };
+      const token = jwt.sign({ id: mockPatient._id, role: mockPatient.role }, JWT_SECRET);
+
+      Patient.findById = jest.fn().mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockPatient)
+      });
+
+      // Mock date to 2026-07-15 12:00 PM local time
+      const realDate = global.Date;
+      const mockTime = new realDate('2026-07-15T12:00:00').getTime();
+      global.Date = class extends realDate {
+        constructor(...args) {
+          if (args.length === 0) {
+            return new realDate(mockTime);
+          }
+          return new realDate(...args);
+        }
+      };
+
+      try {
+        const response = await request(app)
+          .post('/api/appointments')
+          .set('Authorization', `Bearer ${token}`)
+          .send({
+            doctor: 'doctor456',
+            title: 'Audiology Exam',
+            date: '2026-07-15',
+            timeSlot: '09:00 AM'
+          });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toMatch(/time slot that has already passed/i);
+      } finally {
+        global.Date = realDate;
+      }
     });
 
     it('should return appointments for the logged-in patient', async () => {

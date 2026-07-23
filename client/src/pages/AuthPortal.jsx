@@ -1,11 +1,57 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function AuthPortal() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [tab, setTab] = useState('login'); // 'login' | 'register'
     const [step, setStep] = useState('form'); // 'form' | 'verify'
     const [role, setRole] = useState('patient'); // 'patient' | 'doctor' | 'admin'
+
+    const roleParam = searchParams.get('role');
+    const tabParam = searchParams.get('tab');
+    const hideToggle = roleParam === 'admin' || (roleParam === 'doctor' && tabParam === 'register');
+
+    useEffect(() => {
+        if (roleParam === 'admin') {
+            setRole('admin');
+            setTab('login');
+        } else if (roleParam === 'doctor') {
+            setRole('doctor');
+            if (tabParam === 'register') {
+                setTab('register');
+            } else {
+                setTab('login');
+            }
+        } else {
+            setRole('patient');
+            if (tabParam === 'register') {
+                setTab('register');
+            } else {
+                setTab('login');
+            }
+        }
+    }, [searchParams, roleParam, tabParam]);
+
+    const showRoleOption = (r) => {
+        if (roleParam === 'admin') {
+            return r === 'admin';
+        }
+        if (roleParam === 'doctor') {
+            return r === 'doctor';
+        }
+        // Public portal
+        if (r === 'admin') {
+            return false;
+        }
+        if (r === 'doctor') {
+            if (tab === 'register') {
+                return false;
+            }
+            return true;
+        }
+        return true;
+    };
     
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
@@ -200,6 +246,40 @@ export default function AuthPortal() {
         return baseClasses;
     };
 
+    const getHeadingContent = () => {
+        if (role === 'admin') {
+            return {
+                title: "Welcome Back Admin",
+                description: "Sign in securely to access your administrative control panel."
+            };
+        }
+        if (role === 'doctor') {
+            if (tab === 'register') {
+                return {
+                    title: "Doctor Account Creation",
+                    description: "Register your practice credentials to join our clinical registry."
+                };
+            }
+            return {
+                title: "Welcome Back Doctor",
+                description: "Sign in securely to access your doctor dashboard."
+            };
+        }
+        // Patient role
+        if (tab === 'register') {
+            return {
+                title: "Join Our Sanctuary",
+                description: "Register today to manage your healthcare journey with highest security."
+            };
+        }
+        return {
+            title: "Welcome Back",
+            description: "Sign in securely to access your clinical dashboard."
+        };
+    };
+
+    const { title: headingTitle, description: headingDescription } = getHeadingContent();
+
     return (
         <div className="min-h-screen flex items-center justify-center relative z-0 px-4 py-6 md:py-12 md:px-6 font-body-md text-body-md">
             {/* Atmospheric Background */}
@@ -271,46 +351,48 @@ export default function AuthPortal() {
                     
                     {step === 'form' ? (
                         <>
-                            {/* Toggle */}
-                            <div className="relative flex bg-white/40 backdrop-blur-sm rounded-full p-1 mb-6 w-full max-w-[280px] mr-auto ml-0 shadow-inner border border-[#00c3da]/20">
-                                <div 
-                                    className="absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-sm border border-[#00c3da]/10 transition-all duration-300 ease-out"
-                                    style={{
-                                        width: 'calc(50% - 4px)',
-                                        transform: tab === 'login' ? 'translateX(0)' : 'translateX(100%)'
-                                    }}
-                                />
-                                <button
-                                    type="button"
-                                    className={`relative z-10 py-2 rounded-full text-label-md font-label-md transition-colors duration-300 flex-1 text-center font-bold ${
-                                        tab === 'login' ? 'text-primary' : 'text-on-surface-variant hover:text-[#00c3da]'
-                                    }`}
-                                    onClick={() => { setTab('login'); setErrors({}); setSuccess({}); }}
-                                >
-                                    Login
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`relative z-10 py-2 rounded-full text-label-md font-label-md transition-colors duration-300 flex-1 text-center font-bold ${
-                                        tab === 'register' ? 'text-primary' : 'text-on-surface-variant hover:text-[#00c3da]'
-                                    }`}
-                                    onClick={() => {
-                                        setTab('register');
-                                        setErrors({});
-                                        setSuccess({});
-                                        if (role === 'admin') setRole('patient');
-                                    }}
-                                >
-                                    Register
-                                </button>
-                            </div>
+                             {/* Toggle */}
+                             {!hideToggle && (
+                                 <div className="relative flex bg-white/40 backdrop-blur-sm rounded-full p-1 mb-6 w-full max-w-[280px] mr-auto ml-0 shadow-inner border border-[#00c3da]/20">
+                                     <div 
+                                         className="absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-sm border border-[#00c3da]/10 transition-all duration-300 ease-out"
+                                         style={{
+                                             width: 'calc(50% - 4px)',
+                                             transform: tab === 'login' ? 'translateX(0)' : 'translateX(100%)'
+                                         }}
+                                     />
+                                     <button
+                                         type="button"
+                                         className={`relative z-10 py-2 rounded-full text-label-md font-label-md transition-colors duration-300 flex-1 text-center font-bold ${
+                                             tab === 'login' ? 'text-primary' : 'text-on-surface-variant hover:text-[#00c3da]'
+                                         }`}
+                                         onClick={() => { setTab('login'); setErrors({}); setSuccess({}); }}
+                                     >
+                                         Login
+                                     </button>
+                                     <button
+                                         type="button"
+                                         className={`relative z-10 py-2 rounded-full text-label-md font-label-md transition-colors duration-300 flex-1 text-center font-bold ${
+                                             tab === 'register' ? 'text-primary' : 'text-on-surface-variant hover:text-[#00c3da]'
+                                         }`}
+                                         onClick={() => {
+                                             setTab('register');
+                                             setErrors({});
+                                             setSuccess({});
+                                             if (role === 'admin') setRole('patient');
+                                         }}
+                                     >
+                                         Register
+                                     </button>
+                                 </div>
+                             )}
 
                             <div className="mb-6">
                                 <h2 className="font-headline-md text-headline-md text-on-surface mb-2 font-bold tracking-tight">
-                                    {tab === 'login' ? 'Welcome Back' : 'Join Our Sanctuary'}
+                                    {headingTitle}
                                 </h2>
                                 <p className="font-body-md text-body-md text-on-surface-variant">
-                                    {tab === 'login' ? 'Sign in securely to access your clinical dashboard.' : 'Register today to manage your healthcare journey with highest security.'}
+                                    {headingDescription}
                                 </p>
                             </div>
 
@@ -322,33 +404,35 @@ export default function AuthPortal() {
                                     </div>
                                 )}
                                 {/* Role Selector */}
-                                <div className="space-y-2">
-                                    <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Access Role</label>
-                                    <div className="flex gap-1.5 xs:gap-2 sm:gap-3">
-                                        {['patient', 'doctor', 'admin'].filter(r => tab !== 'register' || r !== 'admin').map((r) => (
-                                            <label key={r} className="flex-1 cursor-pointer group">
-                                                <input 
-                                                    className="hidden peer" 
-                                                    name="role" 
-                                                    type="radio" 
-                                                    value={r} 
-                                                    checked={role === r}
-                                                    onChange={() => setRole(r)}
-                                                />
-                                                <div className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-lg border transition-all text-center ${
-                                                    role === r 
-                                                    ? 'border-[#00c3da] bg-[#00c3da]/8 text-primary shadow-sm font-bold ring-2 ring-[#00c3da]/10' 
-                                                    : 'border-[#00c3da]/20 text-on-surface-variant hover:bg-white/50 hover:border-[#00c3da]/50 hover:shadow-sm'
-                                                }`}>
-                                                    <span className="material-symbols-outlined mb-1 text-[20px] sm:text-[24px]" style={{ fontVariationSettings: role === r ? "'FILL' 1" : "'FILL' 0" }}>
-                                                        {r === 'patient' ? 'person' : r === 'doctor' ? 'stethoscope' : 'admin_panel_settings'}
-                                                    </span>
-                                                    <span className="text-[11px] sm:text-caption capitalize font-bold tracking-wide">{r}</span>
-                                                </div>
-                                            </label>
-                                        ))}
+                                {['patient', 'doctor', 'admin'].filter(showRoleOption).length > 1 && (
+                                    <div className="space-y-2">
+                                        <label className="font-label-md text-caption text-on-surface-variant ml-1 font-semibold uppercase tracking-wider block">Access Role</label>
+                                        <div className="flex gap-1.5 xs:gap-2 sm:gap-3">
+                                            {['patient', 'doctor', 'admin'].filter(showRoleOption).map((r) => (
+                                                <label key={r} className="flex-1 cursor-pointer group">
+                                                    <input 
+                                                        className="hidden peer" 
+                                                        name="role" 
+                                                        type="radio" 
+                                                        value={r} 
+                                                        checked={role === r}
+                                                        onChange={() => setRole(r)}
+                                                    />
+                                                    <div className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-lg border transition-all text-center ${
+                                                        role === r 
+                                                        ? 'border-[#00c3da] bg-[#00c3da]/8 text-primary shadow-sm font-bold ring-2 ring-[#00c3da]/10' 
+                                                        : 'border-[#00c3da]/20 text-on-surface-variant hover:bg-white/50 hover:border-[#00c3da]/50 hover:shadow-sm'
+                                                    }`}>
+                                                        <span className="material-symbols-outlined mb-1 text-[20px] sm:text-[24px]" style={{ fontVariationSettings: role === r ? "'FILL' 1" : "'FILL' 0" }}>
+                                                            {r === 'patient' ? 'person' : r === 'doctor' ? 'stethoscope' : 'admin_panel_settings'}
+                                                        </span>
+                                                        <span className="text-[11px] sm:text-caption capitalize font-bold tracking-wide">{r}</span>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Form Fields */}
                                 <div className="space-y-4">

@@ -347,7 +347,12 @@ export default function PatientPortal() {
     const handleBookNow = async (e) => {
         e.preventDefault();
         if (!bookingDate) return alert('Please select a date.');
-        if (bookingDate < todayStr) return alert('You cannot book an appointment for a past date.');
+        if (bookingDate < todayStr) {
+            return alert("You cannot book an appointment for a past date. Please select today's date or a future date.");
+        }
+        if (isAppointmentPast(bookingDate, bookingTime)) {
+            return alert("You cannot book an appointment for a time slot that has already passed today. Please select a future time slot.");
+        }
         if (!specialist) return alert('Please select a doctor.');
 
         let titleToBook = bookingReason;
@@ -446,11 +451,15 @@ export default function PatientPortal() {
         const date = prompt("Enter preferred surgery date (YYYY-MM-DD):", todayStr);
         if (!date) return;
         if (date < todayStr) {
-            alert('You cannot request surgery for a past date.');
+            alert("You cannot request surgery for a past date. Please select today's date or a future date.");
             return;
         }
         const time = prompt("Enter preferred surgery time (e.g. 08:30 AM):", "08:30 AM");
         if (!time) return;
+        if (isAppointmentPast(date, time)) {
+            alert("You cannot request surgery for a time slot that has already passed today. Please select a future time slot.");
+            return;
+        }
 
         setIsLoading(true);
         try {
@@ -516,7 +525,7 @@ export default function PatientPortal() {
     };
 
     const handleEmergencyPortal = () => {
-        alert('Connecting to 24/7 Priority Emergency Team at +1-800-PALM-ENT.');
+        alert('Connecting to 24/7 Priority Emergency Team at +234 805 691 3057.');
     };
 
     return (
@@ -942,13 +951,25 @@ export default function PatientPortal() {
                     <footer className="w-full py-12 bg-surface-container-lowest border-t border-outline-variant/30 mt-stack-lg">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-gutter px-6 md:px-margin-desktop max-w-container-max mx-auto">
                             <div className="col-span-1 md:col-span-1">
-                                <h2 className="text-headline-sm font-headline-md text-primary mb-4">PalmCrest ENT</h2>
-                                <p className="text-caption text-on-surface-variant">Advanced Sanctuary of Care.</p>
+                                <h2 className="text-headline-sm font-headline-md text-primary mb-2">PalmCrest ENT</h2>
+                                <p className="text-caption text-on-surface-variant mb-4">Advanced Sanctuary of Care.</p>
+                                <div className="flex gap-3">
+                                    <a href="https://www.facebook.com/share/1JdiM6CWBq/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary transition-colors" aria-label="Facebook">
+                                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                            <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
+                                        </svg>
+                                    </a>
+                                    <a href="https://www.tiktok.com/@palmcrest.ent.spe?_r=1&_t=ZS-97fnezTeyua" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary transition-colors" aria-label="TikTok">
+                                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.59 4.23.8 1 1.89 1.73 3.11 2.14v3.83c-1.46-.07-2.88-.63-4.04-1.57-.42-.34-.78-.73-1.1-1.16v6.4c.03 2.14-.65 4.31-2.03 5.92-1.6 1.86-4.06 2.94-6.52 2.87-2.6-.08-5.11-1.43-6.52-3.66-1.52-2.39-1.57-5.56-.16-8 1.34-2.35 3.84-3.86 6.55-3.95v3.87c-1.28.1-2.48.83-3.13 1.94-.71 1.22-.64 2.89.2 4.02.83 1.12 2.27 1.76 3.66 1.55 1.48-.22 2.68-1.52 2.89-3v-12.2c.01-1.34 0-2.68.01-4.02z"/>
+                                        </svg>
+                                    </a>
+                                </div>
                             </div>
                             <div>
                                 <h5 className="font-label-md text-primary mb-4">Contact</h5>
                                 <ul className="space-y-2">
-                                    <li><a className="text-on-surface-variant text-body-md hover:text-primary transition-all" href="#">Emergency: +1-800-PALM-ENT</a></li>
+                                    <li><a className="text-on-surface-variant text-body-md hover:text-primary transition-all" href="/emergency">Emergency: +234 805 691 3057</a></li>
                                     <li><a className="text-on-surface-variant text-body-md hover:text-primary transition-all" href="#">Support Center</a></li>
                                 </ul>
                             </div>

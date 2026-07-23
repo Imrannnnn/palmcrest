@@ -8,6 +8,23 @@ export default function LandingPage() {
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
     const [activeExploreTab, setActiveExploreTab] = useState('ear');
     const [scrolled, setScrolled] = useState(false);
+    const [reviews, setReviews] = useState([]);
+
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const res = await fetch(`${backendUrl}/api/reviews`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setReviews(data);
+                }
+            } catch (err) {
+                console.error('Error fetching reviews:', err);
+            }
+        };
+        fetchReviews();
+    }, []);
 
     useEffect(() => {
         const observerOptions = { threshold: 0.1 };
@@ -133,8 +150,22 @@ export default function LandingPage() {
                         <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-12 sm:h-14 w-auto object-contain rounded-lg shadow-sm" />
                     </div>
                     <div className="hidden md:flex items-center gap-8">
-                        {['Services', 'Specialists', 'Emergency', 'About'].map(item => (
-                            <a key={item} className="text-on-surface-variant hover:text-primary font-medium transition-colors text-sm tracking-wide" href="#">{item}</a>
+                        {[
+                            { label: 'Services', onClick: () => {
+                                const el = document.getElementById('services');
+                                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                            }},
+                            { label: 'Specialists', onClick: () => navigate('/specialists') },
+                            { label: 'Emergency', onClick: () => navigate('/emergency') },
+                            { label: 'About', onClick: () => navigate('/about') }
+                        ].map(item => (
+                            <button
+                                key={item.label}
+                                className="text-on-surface-variant hover:text-primary font-medium transition-colors text-sm tracking-wide bg-transparent border-none cursor-pointer p-0"
+                                onClick={item.onClick}
+                            >
+                                {item.label}
+                            </button>
                         ))}
                     </div>
                     <div className="flex items-center gap-3">
@@ -198,7 +229,10 @@ export default function LandingPage() {
                                     <span className="material-symbols-outlined text-[20px]">calendar_today</span>
                                     Book Appointment
                                 </button>
-                                <button className="bg-white/75 w-full backdrop-blur-md border border-outline-variant/30 text-primary px-6 py-4 rounded-xl font-bold text-sm hover:bg-white hover:border-primary/20 hover:shadow-lg transition-all min-h-[52px] flex items-center justify-center gap-2.5">
+                                <button 
+                                    onClick={() => navigate('/specialists')}
+                                    className="bg-white/75 w-full backdrop-blur-md border border-outline-variant/30 text-primary px-6 py-4 rounded-xl font-bold text-sm hover:bg-white hover:border-primary/20 hover:shadow-lg transition-all min-h-[52px] flex items-center justify-center gap-2.5"
+                                >
                                     <span className="material-symbols-outlined text-[20px]">groups</span>
                                     Meet Our Specialists
                                 </button>
@@ -293,7 +327,7 @@ export default function LandingPage() {
             </section>
 
             {/* ── SERVICES ── */}
-            <section className="py-16 md:py-24 reveal relative overflow-hidden">
+            <section id="services" className="py-16 md:py-24 reveal relative overflow-hidden">
                 {/* Decorative concentric circles (Half visible on the left edge) */}
                 <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[600px] md:h-[600px] border-[12px] sm:border-[16px] md:border-[50px] border-primary/[0.15] rounded-full pointer-events-none -translate-x-1/2 z-[-1]"></div>
                 <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[400px] md:h-[400px] border-[8px] sm:border-[12px] md:border-[40px] border-primary/[0.10] rounded-full pointer-events-none -translate-x-1/2 z-[-1]"></div>
@@ -493,7 +527,7 @@ export default function LandingPage() {
                                 ))}
                             </ul>
 
-                            <button className="btn-primary text-white px-6 py-4 rounded-xl font-bold text-sm uppercase tracking-wider min-h-[52px] flex items-center gap-2.5 shadow-lg shadow-primary/15 hover:shadow-primary/30 transition-all duration-300">
+                            <button onClick={() => navigate('/about')} className="btn-primary text-white px-6 py-4 rounded-xl font-bold text-sm uppercase tracking-wider min-h-[52px] flex items-center gap-2.5 shadow-lg shadow-primary/15 hover:shadow-primary/30 transition-all duration-300">
                                 <span className="material-symbols-outlined text-[20px]">history_edu</span>
                                 Our Full History
                             </button>
@@ -519,20 +553,29 @@ export default function LandingPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            {
-                                quote: "The level of care I received for my chronic sinusitis was unlike anything I've experienced. The 3D sinus mapping before surgery gave me immense confidence going in.",
-                                name: 'Sarah J. Lindquist', role: 'Sinus Surgery Patient', rating: 5, initials: 'SJ',
-                            },
-                            {
-                                quote: "PalmCrest ENT is truly a futuristic sanctuary. Dr. Vance and her team treated my hearing loss with such precision. I'm hearing sounds I haven't heard in a decade.",
-                                name: 'Robert McAllister', role: 'Cochlear Implant Patient', rating: 5, initials: 'RM',
-                            },
-                            {
-                                quote: "After years of struggling with vocal strain, the phonosurgery team here gave me my voice back. The facility is world-class and the follow-up care was exceptional.",
-                                name: 'Amara Osei-Bonsu', role: 'Voice Therapy Patient', rating: 5, initials: 'AO',
-                            },
-                        ].map((t, i) => (
+                        {(reviews.length > 0 
+                            ? reviews.map(r => ({
+                                quote: r.comments,
+                                name: r.patientName,
+                                role: `Patient of Dr. ${r.doctorName.split(' ').pop()}`,
+                                rating: r.rating,
+                                initials: r.patientName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                              }))
+                            : [
+                                {
+                                    quote: "The level of care I received for my chronic sinusitis was unlike anything I've experienced. The 3D sinus mapping before surgery gave me immense confidence going in.",
+                                    name: 'Sarah J. Lindquist', role: 'Sinus Surgery Patient', rating: 5, initials: 'SJ',
+                                },
+                                {
+                                    quote: "PalmCrest ENT is truly a futuristic sanctuary. Dr. Vance and her team treated my hearing loss with such precision. I'm hearing sounds I haven't heard in a decade.",
+                                    name: 'Robert McAllister', role: 'Cochlear Implant Patient', rating: 5, initials: 'RM',
+                                },
+                                {
+                                    quote: "After years of struggling with vocal strain, the phonosurgery team here gave me my voice back. The facility is world-class and the follow-up care was exceptional.",
+                                    name: 'Amara Osei-Bonsu', role: 'Voice Therapy Patient', rating: 5, initials: 'AO',
+                                },
+                            ]
+                        ).slice(0, 6).map((t, i) => (
                             <div key={i} className="glass-card p-6 rounded-2xl flex flex-col justify-between gap-5 glow-card">
                                 <div>
                                     {/* Stars */}
@@ -571,9 +614,9 @@ export default function LandingPage() {
                     </div>
 
                     <div className="relative z-10 flex flex-col items-center gap-3 w-full md:w-auto flex-shrink-0">
-                        <a className="bg-white text-primary px-6 py-5 md:px-12 md:py-6 rounded-xl font-display text-lg sm:text-xl flex items-center justify-center gap-4 hover:scale-[1.03] transition-transform w-full md:w-auto shadow-xl" href="tel:1-800-PALM-ENT">
+                        <a className="bg-white text-primary px-6 py-5 md:px-12 md:py-6 rounded-xl font-display text-lg sm:text-xl flex items-center justify-center gap-4 hover:scale-[1.03] transition-transform w-full md:w-auto shadow-xl" href="tel:+2348056913057">
                             <span className="material-symbols-outlined text-primary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>call</span>
-                            +1-800-PALM-ENT
+                            +234 805 691 3057
                         </a>
                         <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">Direct line to On-Call Specialists</p>
                     </div>
@@ -586,14 +629,14 @@ export default function LandingPage() {
                     <div>
                         <div className="flex items-center gap-3 mb-5">
                             <img src="/logo-ent.jpeg" alt="PalmCrest ENT Logo" className="h-10 w-auto object-contain shadow-sm rounded-lg" />
-                            <span className="font-bold text-primary text-lg">PalmCrest ENT</span>
+                            <span className="font-bold text-primary text-lg">PalmCrest</span>
                         </div>
                         <p className="text-on-surface-variant text-sm leading-relaxed">The Advanced Sanctuary of Care. Leading ENT medicine through innovation and empathy.</p>
                     </div>
                     <div>
                         <h4 className="font-bold text-primary text-sm uppercase tracking-wider mb-5">Services</h4>
                         <ul className="space-y-3 text-sm">
-                            {['Hearing Diagnostics', 'Sinus Surgery', 'Voice Therapy', 'Sleep Apnea', 'Pediatric ENT'].map(s => (
+                            {['Otology', 'Rhinology', 'Laryngology', 'Audiology'].map(s => (
                                 <li key={s}><a className="text-on-surface-variant hover:text-primary transition-colors" href="#">{s}</a></li>
                             ))}
                         </ul>
@@ -602,6 +645,7 @@ export default function LandingPage() {
                         <h4 className="font-bold text-primary text-sm uppercase tracking-wider mb-5">Resources</h4>
                         <ul className="space-y-3 text-sm">
                             <li><a onClick={handleBookClick} className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Patient Portal</a></li>
+                            <li><a onClick={() => navigate('/about')} className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">About Us</a></li>
                             {['Specialist Directory', 'Department Directory', 'Patient FAQs', 'Terms of Service'].map(s => (
                                 <li key={s}><a className="text-on-surface-variant hover:text-primary transition-colors" href="#">{s}</a></li>
                             ))}
@@ -613,11 +657,16 @@ export default function LandingPage() {
                         <p className="text-on-surface-variant text-sm mb-1">+234 805 691 3057</p>
                         <p className="text-on-surface-variant text-sm mb-4">Palmcrestentspecialisthospital@gmail.com</p>
                         <div className="flex gap-3">
-                            {['share', 'public', 'mail'].map(icon => (
-                                <div key={icon} className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all cursor-pointer border border-outline-variant/20">
-                                    <span className="material-symbols-outlined text-[18px]">{icon}</span>
-                                </div>
-                            ))}
+                            <a href="https://www.facebook.com/share/1JdiM6CWBq/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all cursor-pointer border border-outline-variant/20" aria-label="Facebook">
+                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                    <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
+                                </svg>
+                            </a>
+                            <a href="https://www.tiktok.com/@palmcrest.ent.spe?_r=1&_t=ZS-97fnezTeyua" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all cursor-pointer border border-outline-variant/20" aria-label="TikTok">
+                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.59 4.23.8 1 1.89 1.73 3.11 2.14v3.83c-1.46-.07-2.88-.63-4.04-1.57-.42-.34-.78-.73-1.1-1.16v6.4c.03 2.14-.65 4.31-2.03 5.92-1.6 1.86-4.06 2.94-6.52 2.87-2.6-.08-5.11-1.43-6.52-3.66-1.52-2.39-1.57-5.56-.16-8 1.34-2.35 3.84-3.86 6.55-3.95v3.87c-1.28.1-2.48.83-3.13 1.94-.71 1.22-.64 2.89.2 4.02.83 1.12 2.27 1.76 3.66 1.55 1.48-.22 2.68-1.52 2.89-3v-12.2c.01-1.34 0-2.68.01-4.02z"/>
+                                </svg>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -648,15 +697,24 @@ export default function LandingPage() {
                     </div>
                     <div className="flex flex-col gap-2">
                         {[
-                            { icon: 'medical_services', label: 'Services' },
-                            { icon: 'groups', label: 'Specialists' },
-                            { icon: 'emergency', label: 'Emergency' },
-                            { icon: 'contact_support', label: 'Contact' },
+                            { icon: 'medical_services', label: 'Services', onClick: () => {
+                                toggleMobileNav();
+                                const el = document.getElementById('services');
+                                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                            }},
+                            { icon: 'groups', label: 'Specialists', onClick: () => { toggleMobileNav(); navigate('/specialists'); } },
+                            { icon: 'emergency', label: 'Emergency', onClick: () => { toggleMobileNav(); navigate('/emergency'); } },
+                            { icon: 'info', label: 'About Us', onClick: () => { toggleMobileNav(); navigate('/about'); } },
+                            { icon: 'contact_support', label: 'Contact', onClick: () => { toggleMobileNav(); navigate('/emergency'); } },
                         ].map(item => (
-                            <a key={item.label} className="flex items-center gap-4 text-lg font-medium text-on-surface-variant hover:text-primary hover:bg-primary/5 transition-all py-3 px-4 rounded-xl" href="#" onClick={toggleMobileNav}>
+                            <button
+                                key={item.label}
+                                className="flex items-center gap-4 text-lg font-medium text-on-surface-variant hover:text-primary hover:bg-primary/5 transition-all py-3 px-4 rounded-xl w-full text-left bg-transparent border-none cursor-pointer"
+                                onClick={item.onClick}
+                            >
                                 <span className="material-symbols-outlined text-primary">{item.icon}</span>
                                 {item.label}
-                            </a>
+                            </button>
                         ))}
                         <div className="border-t border-outline-variant/10 my-2"></div>
                         <a className="flex items-center gap-4 text-lg font-semibold text-primary hover:bg-primary/5 transition-all py-3 px-4 rounded-xl cursor-pointer"

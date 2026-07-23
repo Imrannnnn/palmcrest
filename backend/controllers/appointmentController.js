@@ -31,7 +31,27 @@ const createAppointment = async (req, res, next) => {
 
     if (apptMidnight < todayMidnight) {
       res.status(400);
-      throw new Error('Appointment date cannot be in the past');
+      throw new Error("You cannot book an appointment for a past date. Please select today's date or a future date.");
+    }
+
+    // Prevent booking an hour that has already passed today
+    if (apptMidnight === todayMidnight) {
+      const timeParts = timeSlot.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+      if (timeParts) {
+        let hours = parseInt(timeParts[1], 10);
+        const minutes = parseInt(timeParts[2], 10);
+        const ampm = timeParts[3].toUpperCase();
+        if (ampm === 'PM' && hours < 12) hours += 12;
+        if (ampm === 'AM' && hours === 12) hours = 0;
+
+        const apptTimeToday = new Date(today);
+        apptTimeToday.setHours(hours, minutes, 0, 0);
+
+        if (apptTimeToday < today) {
+          res.status(400);
+          throw new Error("You cannot book an appointment for a time slot that has already passed today. Please select a future time slot.");
+        }
+      }
     }
 
     const appointment = await Appointment.create({

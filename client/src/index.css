@@ -306,4 +306,14 @@ nav {
     animation: move 20s infinite alternate;
 }
 
+/* Global Loading Transition */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out forwards;
+}
+
+
 

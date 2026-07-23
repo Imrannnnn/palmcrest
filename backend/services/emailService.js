@@ -166,8 +166,17 @@ const sendBookingCreatedDoctor = async (doctor, patient, appointment) => {
 
 const sendBookingStatusUpdate = async (patient, doctor, appointment) => {
     const isApproved = appointment.status === 'Approved';
-    const subject = isApproved ? "Appointment Confirmed" : "Appointment Status Updated";
-    const title = isApproved ? "Appointment Confirmed" : "Appointment Update";
+    const isCompleted = appointment.status === 'Completed';
+    const subject = isApproved 
+        ? "Appointment Confirmed" 
+        : isCompleted 
+            ? "Thank you for your visit - Palmcrest ENT" 
+            : "Appointment Status Updated";
+    const title = isApproved 
+        ? "Appointment Confirmed" 
+        : isCompleted 
+            ? "Appointment Completed" 
+            : "Appointment Update";
     
     let content = `
         <p>Dear ${patient.fullName},</p>
@@ -176,6 +185,14 @@ const sendBookingStatusUpdate = async (patient, doctor, appointment) => {
 
     if (isApproved) {
         content += `<p>We look forward to seeing you at our clinic.</p>`;
+    } else if (isCompleted) {
+        const reviewUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/review/${appointment._id}`;
+        content += `
+            <p>Thank you for visiting us today. We hope your experience was excellent! We value your feedback and would love to hear about your experience. Please take a minute to leave a review:</p>
+            <div style="text-align: center; margin: 24px 0;">
+                <a href="${reviewUrl}" class="button" style="background-color: #f59e0b; color: #ffffff !important; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: inline-block;">Leave a Review</a>
+            </div>
+        `;
     } else {
         content += `<p>Please log in to your portal to reschedule or contact support if you have any questions.</p>`;
     }
@@ -207,7 +224,16 @@ const sendAppointmentReminder = async (patient, doctor, appointment, type) => {
     } else if (type === "post4hr") {
         subject = "Thank you for your visit";
         title = "Post-Appointment Follow-up";
-        message = `Thank you for visiting Dr. ${doctor.fullName} today. We hope your experience was excellent. If you need further assistance, please contact us or schedule a follow-up through your portal.`;
+        const reviewUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/review/${appointment._id}`;
+        message = `Thank you for visiting Dr. ${doctor.fullName} today. We hope your experience was excellent.
+        <br/><br/>
+        We value your feedback and would love to hear about your experience! Please take a minute to leave a review:
+        <br/><br/>
+        <div style="text-align: center;">
+            <a href="${reviewUrl}" class="button" style="background-color: #f59e0b; color: #ffffff !important; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: inline-block;">Leave a Review</a>
+        </div>
+        <br/>
+        If you need further assistance, please contact us or schedule a follow-up through your portal.`;
     }
 
     const content = `

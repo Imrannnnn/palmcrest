@@ -1207,11 +1207,23 @@ export default function SuperAdmin() {
                         <div className="flex flex-col gap-4">
                             <h4 className="text-headline-sm font-headline-md text-primary font-bold">PalmCrest ENT</h4>
                             <p className="text-body-md text-on-surface-variant max-w-xs">Advanced sanctuary of care specializing in ear, nose, and throat excellence.</p>
+                            <div className="flex gap-3 mt-2">
+                                <a href="https://www.facebook.com/share/1JdiM6CWBq/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary transition-colors" aria-label="Facebook">
+                                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                        <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
+                                    </svg>
+                                </a>
+                                <a href="https://www.tiktok.com/@palmcrest.ent.spe?_r=1&_t=ZS-97fnezTeyua" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary transition-colors" aria-label="TikTok">
+                                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.59 4.23.8 1 1.89 1.73 3.11 2.14v3.83c-1.46-.07-2.88-.63-4.04-1.57-.42-.34-.78-.73-1.1-1.16v6.4c.03 2.14-.65 4.31-2.03 5.92-1.6 1.86-4.06 2.94-6.52 2.87-2.6-.08-5.11-1.43-6.52-3.66-1.52-2.39-1.57-5.56-.16-8 1.34-2.35 3.84-3.86 6.55-3.95v3.87c-1.28.1-2.48.83-3.13 1.94-.71 1.22-.64 2.89.2 4.02.83 1.12 2.27 1.76 3.66 1.55 1.48-.22 2.68-1.52 2.89-3v-12.2c.01-1.34 0-2.68.01-4.02z"/>
+                                    </svg>
+                                </a>
+                            </div>
                         </div>
                         <div>
                             <h5 className="font-bold text-primary mb-4">Support</h5>
                             <ul className="space-y-2">
-                                <li><a className="text-on-surface-variant hover:text-primary transition-colors" href="#">Emergency: +1-800-PALM-ENT</a></li>
+                                <li><a className="text-on-surface-variant hover:text-primary transition-colors" href="/emergency">Emergency: +234 805 691 3057</a></li>
                                 <li><a className="text-on-surface-variant hover:text-primary transition-colors" href="#">Department Directory</a></li>
                             </ul>
                         </div>

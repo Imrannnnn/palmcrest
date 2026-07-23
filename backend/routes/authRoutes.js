@@ -19,6 +19,7 @@ const { protect, authorize } = require('../middleware/auth');
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/admin/setup-password/:token', setupAdminPassword);
+router.get('/public-doctors', getAllDoctors);
 
 // Protected endpoints
 router.get('/profile', protect, getUserProfile);

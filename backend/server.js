@@ -7,6 +7,7 @@ const connectDB = require("./db/db")
 const authRoutes = require('./routes/authRoutes')
 const appointmentRoutes = require('./routes/appointmentRoutes')
 const noteRoutes = require('./routes/noteRoutes')
+const reviewRoutes = require('./routes/reviewRoutes')
 const errorHandler = require('./middleware/error')
 
 //env config
@@ -47,6 +48,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/appointments', appointmentRoutes)
 app.use('/api/notes', noteRoutes)
+app.use('/api/reviews', reviewRoutes)
 
 // Error handler middleware
 app.use(errorHandler)
